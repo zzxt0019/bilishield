@@ -1,4 +1,3 @@
-import { fetchUid2Name } from '@/utils';
 import { _uids } from './database';
 export function initUids(): void {
     // GM_deleteValue('uids')  // to test
@@ -37,4 +36,35 @@ export function initUids(): void {
             ${showUids}`
         );
     })
+}
+class BiliUp {
+    constructor(public uid: number, public username: string, public expiretime: number) {
+    }
+}
+export function fetchUid2Name(uid: number): string {
+    let obj = GM_getValue('uid_' + uid)
+    let biliUp: BiliUp = obj as BiliUp
+    if (biliUp && new Date().getTime() < biliUp.expiretime) {
+        return biliUp.username
+    } else {
+        let request = new XMLHttpRequest()
+        request.open('GET', 'https://api.bilibili.com/x/space/acc/info?mid=' + uid, false)
+        request.send(null)
+        let username = JSON.parse(request.responseText).data.name
+        biliUp = { uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000 }
+        GM_setValue('uid_' + uid, biliUp)
+        return biliUp.username
+    }
+}
+export function inUids(uid: number | null): boolean {
+    if (uid) {
+        return (GM_getValue('uids', []) as number[]).includes(uid)
+    }
+    return false
+}
+export function inUsernames(text: string | null): boolean {
+    if (text) {
+        return (GM_getValue('uids', []) as number[]).map(fetchUid2Name).includes(text)
+    }
+    return false;
 }

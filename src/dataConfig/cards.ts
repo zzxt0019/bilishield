@@ -37,3 +37,13 @@ export function initCards(): void {
         );
     })
 }
+export function inCardLike(text: string | null): boolean {
+    if (text) {
+        for (const card of GM_getValue('cards',[])) {
+            if (text.includes(card)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
