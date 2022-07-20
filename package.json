@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "name": "tmts",
+  "scripts": {
+    "dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=development --watch",
+    "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=production"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "@types/tampermonkey": "^4.0.5",
+    "cross-env": "^7.0.3",
+    "esbuild-loader": "^2.18.0",
+    "ts-loader": "^9.2.7",
+    "ts-node": "^10.6.0",
+    "typescript": "^4.7.4",
+    "webpack": "^5.69.1",
+    "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "@types/arrive": "^2.4.1",
+    "arrive": "^2.4.1"
+  }
+}
