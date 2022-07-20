@@ -1,9 +1,10 @@
-import 'arrive'
-import { _uids } from './dataConfig/database';
+import 'arrive';
 import { initCards } from './dataConfig/cards';
+import { _uids } from './dataConfig/database';
 import { initUids } from './dataConfig/uids-usernames';
-import { rules } from './rules/base-rules';
-import { fetchUid2Name, Log } from './utils';
+import { RankUpRule } from './rules/main-page-rules';
+import { fetchUid2Name } from './utils';
+
 init()
 function init(): void {
   initCards()
@@ -15,7 +16,9 @@ function init(): void {
     dogNames.push(fetchUid2Name(dogId))
   }
   // 写更多的规则
-  for (const rule of rules) {
+  for (const rule of [
+    new RankUpRule(),
+  ]) {
     document.arrive(rule.mainSelector, { fireOnAttributesModification: true, onceOnly: false, existing: true },
       (element: Element) => {
         if (rule.ifRemove(element)) {
