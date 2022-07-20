@@ -68,3 +68,13 @@ export function inUsernames(text: string | null): boolean {
     }
     return false;
 }
+export function inUsernameLike(text: string | null): boolean {
+    if (text) {
+        for (const card of GM_getValue('uids', []).map(fetchUid2Name)) {
+            if (text.includes(card)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
