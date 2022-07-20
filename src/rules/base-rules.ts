@@ -1,8 +1,6 @@
 /**
  * 总规则
  */
-import { RankRule } from "./main-page-rules";
-
 export interface Rule {
     mainSelector: string
     ifRemove(element: Element): boolean
@@ -33,7 +31,3 @@ export abstract class HasRule implements Rule {
         return false;
     }
 }
-
-export let rules: ReadonlyArray<Rule> = [
-    new RankRule()
-]
