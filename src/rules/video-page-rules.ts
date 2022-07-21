@@ -24,7 +24,7 @@ export function initVideoPage(): void {
         undefined,
         (node) => {
             (node as any).attributeStyleMap.set('display', 'none')
-            return true;
+            return false;
         }
     )
 }
