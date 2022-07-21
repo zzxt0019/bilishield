@@ -4,11 +4,23 @@ import { registerRule } from "./base-rules";
 let danmakuMap: Map<string, number> = new Map()
 export function initLivePage(): void {
     registerRule(
+        '.chat-item.danmaku-item',  // 右侧弹幕 屏蔽matches发言
+        undefined,
+        (node) => checkMatchLike(node.getAttribute('data-danmaku'))
+    )
+    registerRule(
+        '.bilibili-danmaku.mode-roll',  // 中央弹幕 屏蔽matches发言
+        undefined,
+        (node) => checkMatchLike(node.getAttribute('data-danmaku'))
+    )
+    registerRule(
         '.chat-item.danmaku-item',  // 右侧弹幕
         undefined,
         (node) => {
-            if (checkUid(Number(node.querySelector('[data-anchor-id]')?.getAttribute('data-anchor-id')))  // 有uid的UP牌子
-                || checkMatchLike(node.getAttribute('data-danmaku'))) {  // 有matches的内容
+            /**
+             * 屏蔽带粉丝牌子的发言
+             */
+            if (checkUid(Number(node.querySelector('[data-anchor-id]')?.getAttribute('data-anchor-id')))) {
                 try {
                     /**
                      * 记录发言存入map 计数 + 1
