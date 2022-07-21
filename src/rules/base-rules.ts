@@ -1,12 +1,36 @@
 import { initMainPage } from "./main-page-rules";
 import { initVideoPage } from "./video-page-rules";
+/**
+ * 规则接口
+ */
 export interface Rule {
+    /**
+     * 主选择器
+     */
     mainSelector: string
-    ifRemove(element: Element): boolean
+    /**
+     * 是否移除
+     * @param mainElement 主对象
+     * @returns {boolean} 是否移除
+     */
+    ifRemove(mainElement: Element): boolean
 }
+/**
+ * 检查器
+ */
 export class Checker {
+    /**
+     * 
+     * @param innerSelector 内部选择器
+     * @param bingo 内部对象是否符合删除标准
+     */
     constructor(public innerSelector: string | undefined, public bingo: (element: Element) => boolean) {
     }
+    /**
+     * 
+     * @param mainElement 主对象
+     * @returns {boolean} 是否移除
+     */
     check(mainElement: Element): boolean {
         if (this.innerSelector) {
             let elements = mainElement.querySelectorAll(this.innerSelector)
@@ -20,18 +44,13 @@ export class Checker {
         return false;
     }
 }
-class BaseRule implements Rule {
-    mainSelector: string;
-    checker: Checker;
-    constructor(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean) {
-        this.mainSelector = mainSelector
-        this.checker = new Checker(innerSelector, bingo)
-    }
-    ifRemove(element: Element): boolean {
-        return this.checker.check(element)
-    }
-}
+/**
+ * OR规则
+ * 满足任意一个检查器 即删除
+ */
 class OrRule implements Rule {
+    constructor(public mainSelector: string, public checkers: Checker[]) {
+    }
     ifRemove(element: Element): boolean {
         for (const checker of this.checkers) {
             if (checker.check(element)) {
@@ -40,28 +59,37 @@ class OrRule implements Rule {
         }
         return false;
     }
-    constructor(public mainSelector: string, public checkers: Checker[]) {
+}
+/**
+ * 注册进来的检查器集合
+ */
+let checkerMap: Map<string, Checker[]> = new Map()
+/**
+ * 注册检查器
+ * @param mainSelector 主选择器 
+ * @param innerSelector 内部选择器
+ * @param bingo 内部对象是否符合删除标准
+ */
+export function registerRule(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean): void {
+    let _checkers = checkerMap.get(mainSelector);
+    let checkers = _checkers ? _checkers : []
+    checkers.push(new Checker(innerSelector, bingo))
+    if (!_checkers) {
+        checkerMap.set(mainSelector, checkers)
     }
 }
-let baseRules: BaseRule[] = []
-export function registerRule(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean): void {
-    baseRules.push(new BaseRule(mainSelector, innerSelector, bingo))
-}
+/**
+ * 初始化规则
+ * @returns 规则
+ */
 export function initRules(): Rule[] {
     initMainPage()
     initVideoPage()
-    let map: Map<string, BaseRule[]> = new Map()
-    for (const baseRule of baseRules) {
-        let arr0 = map.get(baseRule.mainSelector)
-        let arr = arr0 ? arr0 : []
-        arr.push(baseRule)
-        map.set(baseRule.mainSelector, arr)
-    }
     let orRules: OrRule[] = []
-    map.forEach((baseRules: BaseRule[], mainSelector: string) => {
+    checkerMap.forEach((checkers: Checker[], mainSelector: string) => {
         orRules.push(new OrRule(
             mainSelector,
-            baseRules.map(baseRule => baseRule.checker)
+            checkers
         ))
     })
     return orRules
