@@ -19,4 +19,12 @@ export function initVideoPage(): void {
         'img',  // 子评论中的图片(card)
         node => checkCardLike(node.getAttribute('alt'))
     )
+    registerRule(
+        'a.ad-report',  // 广告
+        undefined,
+        (node) => {
+            (node as any).attributeStyleMap.set('display', 'none')
+            return true;
+        }
+    )
 }
