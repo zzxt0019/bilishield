@@ -6,14 +6,24 @@ import { registerRule } from "./base-rules"
  */
 export function initMainPage() {
     registerRule(
-        '.result.c-container',
-        'a',
-        node => node.innerHTML.includes('公司来了个新同事')
-    )
-    registerRule(
         '.rank-wrap',  // 排行榜
         '.info .name',  // UP(username)
         node => checkUsername(node.innerHTML)
+    )
+    registerRule(
+        '.rank-wrap',  // 排行榜
+        '.title',  // 标题
+        node => checkMatchLike(node.getAttribute('title'))
+    )
+    registerRule(
+        '.pgc-rank',  // 番剧/国创 排行榜
+        '.title',  // 标题
+        node => checkMatchLike(node.getAttribute('title'))
+    )
+    registerRule(
+        '.manga-rank-item',  // 漫画排行榜
+        '.title',  // 标题
+        node => checkMatchLike(node.getAttribute('title'))
     )
     registerRule(
         '.video-card-reco',  // 右上角推荐
@@ -44,6 +54,16 @@ export function initMainPage() {
         '.video-card-common',  // 左边的视频块
         '.gg-normal-icon',  // 广告
         () => true
+    )
+    registerRule(
+        '.article-card',  // 左边的专栏
+        '.title',  // 标题
+        node => checkMatchLike(node.getAttribute('title'))
+    )
+    registerRule(
+        '.article-card',  // 左边的专栏
+        'a.up',  // UP(username)  // 有其他内容, 不是单一用户名
+        node => checkUsernameLike(node.innerHTML)
     )
     registerRule(
         'a.banner-card.b-wrap',  // 横条广告
