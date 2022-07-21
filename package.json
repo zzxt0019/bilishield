@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "name": "tmts",
+  "name": "tampermonkey-typescript",
   "scripts": {
     "dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=development --watch",
     "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=production"
@@ -17,7 +17,6 @@
     "webpack-cli": "^4.9.2"
   },
   "dependencies": {
-    "@types/arrive": "^2.4.1",
     "arrive": "^2.4.1"
   }
 }
