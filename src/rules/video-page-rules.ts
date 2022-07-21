@@ -23,6 +23,7 @@ export function initVideoPage(): void {
         'a.ad-report',  // 广告
         undefined,
         (node) => {
+            // node.remove()后页面报错, 使用display隐藏
             (node as any).attributeStyleMap.set('display', 'none')
             return false;
         }
