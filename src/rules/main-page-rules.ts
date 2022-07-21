@@ -1,8 +1,8 @@
 /**
  * 首页规则
  */
-import { inMatchLike } from "@/dataConfig/matches"
-import { inUsernameLike, inUsernames } from "@/dataConfig/uids-usernames"
+import { inMatchLike } from "@/settings/matches"
+import { inUsernameLike, inUsernames } from "@/settings/uids-usernames"
 import { HasRule } from "./base-rules"
 
 /**

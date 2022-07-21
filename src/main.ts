@@ -1,7 +1,7 @@
 import 'arrive';
-import { initCards } from './dataConfig/cards';
-import { initMatches } from './dataConfig/matches';
-import { initUids } from './dataConfig/uids-usernames';
+import { initCards } from './settings/cards';
+import { initMatches } from './settings/matches';
+import { initUids } from './settings/uids-usernames';
 import { RandomVideoTitleRule, RankUpRule, SlideRule, VideoCardTitleRule, VideoCardUpRule } from './rules/main-page-rules';
 import { CommentCardRule, CommentImgRule, CommentReplyImgRule } from './rules/video-page-rules';
 

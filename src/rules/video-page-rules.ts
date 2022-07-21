@@ -1,7 +1,7 @@
 /**
  * 视频页规则
  */
-import { inCardLike } from "@/dataConfig/cards";
+import { inCardLike } from "@/settings/cards";
 import { HasRule } from "./base-rules";
 
 /**
