@@ -8,25 +8,36 @@ export function initUids(): void {
 
     GM_registerMenuCommand('添加up', () => {
         let showUids = GM_getValue('uids', []).map(uid => `${uid}(${fetchUid2Name(uid)})`).join(',')
-        let addUids = prompt(
+        let input = prompt(
             `uid:
             ${showUids}`
         );
-        if (addUids) {
+        if (input) {
+            let addUids = input.split(' ').map(Number)
             let uids = (GM_getValue('uids') as number[])
-            uids.push(...addUids.split(' ').map(Number))
+            uids.push(...addUids)
             GM_setValue('uids', uids)
+
+            // 添加时查询存储 <uid, username>
+            for (const uid of addUids) {
+                setTimeout(fetchUid2Name(uid))
+            }
         }
     })
     GM_registerMenuCommand('删除up', () => {
         let showUids = GM_getValue('uids', []).map(uid => `${uid}(${fetchUid2Name(uid)})`).join(',')
-        let deleteuids = prompt(
+        let input = prompt(
             `uid:
             ${showUids}`
         );
-        if (deleteuids) {
-            let deleteSet: Set<number> = new Set(deleteuids.split(' ').map(Number))
+        if (input) {
+            let deleteSet: Set<number> = new Set(input.split(' ').map(Number))
             GM_setValue('uids', (GM_getValue('uids') as number[]).filter(uid => !deleteSet.has(uid)))
+
+            // 删除时删除 <uid, username>
+            for (const uid of deleteSet) {
+                GM_deleteValue('uid_' + uid)
+            }
         }
     })
     GM_registerMenuCommand('展示up', () => {
