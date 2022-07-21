@@ -25,6 +25,7 @@ const config: Configuration = {
         target: 'es2015',
         banner: fs
           .readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
+          .replace("${timestamp}", String(new Date().getTime()))
           .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
       }),
     ],
