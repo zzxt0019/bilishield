@@ -1,3 +1,4 @@
+import { initLivePage } from "./live-page-rules";
 import { initMainPage } from "./main-page-rules";
 import { initVideoPage } from "./video-page-rules";
 /**
@@ -40,6 +41,10 @@ export class Checker {
                     return true;
                 }
             }
+        } else {
+            if (this.bingo(mainElement)) {
+                return true;
+            }
         }
         return false;
     }
@@ -70,7 +75,7 @@ let checkerMap: Map<string, Checker[]> = new Map()
  * @param innerSelector 内部选择器
  * @param bingo 内部对象是否符合删除标准
  */
-export function registerRule(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean): void {
+export function registerRule(mainSelector: string, innerSelector: string | undefined, bingo: (element: Element) => boolean): void {
     let _checkers = checkerMap.get(mainSelector);
     let checkers = _checkers ? _checkers : []
     checkers.push(new Checker(innerSelector, bingo))
@@ -85,6 +90,7 @@ export function registerRule(mainSelector: string, innerSelector: string, bingo:
 export function initRules(): Rule[] {
     initMainPage()
     initVideoPage()
+    initLivePage()
     let orRules: OrRule[] = []
     checkerMap.forEach((checkers: Checker[], mainSelector: string) => {
         orRules.push(new OrRule(
