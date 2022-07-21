@@ -37,7 +37,7 @@ export function initMatches(): void {
         );
     })
 }
-export function inMatchLike(text: string | null): boolean {
+export function checkMatchLike(text: string | null): boolean {
     if (text) {
         for (const match of GM_getValue('matches',[])) {
             if (text.includes(match)) {

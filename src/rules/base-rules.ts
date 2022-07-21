@@ -20,7 +20,7 @@ export class Checker {
         return false;
     }
 }
-export class BaseRule implements Rule {
+class BaseRule implements Rule {
     mainSelector: string;
     checker: Checker;
     constructor(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean) {
@@ -43,11 +43,13 @@ class OrRule implements Rule {
     constructor(public mainSelector: string, public checkers: Checker[]) {
     }
 }
-export let baseRules: BaseRule[] = []
-export function initRules(): OrRule[] {
+let baseRules: BaseRule[] = []
+export function registerRule(mainSelector: string, innerSelector: string, bingo: (element: Element) => boolean): void {
+    baseRules.push(new BaseRule(mainSelector, innerSelector, bingo))
+}
+export function initRules(): Rule[] {
     initMainPage()
     initVideoPage()
-    console.log(baseRules.length)
     let map: Map<string, BaseRule[]> = new Map()
     for (const baseRule of baseRules) {
         let arr0 = map.get(baseRule.mainSelector)
@@ -62,6 +64,5 @@ export function initRules(): OrRule[] {
             baseRules.map(baseRule => baseRule.checker)
         ))
     })
-    console.log(orRules)
     return orRules
 }

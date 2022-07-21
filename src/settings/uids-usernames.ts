@@ -56,19 +56,19 @@ export function fetchUid2Name(uid: number): string {
         return biliUp.username
     }
 }
-export function inUids(uid: number | null): boolean {
+export function checkUid(uid: number | null): boolean {
     if (uid) {
         return (GM_getValue('uids', []) as number[]).includes(uid)
     }
     return false
 }
-export function inUsernames(text: string | null): boolean {
+export function checkUsername(text: string | null): boolean {
     if (text) {
         return (GM_getValue('uids', []) as number[]).map(fetchUid2Name).includes(text)
     }
     return false;
 }
-export function inUsernameLike(text: string | null): boolean {
+export function checkUsernameLike(text: string | null): boolean {
     if (text) {
         for (const card of GM_getValue('uids', []).map(fetchUid2Name)) {
             if (text.includes(card)) {
