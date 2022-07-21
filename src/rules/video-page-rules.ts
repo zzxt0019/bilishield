@@ -1,6 +1,7 @@
 /**
  * 视频页规则
  */
+import * as coreDecorators from 'core-decorators'
 import { inCardLike } from "@/settings/cards";
 import { HasRule } from "./base-rules";
 
@@ -10,6 +11,7 @@ import { HasRule } from "./base-rules";
 export class CommentCardRule extends HasRule {
     mainSelector = '.list-item'
     innerSelector = '.sailing-img'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inCardLike(element.getAttribute('alt'))
     }
@@ -20,6 +22,7 @@ export class CommentCardRule extends HasRule {
 export class CommentImgRule extends HasRule {
     mainSelector = '.list-item'
     innerSelector = 'p.text img'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inCardLike(element.getAttribute('alt'))
     }
@@ -27,6 +30,7 @@ export class CommentImgRule extends HasRule {
 export class CommentReplyImgRule extends HasRule {
     mainSelector = '.reply-item'
     innerSelector = 'img'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inCardLike(element.getAttribute('alt'))
     }

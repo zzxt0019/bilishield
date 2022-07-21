@@ -12,7 +12,7 @@ export abstract class HasRule implements Rule {
         return false;
         // return inCard(innerElement.outerHTML)
     }
-    ifRemove(element: Element) {
+    ifRemove(element: Element): boolean {
         if (this.innerSelector === undefined) {
             // undefined 本层
             if (this.bingo(element)) {

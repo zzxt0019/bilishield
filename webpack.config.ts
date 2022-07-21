@@ -1,7 +1,7 @@
-import { type Configuration } from 'webpack'
 import { ESBuildMinifyPlugin } from 'esbuild-loader'
 import * as fs from 'fs'
 import * as path from 'path'
+import { type Configuration } from 'webpack'
 
 
 const config: Configuration = {
@@ -10,7 +10,7 @@ const config: Configuration = {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    extensions: ['.ts'],
+    extensions: ['.ts', '.js'],
   },
 
   entry: './src/main.ts',

@@ -1,6 +1,7 @@
 /**
  * 首页规则
  */
+import * as coreDecorators from 'core-decorators'
 import { inMatchLike } from "@/settings/matches"
 import { inUsernameLike, inUsernames } from "@/settings/uids-usernames"
 import { HasRule } from "./base-rules"
@@ -11,7 +12,8 @@ import { HasRule } from "./base-rules"
 export class RankUpRule extends HasRule {
     mainSelector = '.rank-wrap'
     innerSelector = '.info .name'
-    bingo(element: Element) {
+    @coreDecorators.override
+    bingo(element: Element): boolean {
         return inUsernames(element.innerHTML)
     }
 }
@@ -21,6 +23,7 @@ export class RankUpRule extends HasRule {
 export class RandomVideoTitleRule extends HasRule {
     mainSelector = '.video-card-reco'
     innerSelector = 'img'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inMatchLike(element.getAttribute('alt'))
     }
@@ -32,6 +35,7 @@ export class RandomVideoTitleRule extends HasRule {
 export class SlideRule extends HasRule {
     mainSelector = '.van-slide .item';
     innerSelector = 'img'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inMatchLike(element.getAttribute('alt'))
     }
@@ -42,6 +46,7 @@ export class SlideRule extends HasRule {
 export class VideoCardTitleRule extends HasRule {
     mainSelector = '.video-card-common'
     innerSelector = 'a.title'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inMatchLike(element.getAttribute('title'))
     }
@@ -52,6 +57,7 @@ export class VideoCardTitleRule extends HasRule {
 export class VideoCardUpRule extends HasRule {
     mainSelector = '.video-card-common'
     innerSelector = 'a.up'
+    @coreDecorators.override
     bingo(element: Element): boolean {
         return inUsernameLike(element.innerHTML)
     }
