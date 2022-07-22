@@ -24,7 +24,7 @@ export function initVideoPage(): void {
         undefined,
         (node) => {
             // node.remove()后页面报错, 使用display隐藏
-            (node as any).attributeStyleMap.set('display', 'none')
+            (node as any).style.display = 'none'
             return false;
         }
     )
