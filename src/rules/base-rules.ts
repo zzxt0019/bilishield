@@ -95,7 +95,16 @@ let checkerMap: Map<string, Checker[]> = new Map()
  * @param innerSelector 内部选择器
  * @param bingo 内部对象是否符合删除标准
  */
-export function registerRule(mainSelector: string, innerSelector: string | undefined = undefined, bingo: (element: Element) => boolean, removeAction: removeAction = 'remove'): void {
+export function registerRule(...args: [
+    selector: [mainSelector: string, innerSelector?: string], removeAction?: removeAction
+] | [
+    selector: [mainSelector: string, innerSelector?: string], bingo: (element: Element) => boolean, removeAction?: removeAction
+]): void {
+    let mainSelector: string = args[0][0];
+    let innerSelector: string | undefined = args[0][1];
+    let bingo = typeof args[1] === 'function' ? args[1] : () => true;
+    let removeAction: removeAction = args[2] ?? 'remove';
+
     let _checkers = checkerMap.get(JSON.stringify({ mainSelector, removeAction }));
     let checkers = _checkers ? _checkers : []
     checkers.push(new Checker(innerSelector, bingo))

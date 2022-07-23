@@ -5,24 +5,23 @@ import { registerRule } from "./base-rules";
  */
 export function initVideoPage(): void {
     registerRule(
-        '.list-item',  // 主评论 
-        '.sailing-img',  // 卡片(card)
+        ['.list-item',  // 主评论 
+            '.sailing-img'],  // 卡片(card)
         node => checkCardLike(node.getAttribute('alt'))
     )
     registerRule(
-        '.list-item',  // 主评论
-        'p.text img',  // 评论中的图片(card)
+        ['.list-item',  // 主评论
+            'p.text img'],  // 评论中的图片(card)
         node => checkCardLike(node.getAttribute('alt'))
     )
     registerRule(
-        '.reply-item',  // 子评论
-        'img',  // 子评论中的图片(card)
+        ['.reply-item',  // 子评论
+            'img'],  // 子评论中的图片(card)
         node => checkCardLike(node.getAttribute('alt'))
     )
     registerRule(
-        'a.ad-report',  // 广告
-        undefined,
-        () => true,
+        ['a.ad-report',  // 广告
+        ],
         'display'
     )
 }

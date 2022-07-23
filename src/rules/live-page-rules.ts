@@ -4,18 +4,18 @@ import { registerRule } from "./base-rules";
 let danmakuMap: Map<string, number> = new Map()
 export function initLivePage(): void {
     registerRule(
-        '.chat-item.danmaku-item',  // 右侧弹幕 屏蔽matches发言
-        undefined,
+        ['.chat-item.danmaku-item',  // 右侧弹幕 屏蔽matches发言
+        ],
         (node) => checkMatchLike(node.getAttribute('data-danmaku'))
     )
     registerRule(
-        '.bilibili-danmaku.mode-roll',  // 中央弹幕 屏蔽matches发言
-        undefined,
+        ['.bilibili-danmaku.mode-roll',  // 中央弹幕 屏蔽matches发言
+        ],
         (node) => checkMatchLike(node.getAttribute('data-danmaku'))
     )
     registerRule(
-        '.chat-item.danmaku-item',  // 右侧弹幕
-        undefined,
+        ['.chat-item.danmaku-item',  // 右侧弹幕
+        ],
         (node) => {
             /**
              * 屏蔽带粉丝牌子的发言
@@ -57,8 +57,8 @@ export function initLivePage(): void {
         }
     )
     registerRule(
-        '.bilibili-danmaku.mode-roll',  // 中央弹幕
-        undefined,
+        ['.bilibili-danmaku.mode-roll',  // 中央弹幕
+        ],
         node => {
             let text = node.innerHTML
             let lastCount = danmakuMap.get(text)
