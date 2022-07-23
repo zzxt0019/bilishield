@@ -90,11 +90,21 @@ class OrRule implements Rule {
  */
 let checkerMap: Map<string, Checker[]> = new Map()
 /**
- * 注册检查器
- * @param mainSelector 主选择器 
- * @param innerSelector 内部选择器
- * @param bingo 内部对象是否符合删除标准
+ * 
+ * @param selector.arg0 主选择器
+ * @param selector.arg1 内部选择器
+ * @param removeAction 移除方式
+ * 
  */
+export function registerRule(selector: [mainSelector: string, innerSelector?: string], removeAction?: removeAction): void;
+/**
+ * 
+ * @param selector.arg0 主选择器
+ * @param selector.arg1 内部选择器
+ * @param bingo 是否删除的判断标准
+ * @param removeAction 移除方式
+ */
+export function registerRule(selector: [mainSelector: string, innerSelector?: string], bingo: (element: Element) => boolean, removeAction?: removeAction): void;
 export function registerRule(...args: [
     selector: [mainSelector: string, innerSelector?: string], removeAction?: removeAction
 ] | [
