@@ -1,6 +1,7 @@
 import { initLivePage } from "./live-page-rules";
 import { initMainPage } from "./main-page-rules";
 import { initVideoPage } from "./video-page-rules";
+type removeAction = 'remove' | 'display'
 /**
  * 规则接口
  */
@@ -9,12 +10,18 @@ export interface Rule {
      * 主选择器
      */
     mainSelector: string
+    removeAction: removeAction
     /**
      * 是否移除
      * @param mainElement 主对象
      * @returns {boolean} 是否移除
      */
     ifRemove(mainElement: Element): boolean
+    /**
+     * 执行规则
+     * @param mainElement 主对象 
+     */
+    run(mainElement: Element): void
 }
 /**
  * 检查器
@@ -54,7 +61,7 @@ export class Checker {
  * 满足任意一个检查器 即删除
  */
 class OrRule implements Rule {
-    constructor(public mainSelector: string, public checkers: Checker[]) {
+    constructor(public mainSelector: string, public checkers: Checker[], public removeAction: removeAction = 'remove') {
     }
     ifRemove(element: Element): boolean {
         for (const checker of this.checkers) {
@@ -64,9 +71,22 @@ class OrRule implements Rule {
         }
         return false;
     }
+    run(element: Element): void {
+        if (this.ifRemove(element)) {
+            switch (this.removeAction) {
+                case 'remove':
+                    element.remove()
+                    break;
+                case 'display':
+                    (element as any).style.display = 'none'
+                    break;
+            }
+        }
+    }
 }
 /**
  * 注册进来的检查器集合
+ * key: { mainSelector, removeAction }
  */
 let checkerMap: Map<string, Checker[]> = new Map()
 /**
@@ -75,12 +95,12 @@ let checkerMap: Map<string, Checker[]> = new Map()
  * @param innerSelector 内部选择器
  * @param bingo 内部对象是否符合删除标准
  */
-export function registerRule(mainSelector: string, innerSelector: string | undefined, bingo: (element: Element) => boolean): void {
-    let _checkers = checkerMap.get(mainSelector);
+export function registerRule(mainSelector: string, innerSelector: string | undefined = undefined, bingo: (element: Element) => boolean, removeAction: removeAction = 'remove'): void {
+    let _checkers = checkerMap.get(JSON.stringify({ mainSelector, removeAction }));
     let checkers = _checkers ? _checkers : []
     checkers.push(new Checker(innerSelector, bingo))
     if (!_checkers) {
-        checkerMap.set(mainSelector, checkers)
+        checkerMap.set(JSON.stringify({ mainSelector, removeAction }), checkers)
     }
 }
 /**
@@ -92,10 +112,12 @@ export function initRules(): Rule[] {
     initVideoPage()
     initLivePage()
     let orRules: OrRule[] = []
-    checkerMap.forEach((checkers: Checker[], mainSelector: string) => {
+    checkerMap.forEach((checkers: Checker[], key: string) => {
+        let { mainSelector, removeAction } = JSON.parse(key)
         orRules.push(new OrRule(
             mainSelector,
-            checkers
+            checkers,
+            removeAction
         ))
     })
     return orRules

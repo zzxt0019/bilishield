@@ -18,7 +18,6 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "arrive": "^2.4.1",
-    "core-decorators": "^0.20.0"
+    "arrive": "^2.4.1"
   }
 }

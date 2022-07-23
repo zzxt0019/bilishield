@@ -11,11 +11,12 @@ function init(): void {
   initMatches()
   // 写更多的规则
   for (const rule of initRules()) {
-    document.arrive(rule.mainSelector, { fireOnAttributesModification: true, onceOnly: false, existing: true },
-      (element: Element) => {
-        if (rule.ifRemove(element)) {
-          element.remove()
-        }
-      })
+    document.arrive(rule.mainSelector, {
+      fireOnAttributesModification: true,
+      onceOnly: false,
+      existing: true
+    }, (element: Element) => {
+      rule.run(element)
+    })
   }
 }
