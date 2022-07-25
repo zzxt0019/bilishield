@@ -1,4 +1,5 @@
 import { ESBuildMinifyPlugin } from 'esbuild-loader'
+const { VueLoaderPlugin } = require("vue-loader");
 import * as fs from 'fs'
 import * as path from 'path'
 import { type Configuration } from 'webpack'
@@ -41,8 +42,19 @@ const config: Configuration = {
           target: 'es2015',
         },
       },
+      {
+        test: /\.vue$/,
+        use: "vue-loader",
+      },
+      {
+        test: /\.css|\.less$/,
+        use: ["style-loader", "css-loader", "less-loader"],
+      },
     ],
   },
+  plugins:[
+      new VueLoaderPlugin(),
+  ]
 }
 
 export default config
