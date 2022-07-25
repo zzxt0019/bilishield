@@ -113,7 +113,7 @@ export function registerRule(...args: [
     let mainSelector: string = args[0][0];
     let innerSelector: string | undefined = args[0][1];
     let bingo = typeof args[1] === 'function' ? args[1] : () => true;
-    let removeAction: removeAction = args[2] ?? 'remove';
+    let removeAction: removeAction = args[2] ?? 'display';
 
     let _checkers = checkerMap.get(JSON.stringify({ mainSelector, removeAction }));
     let checkers = _checkers ? _checkers : []

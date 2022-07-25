@@ -22,6 +22,5 @@ export function initVideoPage(): void {
     registerRule(
         ['a.ad-report',  // 广告
         ],
-        'display'
     )
 }
