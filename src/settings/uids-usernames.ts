@@ -18,7 +18,7 @@ export function addUids(input: string): void {
 
         // 添加时查询存储 <uid, username>
         for (const uid of uids) {
-            setTimeout(fetchUid2Name(uid))
+            setTimeout(() => fetchUid2Name(uid))
         }
     }
 }

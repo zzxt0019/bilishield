@@ -11,6 +11,9 @@ function initBox() {
   Vue.createApp(App).mount('#APP_ID');
 }
 function init(): void {
+  // GM_setValue('uids',[])
+  // GM_setValue('matches',[])
+  // GM_setValue('cards',[])
   initBox()
   // 写更多的规则
   for (const rule of initRules()) {
