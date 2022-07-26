@@ -3,20 +3,17 @@ import { checkUid } from '@/settings/uids-usernames';
 import { registerRule } from "./base-rules";
 let danmakuMap: Map<string, number> = new Map()
 export function initLivePage(): void {
-    registerRule(
-        ['.chat-item.danmaku-item',  // 右侧弹幕 屏蔽matches发言
-        ],
-        (node) => checkMatchLike(node.getAttribute('data-danmaku'))
-    )
-    registerRule(
-        ['.bilibili-danmaku.mode-roll',  // 中央弹幕 屏蔽matches发言
-        ],
-        (node) => checkMatchLike(node.getAttribute('data-danmaku'))
-    )
-    registerRule(
-        ['.chat-item.danmaku-item',  // 右侧弹幕
-        ],
-        (node) => {
+    registerRule({
+        mainSelector: '.chat-item.danmaku-item',  // 右侧弹幕 屏蔽matches发言
+        bingo: node => checkMatchLike(node.getAttribute('data-danmaku'))
+    })
+    registerRule({
+        mainSelector: '.bilibili-danmaku.mode-roll',  // 中央弹幕 屏蔽matches发言
+        bingo: node => checkMatchLike(node.getAttribute('data-danmaku'))
+    })
+    registerRule({
+        mainSelector: '.chat-item.danmaku-item',  // 右侧弹幕
+        bingo: node => {
             /**
              * 屏蔽带粉丝牌子的发言
              */
@@ -55,11 +52,10 @@ export function initLivePage(): void {
             }
             return false;
         }
-    )
-    registerRule(
-        ['.bilibili-danmaku.mode-roll',  // 中央弹幕
-        ],
-        node => {
+    })
+    registerRule({
+        mainSelector: '.bilibili-danmaku.mode-roll',  // 中央弹幕
+        bingo: node => {
             let text = node.innerHTML
             let lastCount = danmakuMap.get(text)
             if (lastCount) {
@@ -68,5 +64,5 @@ export function initLivePage(): void {
             }
             return false
         }
-    )
+    })
 }

@@ -78,7 +78,7 @@ class OrRule implements Rule {
                     element.remove()
                     break;
                 case 'display':
-                    (element as any).style.display = 'none'
+                    (element as any).style.setProperty('display', 'none', 'important')
                     break;
             }
         }
@@ -89,35 +89,17 @@ class OrRule implements Rule {
  * key: { mainSelector, removeAction }
  */
 let checkerMap: Map<string, Checker[]> = new Map()
-/**
- * 
- * @param selector.arg0 主选择器
- * @param selector.arg1 内部选择器
- * @param removeAction 移除方式
- * 
- */
-export function registerRule(selector: [mainSelector: string, innerSelector?: string], removeAction?: removeAction): void;
-/**
- * 
- * @param selector.arg0 主选择器
- * @param selector.arg1 内部选择器
- * @param bingo 是否删除的判断标准
- * @param removeAction 移除方式
- */
-export function registerRule(selector: [mainSelector: string, innerSelector?: string], bingo: (element: Element) => boolean, removeAction?: removeAction): void;
-export function registerRule(...args: [
-    selector: [mainSelector: string, innerSelector?: string], removeAction?: removeAction
-] | [
-    selector: [mainSelector: string, innerSelector?: string], bingo: (element: Element) => boolean, removeAction?: removeAction
-]): void {
-    let mainSelector: string = args[0][0];
-    let innerSelector: string | undefined = args[0][1];
-    let bingo = typeof args[1] === 'function' ? args[1] : () => true;
-    let removeAction: removeAction = args[2] ?? 'display';
 
+export function registerRule(params: {
+    mainSelector: string
+    innerSelector?: string
+    bingo?: (element: Element) => boolean
+    removeAction?: removeAction
+}): void {
+    let { mainSelector, innerSelector, bingo, removeAction } = params
     let _checkers = checkerMap.get(JSON.stringify({ mainSelector, removeAction }));
     let checkers = _checkers ? _checkers : []
-    checkers.push(new Checker(innerSelector, bingo))
+    checkers.push(new Checker(innerSelector, bingo ?? (() => true)))
     if (!_checkers) {
         checkerMap.set(JSON.stringify({ mainSelector, removeAction }), checkers)
     }
