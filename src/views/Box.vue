@@ -68,7 +68,9 @@ GM_registerMenuCommand("展示Vue", () => {
   background-color: #000;
   bottom: 6vh;
   color: #777777;
-  position: fixed;
+  position: absolute;
+  top:10px;
+  right:10px;
   z-index: 99999;
 }
 </style>
