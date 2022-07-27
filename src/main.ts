@@ -1,6 +1,9 @@
 import 'arrive';
 import * as Vue from 'vue';
-import { initRules } from './rules/base-rules';
+import { BaiduMainPage } from './rules/baidu-main-page';
+import { LivePage } from './rules/live-page';
+import { MainPage } from './rules/main-page';
+import { VideoPage } from './rules/video-page';
 import App from "./views/Box.vue";
 
 init()
@@ -10,19 +13,28 @@ function initBox() {
   document.body.appendChild(div);
   Vue.createApp(App).mount('#APP_ID');
 }
+function initPages() {
+  return [
+    new BaiduMainPage().init(),
+    new MainPage().init(),
+    new VideoPage().init(),
+    new LivePage().init(),
+  ]
+}
 function init(): void {
-  // GM_setValue('uids',[])
-  // GM_setValue('matches',[])
-  // GM_setValue('cards',[])
   initBox()
   // 写更多的规则
-  for (const rule of initRules()) {
-    document.arrive(rule.mainSelector, {
-      fireOnAttributesModification: true,
-      onceOnly: false,
-      existing: true
-    }, (element: Element) => {
-      rule.run(element)
-    })
-  }
+  initPages().forEach(page => {
+    if (page.url.test(location.href)) {
+      for (const rule of page.rules()) {
+        document.arrive(rule.mainSelector, {
+          fireOnAttributesModification: true,
+          onceOnly: false,
+          existing: true
+        }, (element: Element) => {
+          rule.run(element)
+        })
+      }
+    }
+  })
 }
