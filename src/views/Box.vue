@@ -1,6 +1,18 @@
 <template>
   <div class="_main" v-if="mainIf">
     <div class="_box">
+      <div v-if="status.debug && boxData.pages.length !== 0">
+        <div>当前正则</div>
+        <div v-for="page in boxData.pages">
+          <span :style="{color: page.working?'green':'red'}">{{ page.url }}</span>
+          <button @click="page.working?page.stopRule():page.startRule()">启停</button>
+        </div>
+      </div>
+      <div v-if="status.debug">
+        <div>测试正则</div>
+        <input type="text" v-model="input.regexp">
+        <span :style="{color: regSuccess?'green':'red'}">●</span>
+      </div>
       <div>
         <div>卡片:</div>
         <span v-for="item in Cards.fetchCards()">{{ item }},</span>
@@ -37,29 +49,40 @@
         <button @click="download()">下载配置</button>
       </div>
       <div>
-        <button @click="mainIf=false">取消</button>
+        <button @click="mainIf = false">取消</button>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
+import { boxData } from "./box-data";
 import * as Cards from "@/settings/cards";
 import * as Matches from "@/settings/matches";
 import * as UUs from "@/settings/uids-usernames";
 import { ref } from "vue";
+import { computed } from "@vue/reactivity";
 class Input {
   cards: string = ''
   uids: string = ''
   matches: string = ''
+  regexp: string = ''
   file?: File
 }
 class Status {
   readingFile: boolean = false
+  debug: boolean = false
 }
 const mainIf = ref(false);
 const input = ref(new Input())
 const status = ref(new Status())
 const config = ref("");
+
+const regSuccess = computed(() => {
+  return input.value.regexp?.length > 2
+    && input.value.regexp[0] === '/'
+    && input.value.regexp[input.value.regexp.length - 1] === '/'
+    && new RegExp(input.value.regexp.substring(1, input.value.regexp.length - 1)).test(boxData.window.location.href)
+})
 // 文件变化
 function fileChange(e: any) {
   input.value.file = e.target.files[0]
@@ -117,9 +140,15 @@ function upload(rewrite: boolean = false) {
     Matches.addMatches(json.matches.join(' '))
   }
 }
+// todo 切换页面 vue没有后 要通过这个重置
 GM_registerMenuCommand("展示Vue", () => {
+  status.value.debug = false
   mainIf.value = !mainIf.value;
 });
+GM_registerMenuCommand("展示Vue debug", () => {
+  status.value.debug = true
+  mainIf.value = !mainIf.value;
+})
 </script>
 <style scoped lang="less">
 ._main {

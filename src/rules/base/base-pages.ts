@@ -33,4 +33,23 @@ export abstract class Page {
         })
         return orRules
     }
+    working: boolean = false
+    startRule() {
+        for (const rule of this.rules()) {
+            document.arrive(rule.mainSelector, {
+                fireOnAttributesModification: true,
+                onceOnly: false,
+                existing: true
+            }, (element: Element) => {
+                rule.run(element)
+            })
+        }
+        this.working = true
+    }
+    stopRule() {
+        for (const rule of this.rules()) {
+            document.unbindArrive(rule.mainSelector);
+        }
+        this.working = false
+    }
 }
