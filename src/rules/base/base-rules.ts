@@ -1,7 +1,4 @@
-import { initLivePage } from "./live-page-rules";
-import { initMainPage } from "./main-page-rules";
-import { initVideoPage } from "./video-page-rules";
-type removeAction = 'remove' | 'display'
+export type RemoveAction = 'remove' | 'display'
 /**
  * 规则接口
  */
@@ -10,7 +7,7 @@ export interface Rule {
      * 主选择器
      */
     mainSelector: string
-    removeAction: removeAction
+    removeAction: RemoveAction
     /**
      * 是否移除
      * @param mainElement 主对象
@@ -60,8 +57,8 @@ export class Checker {
  * OR规则
  * 满足任意一个检查器 即删除
  */
-class OrRule implements Rule {
-    constructor(public mainSelector: string, public checkers: Checker[], public removeAction: removeAction = 'remove') {
+export class OrRule implements Rule {
+    constructor(public mainSelector: string, public checkers: Checker[], public removeAction: RemoveAction) {
     }
     ifRemove(element: Element): boolean {
         for (const checker of this.checkers) {
@@ -83,43 +80,4 @@ class OrRule implements Rule {
             }
         }
     }
-}
-/**
- * 注册进来的检查器集合
- * key: { mainSelector, removeAction }
- */
-let checkerMap: Map<string, Checker[]> = new Map()
-
-export function registerRule(params: {
-    mainSelector: string
-    innerSelector?: string
-    bingo?: (element: Element) => boolean
-    removeAction?: removeAction
-}): void {
-    let { mainSelector, innerSelector, bingo, removeAction } = params
-    let _checkers = checkerMap.get(JSON.stringify({ mainSelector, removeAction }));
-    let checkers = _checkers ? _checkers : []
-    checkers.push(new Checker(innerSelector, bingo ?? (() => true)))
-    if (!_checkers) {
-        checkerMap.set(JSON.stringify({ mainSelector, removeAction }), checkers)
-    }
-}
-/**
- * 初始化规则
- * @returns 规则
- */
-export function initRules(): Rule[] {
-    initMainPage()
-    initVideoPage()
-    initLivePage()
-    let orRules: OrRule[] = []
-    checkerMap.forEach((checkers: Checker[], key: string) => {
-        let { mainSelector, removeAction } = JSON.parse(key)
-        orRules.push(new OrRule(
-            mainSelector,
-            checkers,
-            removeAction
-        ))
-    })
-    return orRules
 }
