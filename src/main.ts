@@ -8,7 +8,7 @@ import { boxData } from './views/box-data';
 import App from "./views/Box.vue";
 
 let pages = [
-  new BaiduMainPage().init(),
+  // new BaiduMainPage().init(),
   new MainPage().init(),
   new VideoPage().init(),
   new LivePage().init(),
