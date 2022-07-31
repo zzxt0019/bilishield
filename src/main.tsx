@@ -38,5 +38,5 @@ function initReact() {
   let div = document.createElement("div");
   div.setAttribute("id", 'APP_ID');
   document.body.appendChild(div);
-  ReactDOM.render( <h1>123</h1> as ReactElement ,document.getElementById('APP_ID'))
+  ReactDOM.render( <h1>1234</h1> as ReactElement ,document.getElementById('APP_ID'))
 }

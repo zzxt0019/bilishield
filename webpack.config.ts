@@ -1,4 +1,3 @@
-// const { VueLoaderPlugin } = require("vue-loader");
 import * as fs from 'fs'
 import * as path from 'path'
 import { BannerPlugin, type Configuration } from 'webpack'
@@ -20,15 +19,7 @@ const config: Configuration = {
   },
 
   optimization: {
-    // minimizer: [
-    //   new ESBuildMinifyPlugin({
-    //     target: 'es2015',
-    //     banner: fs
-    //       .readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
-    //       .replace("${timestamp}", String(new Date().getTime()))
-    //       .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
-    //   }),
-    // ],
+    minimize: false
   },
 
   module: {
@@ -40,7 +31,7 @@ const config: Configuration = {
         //   loader: 'ts',
         //   target: 'es2015',
         // },
-        use: ['babel-loader','ts-loader']
+        use: ['babel-loader', 'ts-loader']
       },
       // {
       //   test: /\.vue$/,
@@ -55,8 +46,7 @@ const config: Configuration = {
   plugins: [
     new BannerPlugin({
       raw: true,
-      banner: fs
-        .readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
+      banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
         .replace("${timestamp}", String(new Date().getTime()))
         .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
     })
