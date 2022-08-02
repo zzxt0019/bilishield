@@ -26,21 +26,18 @@ const config: Configuration = {
     rules: [
       {
         test: /\.ts|\.tsx$/i,
-        // loader: 'babel-loader',
-        // options: {
-        //   loader: 'ts',
-        //   target: 'es2015',
-        // },
+        exclude: /node_modules/,
         use: ['babel-loader', 'ts-loader']
       },
-      // {
-      //   test: /\.vue$/,
-      //   use: "vue-loader",
-      // },
       {
         test: /\.css|\.less$/,
+        exclude: /node_modules/,
         use: ["style-loader", "css-loader", "less-loader"],
       },
+      {
+        test: /\.yml|\.yaml$/,
+        use: ["raw-loader"]
+      }
     ],
   },
   plugins: [
@@ -50,7 +47,6 @@ const config: Configuration = {
         .replace("${timestamp}", String(new Date().getTime()))
         .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
     })
-    // new VueLoaderPlugin(),
   ]
 }
 

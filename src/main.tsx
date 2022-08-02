@@ -34,7 +34,12 @@ function init(): void {
   //   }
   // })
 }
+// import content from './test.json!text';
+import * as y from 'yaml'
+import content from './test.yaml'
+// import * as fs from 'fs'
 function initReact() {
+  console.log(y.parse(content))
   let div = document.createElement("div");
   div.setAttribute("id", 'APP_ID');
   document.body.appendChild(div);

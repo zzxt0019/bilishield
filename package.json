@@ -16,6 +16,7 @@
     "css-loader": "^6.7.1",
     "esbuild-loader": "^2.19.0",
     "less-loader": "^11.0.0",
+    "raw-loader": "^4.0.2",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.9.1",
@@ -27,6 +28,7 @@
     "arrive": "^2.4.1",
     "babel": "^6.23.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "yaml": "^2.1.1"
   }
 }
