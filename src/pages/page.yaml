@@ -1,0 +1,6 @@
+baidu: 
+  name: 百度
+  regexp:
+    pattern: www.baidu.com 
+    # modifiers:
+  
