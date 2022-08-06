@@ -30,9 +30,9 @@ const config: Configuration = {
         use: ['babel-loader', 'ts-loader']
       },
       {
-        test: /\.css|\.less$/,
-        exclude: /node_modules/,
-        use: ["style-loader", "css-loader", "less-loader"],
+        test: /\.raw\.css$/,
+        exclude: /node_module/,
+        use: ["raw-loader"]
       },
       {
         test: /\.yml|\.yaml$/,

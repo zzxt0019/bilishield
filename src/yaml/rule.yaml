@@ -1,0 +1,9 @@
+baidu_r:
+  name: baidu guize
+  page: baidu
+  mainSelector: a
+  checker:
+    # innerSelector:
+    setting: baidu_setting
+    innerHTML: true
+    

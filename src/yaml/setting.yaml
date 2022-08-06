@@ -1,5 +1,4 @@
 baidu_setting:
   name: 百度配置
-  page: baidu
   data: 
    - 'ts'
