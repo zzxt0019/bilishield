@@ -19,6 +19,7 @@ export class Settings {
         Settings.settings = yaml.parse(settingText)
     }
     static getSetting(key: string): string[] {
-        return this.settings[key].data
+        // return this.settings[key].data
+        return GM_getValue('settings.'+key, {data:[]}).data
     }
 }

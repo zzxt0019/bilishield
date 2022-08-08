@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "arrive": "^2.4.1",
-    "babel": "^6.23.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "yaml": "^2.1.1"
