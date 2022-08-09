@@ -1,5 +1,6 @@
 import { DoRuleN } from "@/config/do-rule";
 import { Rule } from "@/config/rule";
+import { Settings } from "@/config/setting";
 import * as yaml from "yaml";
 import { Page } from '../config/page';
 import pageText from '../yaml/page.yaml';
@@ -15,6 +16,9 @@ export function readFiles() {
     Object.keys(ruleData).forEach(ruleKey => {
         let rule0 = ruleData[ruleKey]
         rule0.key = ruleKey
+        if(rule0.setting) {
+            rule0.setting = Settings.getSystemSettings().get(rule0.setting)
+        }
         pageMap.get(rule0.page)?.insert(new Rule(rule0))
     })
     console.log(pageMap)

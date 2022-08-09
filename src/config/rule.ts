@@ -1,5 +1,4 @@
 import { Checker } from './checker';
-import { Setting } from './setting';
 /**
  * 规则配置
  */

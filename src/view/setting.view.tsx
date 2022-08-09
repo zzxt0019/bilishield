@@ -1,4 +1,4 @@
-import { Setting } from "@/config/setting";
+import { Setting, Settings } from "@/config/setting";
 import React from "react";
 
 export class SettingView extends React.Component {
@@ -10,23 +10,26 @@ export class SettingView extends React.Component {
         input: React.createRef<HTMLInputElement>()
     }
     render() {
+        console.log('this.props.setting', this.props.setting)
+        console.log(Settings.getSettingValue(this.props.setting));
+
         return <div>
             <div>{this.props.setting.key + ':' + this.props.setting.name}</div>
             <div>{  // 展示
-                ' ' + this.props.setting.data.join(',')}</div>
+                ' ' + Settings.getSettingValue(this.props.setting).join(',')}</div>
             <input ref={this.REFS.input}></input>
             <button onClick={() => {
                 // 添加 保存到GM
                 if (this.REFS.input.current) {
-                    this.props.setting.data.push(this.REFS.input.current.value)
+                    Settings.addSettingValue(this.props.setting, this.REFS.input.current.value)
                 }
-                GM_setValue('settings.' + this.props.setting.key, this.props.setting)
                 this.props.updateBox()
             }}>添加</button>
             <button onClick={() => {
                 // 删除 保存到GM
-                this.props.setting.data = this.props.setting.data.filter(item => item !== this.REFS.input.current?.value)
-                GM_setValue('settings.' + this.props.setting.key, this.props.setting)
+                if (this.REFS.input.current) {
+                    Settings.delSettingValue(this.props.setting, this.REFS.input.current.value)
+                }
                 this.props.updateBox()
             }}>删除</button>
         </div>

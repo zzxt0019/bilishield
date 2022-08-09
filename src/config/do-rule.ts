@@ -77,7 +77,7 @@ export class DoRuleN extends DoRule {
         }
         // 是innerHTML 判断innerHTML是否在data的范围
         if (checker.innerHTML && checker.setting) {
-            for (const settingData of Settings.getSetting(checker.setting)) {
+            for (const settingData of Settings.getSettingValue(checker.setting)) {
                 if (element.innerHTML.includes(settingData)) {
                     return true;
                 }
@@ -85,7 +85,7 @@ export class DoRuleN extends DoRule {
         }
         // 有attribute 判断attribute的value是否在data的范围
         if (checker.attribute && checker.setting) {
-            for (const settingData of Settings.getSetting(checker.setting)) {
+            for (const settingData of Settings.getSettingValue(checker.setting)) {
                 if (element.getAttribute(checker.attribute)?.includes(settingData)) {
                     return true;
                 }
