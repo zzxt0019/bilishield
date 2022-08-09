@@ -5,12 +5,6 @@ import styleText from './main.raw.css';
 import { Box } from "./view/box";
 init();
 function init(): void {
-     console.log(GM_listValues())
-     GM_listValues().forEach(key => {
-          console.log(key, GM_getValue(key))
-     })
-     // console.log(GM_setValue('settings', ['baidu_setting']))
-     // console.log(GM_setValue('settings.baidu_setting', {key:'baidu_setting',name:'百度配置',data:['ts']}))
      let root = createReact();
      createStyle()
      // 监听APP_ID

@@ -6,4 +6,11 @@ baidu_r:
     # innerSelector:
     setting: baidu_setting
     innerHTML: true
-    
+bilibili_rank_wrap:
+  name: 比例首页排行榜 up用户名
+  page: bilibili
+  mainSelector: .rank-wrap
+  checker:
+    innerSelector: .subtitle .name
+    setting: username
+    innerHTML: true

@@ -3,4 +3,8 @@ baidu:
   regexp:
     pattern: www.baidu.com 
     # modifiers:
+bilibili:
+  name: 比例
+  regexp:
+    pattern: www.bilibili.com
   

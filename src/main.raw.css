@@ -11,3 +11,6 @@
   position: fixed;
   background-color: #000;
 }
+._main ._box button {
+  background-color: aqua;
+}

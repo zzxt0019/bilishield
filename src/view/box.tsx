@@ -4,6 +4,7 @@ import { Page } from "../config/page";
 import { readFiles } from "../test/read-system-file";
 import { PageView } from "./page.view";
 import { SettingView } from "./setting.view";
+import { UidUsernameView } from "./sp/uid-username.view";
 export class Box extends React.Component {
     REFS: any = {
         // 绑定ref
@@ -33,6 +34,20 @@ export class Box extends React.Component {
                                 this.forceUpdate()
                             }} />)}
                 </div>
+                <hr />
+                <div>
+                    <UidUsernameView updateBox={() => {
+                        // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
+                        for (const page of this.state.pageMap.values()) {
+                            if (page.working) {
+                                page.stop()
+                                page.start()
+                            }
+                        }
+                        this.forceUpdate()
+                    }} />
+                </div>
+                <hr />
                 <div>
                     {  // 配置
                         [...Settings.getSystemSettings().values()].map(setting => <SettingView
