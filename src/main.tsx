@@ -9,7 +9,6 @@ function init(): void {
      GM_listValues().forEach(key => {
           console.log(key, GM_getValue(key))
      })
-     GM_deleteValue('settings.undefined')
      // console.log(GM_setValue('settings', ['baidu_setting']))
      // console.log(GM_setValue('settings.baidu_setting', {key:'baidu_setting',name:'百度配置',data:['ts']}))
      let root = createReact();
