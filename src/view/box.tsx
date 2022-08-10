@@ -8,6 +8,7 @@ import { UidUsernameView } from "./sp/uid-username.view";
 export class Box extends React.Component {
     REFS: any = {
         // 绑定ref
+        main: React.createRef<HTMLDivElement>()
     }
     state = {
         pageMap: new Map<string, Page>()
@@ -24,7 +25,7 @@ export class Box extends React.Component {
         }
     }
     render() {
-        return <div className="_main">
+        return <div className="_main" ref={this.REFS.main}>
             <div className="_box">
                 <div>
                     {  // 页面
@@ -63,6 +64,9 @@ export class Box extends React.Component {
                                 this.forceUpdate()
                             }} />)}
                 </div>
+                <div><button onClick={() => {
+                    this.REFS.main.current.style.setProperty('display', 'none')
+                }}>取消</button></div>
             </div>
         </div>
     }
