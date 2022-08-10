@@ -1,6 +1,6 @@
-import { Checker } from './checker';
-import { DoRuleN } from './do-rule';
-import { Rule } from './rule';
+import { Checker } from '../rule/checker';
+import { DoRuleN } from '../rule/do-rule';
+import { Rule } from '../rule/rule';
 /**
  * 页面配置
  */

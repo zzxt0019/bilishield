@@ -1,8 +1,8 @@
 import { DoRuleN } from "@/config/do-rule";
 import { Rule } from "@/config/rule";
-import { Settings } from "@/config/setting";
+import { Settings } from "@/config/setting/setting";
 import * as yaml from "yaml";
-import { Page } from '../config/page';
+import { Page } from '../config/page/page';
 import pageText from '../yaml/page.yaml';
 import ruleText from '../yaml/rule.yaml';
 export function readFiles() {

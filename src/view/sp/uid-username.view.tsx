@@ -1,4 +1,4 @@
-import { UidUsername } from "@/config/sp/uid-username";
+import { UidUsername } from "@/config/setting/special/uid-username";
 import React from "react";
 
 export class UidUsernameView extends React.Component {

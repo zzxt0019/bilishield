@@ -1,6 +1,6 @@
-import { Settings } from "@/config/setting";
+import { Settings } from "@/config/setting/setting";
 import React from "react";
-import { Page } from "../config/page";
+import { Page } from "../config/page/page";
 import { readFiles } from "../test/read-system-file";
 import { PageView } from "./page.view";
 import { SettingView } from "./setting.view";

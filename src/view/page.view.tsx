@@ -1,4 +1,4 @@
-import { Page } from "@/config/page";
+import { Page } from "@/config/page/page";
 import React from "react";
 
 export class PageView extends React.Component {

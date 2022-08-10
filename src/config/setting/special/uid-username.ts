@@ -1,7 +1,7 @@
 import { DefaultSettings } from "../default-setting";
-import { SP } from "./sp";
+import { SpecialSetting } from "./special-setting";
 
-export class UidUsername extends SP {
+export class UidUsername extends SpecialSetting {
     get(key: 'uid' | 'username'): () => string[] {
         return () => {
             if (key === 'uid') {

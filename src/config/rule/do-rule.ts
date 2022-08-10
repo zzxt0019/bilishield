@@ -1,4 +1,4 @@
-import { Settings } from './setting';
+import { Settings } from '../setting/setting';
 import { Checker } from "./checker";
 
 /**

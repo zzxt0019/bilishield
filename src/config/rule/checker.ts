@@ -1,4 +1,4 @@
-import { Setting } from '@/config/setting';
+import { Setting } from '@/config/setting/setting';
 /**
  * 内部检查器配置 判断条件
  */

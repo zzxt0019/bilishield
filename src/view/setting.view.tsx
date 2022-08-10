@@ -1,4 +1,4 @@
-import { Setting, Settings } from "@/config/setting";
+import { Setting, Settings } from "@/config/setting/setting";
 import React from "react";
 
 export class SettingView extends React.Component {
