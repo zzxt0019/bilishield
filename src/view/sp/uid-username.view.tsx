@@ -5,7 +5,7 @@ export class UidUsernameView extends React.Component {
     uidusername = new UidUsername()
     input = React.createRef<HTMLInputElement>()
     props = {
-        updateBox:()=>{}
+        updateBox: () => { }
     }
     state = {
         inputUid: '',
@@ -26,12 +26,21 @@ export class UidUsernameView extends React.Component {
                         this.uidusername.add('uid')(this.input.current.value)
                     }
                     this.props.updateBox()
-                }}>添加</button><button onClick={() => {
+                }}>添加</button>
+                <button onClick={() => {
                     if (this.input.current) {
                         this.uidusername.del('uid')(this.input.current.value)
                     }
                     this.props.updateBox()
                 }}>删除</button>
+                <button onClick={() => {
+                    let uids = new Set(this.uidusername.get('uid')())
+                    GM_listValues()
+                        .filter(item => item.startsWith('uid_'))
+                        .filter(item => !uids.has(item.split('_')[1]))
+                        .forEach(item => GM_deleteValue(item))
+                    this.forceUpdate()
+                }}>清除缓存</button>
             </div>
         </div>
     }
