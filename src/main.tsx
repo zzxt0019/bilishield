@@ -24,6 +24,11 @@ function init(): void {
      }, () => {
           createStyle()
      })
+     // 油猴菜单展示/隐藏配置
+     GM_registerMenuCommand('配置', () => {
+          let main = document.querySelector('._main') as HTMLDivElement
+          main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none')
+     })
 }
 /**
  * 创建div 添加react组件
