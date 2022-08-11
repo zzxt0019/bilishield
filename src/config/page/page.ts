@@ -29,6 +29,9 @@ export class Page {
             })
         }
     }
+    isCurrent(): boolean {
+        return this.regexp.test(location.href)
+    }
     working = false
     checkerMap: Map<string, Checker[]> = new Map()
     insert(rule: Rule) {

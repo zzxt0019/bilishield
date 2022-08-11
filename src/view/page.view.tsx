@@ -21,7 +21,7 @@ export class PageView extends React.Component {
                 this.props.updateBox()
             }} 
             // 如果当前href不匹配 不可以换
-            disabled={!this.props.page.regexp.test(location.href)}>换</button>
+            disabled={!this.props.page.isCurrent()}>换</button>
         </div>
     }
 }
