@@ -1,4 +1,4 @@
-import { SpecialRule } from "./special-rule";
+import { SpecialRule } from "../special-rule";
 
 export class BaiduTest extends SpecialRule {
     pageKey = 'baidu'

@@ -1,4 +1,4 @@
-import { BaiduTest } from "./baidu-test"
+import { BaiduTest } from "./impl/baidu-test"
 import { SpecialRule } from "./special-rule"
 
 export class SpecialRules {

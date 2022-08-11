@@ -4,7 +4,7 @@ import { Page } from "../config/page/page";
 import { readFiles } from "../test/read-system-file";
 import { PageView } from "./page.view";
 import { SettingView } from "./setting.view";
-import { UidUsernameView } from "./sp/uid-username.view";
+import { UidUsernameView } from "./special/uid-username.view";
 export class Box extends React.Component {
     REFS: any = {
         // 绑定ref

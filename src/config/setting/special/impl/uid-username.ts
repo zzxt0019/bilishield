@@ -1,5 +1,5 @@
-import { DefaultSettings } from "../default-setting";
-import { SpecialSetting } from "./special-setting";
+import { DefaultSettings } from "../../default-setting";
+import { SpecialSetting } from "../special-setting";
 
 export class UidUsername extends SpecialSetting {
     get(key: 'uid' | 'username'): () => Promise<string[]> {
