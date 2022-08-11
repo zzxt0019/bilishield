@@ -10,7 +10,7 @@ declare module '*.yml' {
     const content: string;
     export default content;
 }
-declare module '*.raw.css' {
+declare module '*.css' {
     const content: string;
     export default content;
 }

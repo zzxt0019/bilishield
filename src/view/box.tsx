@@ -1,4 +1,5 @@
 import { Settings } from "@/config/setting/setting";
+import { Button } from "antd/lib/radio";
 import React from "react";
 import { Page } from "../config/page/page";
 import { readFiles } from "../test/read-system-file";
@@ -67,7 +68,11 @@ export class Box extends React.Component {
                 <div><button onClick={() => {
                     this.REFS.main.current.style.setProperty('display', 'none')
                 }}>取消</button></div>
+                <div>
+                    <Button type="dashed">测试</Button>
+                </div>
             </div>
+
         </div>
     }
     makeRef = (key: string) => {

@@ -25,7 +25,10 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "antd": "^4.22.4",
     "arrive": "^2.4.1",
+    "postcss": "^8.4.16",
+    "postcss-js": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "yaml": "^2.1.1"
