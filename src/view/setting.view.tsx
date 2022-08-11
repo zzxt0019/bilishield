@@ -2,6 +2,9 @@ import { Setting, Settings } from "@/config/setting/setting";
 import React from "react";
 
 export class SettingView extends React.Component {
+    constructor(any:any) {
+        super(any)
+    }
     props = {
         setting: {} as Setting,
         updateBox: () => { }

@@ -1,4 +1,5 @@
 import { UidUsername } from "@/config/setting/special/impl/uid-username";
+import { Button, InputNumber, Tag, Tooltip } from "antd";
 import React from "react";
 
 export class UidUsernameView extends React.Component {
@@ -33,35 +34,36 @@ export class UidUsernameView extends React.Component {
     render() {
         return <div>
             <div>uid名称: </div>
-            <div>{this.state.settings.map(item => `${item.uid}(${item.username})`)}</div>
-            <input ref={this.input} onChange={async () => {
+            <div>{this.state.settings.map(item =>
+            <Tooltip title={item.uid} key={item.uid} getPopupContainer={(e)=>e}>
+                <Tag closable={true} onClose={() => {
+                    this.uidusername.del('uid')(item.uid)
+                    this.updateSettings()
+                    this.props.updateBox()
+                }} key={item.username}>{item.username}</Tag>
+                </Tooltip>
+            )}</div>
+            <InputNumber controls={false} ref={this.input} onChange={async () => {
                 if (this.input.current) {
                     this.setState({ inputUid: this.input.current.value, inputUsername: await this.uidusername.uid2username(this.input.current.value) })
                 }
-            }}></input><span>{this.state.inputUsername}</span>
+            }}></InputNumber><span>{this.state.inputUsername}</span>
             <div>
-                <button onClick={() => {
+                <Button onClick={() => {
                     if (this.input.current) {
                         this.uidusername.add('uid')(this.input.current.value)
                     }
                     this.updateSettings()
                     this.props.updateBox()
-                }}>添加</button>
-                <button onClick={() => {
-                    if (this.input.current) {
-                        this.uidusername.del('uid')(this.input.current.value)
-                    }
-                    this.updateSettings()
-                    this.props.updateBox()
-                }}>删除</button>
-                <button onClick={async () => {
+                }}>添加</Button>
+                <Button onClick={async () => {
                     let uids = new Set(await this.uidusername.get('uid')())
                     GM_listValues()
                         .filter(item => item.startsWith('uid_'))
                         .filter(item => !uids.has(item.split('_')[1]))
                         .forEach(item => GM_deleteValue(item))
                     this.forceUpdate()
-                }}>清除缓存</button>
+                }}>清除缓存</Button>
             </div>
         </div>
     }

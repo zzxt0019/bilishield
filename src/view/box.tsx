@@ -26,7 +26,7 @@ export class Box extends React.Component {
         }
     }
     render() {
-        return <div className="_main" ref={this.REFS.main} style={{display:'none'}}>
+        return <div className="_main" ref={this.REFS.main} style={{display:''}}>
             <div className="_box">
                 <div>
                     {  // 页面
@@ -53,6 +53,7 @@ export class Box extends React.Component {
                 <div>
                     {  // 配置
                         [...Settings.getSystemSettings().values()].map(setting => <SettingView
+                            key={setting.key}
                             setting={setting}
                             updateBox={() => {
                                 // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
