@@ -61,12 +61,7 @@ export class Page {
     stop() {
         for (const rule of this.rules()) {
             document.unbindArrive(rule.mainSelector);
-            let elements = document.querySelectorAll('.testtest')
-            for (let i = 0; i < elements.length; i++) {
-                const element = elements[i];
-                (element as any).style.setProperty('background-color', '')
-                element.classList.remove('testtest')
-            }
+            rule.show()
         }
         this.working = false
     }

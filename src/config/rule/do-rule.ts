@@ -5,6 +5,7 @@ import { Checker } from "./checker";
  * 执行的规则
  */
 export abstract class DoRule {
+    private static readonly DISPLAYED_CLASS = 'testtest'
     constructor(public mainSelector: string) {
 
     }
@@ -20,17 +21,18 @@ export abstract class DoRule {
     display(mainElement: Element) {
         if (this.bingo(mainElement)) {
             (mainElement as any).style.setProperty('background-color', 'yellow');
-            mainElement.classList.add('testtest')
+            mainElement.classList.add(DoRule.DISPLAYED_CLASS)
         }
     }
     /**
      * 显示主体元素
-     * @param mainElement 主体元素
      */
-    show(mainElement: Element) {
-        if (this.bingo(mainElement)) {
-            (mainElement as any).style.setProperty('background-color', '');
-            mainElement.classList.remove('testtest')
+    show() {
+        let elements = document.querySelectorAll(this.mainSelector + '.' + DoRule.DISPLAYED_CLASS)
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            (element as any).style.setProperty('background-color', '')
+            element.classList.remove(DoRule.DISPLAYED_CLASS)
         }
     }
 
@@ -71,7 +73,7 @@ export class DoRuleN extends DoRule {
      * @returns 是否中奖
      */
     bingo0(element: Element, checker: Checker): boolean {
-        if(checker.bingo) {
+        if (checker.bingo) {
             return checker.bingo(element)
         }
         // 如果是always 中奖
