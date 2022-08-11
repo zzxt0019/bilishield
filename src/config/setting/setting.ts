@@ -28,7 +28,7 @@ export class Settings {
     }
 
     // 加入特殊配置后的获取配置值
-    static getSettingValue(param: string | Setting): string[] {
+    static async getSettingValue(param: string | Setting): Promise<string[]> {
         let key = typeof param === 'string' ? param : param.key
         if (SpecialSettings.sp.has(key)) {
             return (SpecialSettings.sp.get(key) as SpecialSetting).get(key)()

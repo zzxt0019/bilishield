@@ -4,7 +4,7 @@ import { createRoot, Root } from "react-dom/client";
 import styleText from './main.raw.css';
 import { Box } from "./view/box";
 init();
-function init(): void {
+function init() {
      let root = createReact();
      createStyle()
      // 监听APP_ID

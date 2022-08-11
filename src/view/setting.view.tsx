@@ -9,20 +9,26 @@ export class SettingView extends React.Component {
     REFS = {
         input: React.createRef<HTMLInputElement>()
     }
+    state = {
+        settings: []
+    }
+    updateSettings = async () => {
+        this.setState({settings: await Settings.getSettingValue(this.props.setting)})
+    }
+    componentDidMount(): void {
+        this.updateSettings()
+    }
     render() {
-        console.log('this.props.setting', this.props.setting)
-        console.log(Settings.getSettingValue(this.props.setting));
-
         return <div>
             <div>{this.props.setting.key + ':' + this.props.setting.name}</div>
-            <div>{  // 展示
-                ' ' + Settings.getSettingValue(this.props.setting).join(',')}</div>
+            <div>{this.state.settings.join(',')}</div>
             <input ref={this.REFS.input}></input>
             <button onClick={() => {
                 // 添加 保存到GM
                 if (this.REFS.input.current) {
                     Settings.addSettingValue(this.props.setting, this.REFS.input.current.value)
                 }
+                this.updateSettings()
                 this.props.updateBox()
             }}>添加</button>
             <button onClick={() => {
@@ -30,6 +36,7 @@ export class SettingView extends React.Component {
                 if (this.REFS.input.current) {
                     Settings.delSettingValue(this.props.setting, this.REFS.input.current.value)
                 }
+                this.updateSettings()
                 this.props.updateBox()
             }}>删除</button>
         </div>
