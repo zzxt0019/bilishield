@@ -6,22 +6,24 @@ import boxStyle from './main.raw.css';
 import { Box } from './view/box';
 const postcssJs = require('postcss-js')
 const postcss = require('postcss')
-let antdStyle: string = ''
 init()
-async function init() {
-     await (async () => {
+async function initAntdStyle(): Promise<string> {
+     return new Promise<string>((res) => {
           let oldObj = postcssJs.objectify(postcss.parse(_antdStyle))
           let newObj: any = {}
           Object.keys(oldObj).forEach(key => {
                newObj['._main ._box ' + key] = oldObj[key]
           })
-          postcss().process(newObj, { parser: postcssJs }).then((res: any) => {
-               antdStyle = res.css
+          postcss().process(newObj, { parser: postcssJs }).then((result: any) => {
+               res(result.css)
           })
-     })()
+     })
+}
+async function init() {
+     let antdStyle: string = await initAntdStyle()
      let root = createReact();
-     createAntdStyle()
-     createBoxStyle()
+     createStyle('ANTD_STYLE_ID', antdStyle)()
+     createStyle('BOX_STYLE_ID', boxStyle)()
      // 监听APP_ID
      document.leave('#APP_ID', {
           fireOnAttributesModification: true,
@@ -30,22 +32,6 @@ async function init() {
      }, () => {
           root.unmount()
           root = createReact()
-     })
-     // 监听STYLE_ID
-     document.leave('#ANTD_STYLE_ID', {
-          fireOnAttributesModification: true,
-          onceOnly: false,
-          existing: false
-     }, () => {
-          createAntdStyle()
-     })
-     // 监听STYLE_ID
-     document.leave('#BOX_STYLE_ID', {
-          fireOnAttributesModification: true,
-          onceOnly: false,
-          existing: false
-     }, () => {
-          createBoxStyle()
      })
      // 油猴菜单展示/隐藏配置
      GM_registerMenuCommand('配置', () => {
@@ -69,27 +55,21 @@ function createReact(): Root {
      root.render(<Box />)
      return root;
 }
-/**
- * 添加样式
- */
-function createAntdStyle() {
-     if (!document.getElementById('ANTD_STYLE_ID')) {
-          let style = document.createElement('style')
-          style.setAttribute('id', 'ANTD_STYLE_ID')
-          style.setAttribute('type', "text/css")
-          style.innerHTML = antdStyle
-          document.body.appendChild(style)
+function createStyle(id: string, style: string) {
+     if (!document.getElementById(id)) {
+          let element = document.createElement('style')
+          element.setAttribute('id', id)
+          element.setAttribute('type', "text/css")
+          element.innerHTML = style
+          document.body.appendChild(element)
      }
-}
-/**
- * 添加样式
- */
-function createBoxStyle() {
-     if (!document.getElementById('BOX_STYLE_ID')) {
-          let style = document.createElement('style')
-          style.setAttribute('id', 'BOX_STYLE_ID')
-          style.setAttribute('type', "text/css")
-          style.innerHTML = boxStyle
-          document.body.appendChild(style)
+     return () => {
+          document.leave('#' + id, {
+               fireOnAttributesModification: true,
+               onceOnly: false,
+               existing: false
+          }, () => {
+               createStyle(id, style)
+          })
      }
 }
