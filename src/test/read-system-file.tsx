@@ -1,5 +1,5 @@
-import { DoRuleN } from "@/config/do-rule";
-import { Rule } from "@/config/rule";
+import { DoRuleN } from "@/config/rule/do-rule";
+import { Rule } from "@/config/rule/rule";
 import { Settings } from "@/config/setting/setting";
 import * as yaml from "yaml";
 import { Page } from '../config/page/page';

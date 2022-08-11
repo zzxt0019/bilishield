@@ -1,4 +1,5 @@
 import { Checker } from './checker';
+import { BaiduTest } from './special/baidu-test';
 /**
  * 规则配置
  */
@@ -12,5 +13,9 @@ export class Rule {
         this.name = rule.name
         this.mainSelector = rule.mainSelector
         this.checker = rule.checker
+        if (this.checker.bingo) {
+            // 普通规则没有bingo
+            delete this.checker.bingo
+        }
     }
 }

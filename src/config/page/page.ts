@@ -1,6 +1,8 @@
 import { Checker } from '../rule/checker';
 import { DoRuleN } from '../rule/do-rule';
 import { Rule } from '../rule/rule';
+import { SpecialRule } from '../rule/special/special-rule';
+import { SpecialRules } from './../rule/special/special-rules';
 /**
  * 页面配置
  */
@@ -12,6 +14,20 @@ export class Page {
         this.key = page.key
         this.name = page.name ?? page.key
         this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers)
+        // 添加特殊规则 特殊规则优先处理
+        if (SpecialRules.sp.has(this.key)) {
+            let specialRule = SpecialRules.sp.get(this.key) as SpecialRule
+            specialRule.spCheckers.forEach(spChecker => {
+                this.insert({
+                    name: '',
+                    key: '',
+                    mainSelector: spChecker.mainSelector,
+                    checker: {
+                        bingo: spChecker.bingo
+                    }
+                })
+            })
+        }
     }
     working = false
     checkerMap: Map<string, Checker[]> = new Map()

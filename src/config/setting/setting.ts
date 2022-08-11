@@ -1,8 +1,8 @@
 import * as yaml from "yaml";
-import settingText from '../yaml/setting.yaml';
+import settingText from '../../yaml/setting.yaml';
 import { DefaultSettings } from "./default-setting";
 import { SpecialSetting } from "./special/special-setting";
-import { UidUsername } from './special/uid-username';
+import { SpecialSettings } from './special/special-settings';
 /**
  * 数据配置
  */
@@ -23,12 +23,6 @@ export class Settings {
             Settings.settingMap.set(key, { key, name: obj[key] })
         })
     }
-    static sp: Map<string, SpecialSetting> = new Map()
-    static {  // 初始化特殊配置
-        Settings.sp.set('uid', new UidUsername())
-        Settings.sp.set('username', Settings.sp.get('uid') as UidUsername)
-
-    }
     static getSystemSettings(): Map<string, Setting> {
         return Settings.settingMap
     }
@@ -36,8 +30,8 @@ export class Settings {
     // 加入特殊配置后的获取配置值
     static getSettingValue(param: string | Setting): string[] {
         let key = typeof param === 'string' ? param : param.key
-        if (Settings.sp.has(key)) {
-            return (Settings.sp.get(key) as SpecialSetting).get(key)()
+        if (SpecialSettings.sp.has(key)) {
+            return (SpecialSettings.sp.get(key) as SpecialSetting).get(key)()
         } else {
             return DefaultSettings._getSettingValue(param)
         }
@@ -45,8 +39,8 @@ export class Settings {
     // 加入特殊配置后的设置配置值
     static setSettingValue(param: string | Setting, data: string[]): void {
         let key = typeof param === 'string' ? param : param.key
-        if (Settings.sp.has(key)) {
-            return (Settings.sp.get(key) as SpecialSetting).set(key)(data)
+        if (SpecialSettings.sp.has(key)) {
+            return (SpecialSettings.sp.get(key) as SpecialSetting).set(key)(data)
         } else {
             DefaultSettings._setSettingValue(param, data)
         }
@@ -54,8 +48,8 @@ export class Settings {
     // 加入特殊配置后的添加配置值
     static addSettingValue(param: string | Setting, data: string | string[]): void {
         let key = typeof param === 'string' ? param : param.key
-        if (Settings.sp.has(key)) {
-            return (Settings.sp.get(key) as SpecialSetting).add(key)(data)
+        if (SpecialSettings.sp.has(key)) {
+            return (SpecialSettings.sp.get(key) as SpecialSetting).add(key)(data)
         } else {
             DefaultSettings._addSettingValue(param, data)
         }
@@ -63,8 +57,8 @@ export class Settings {
     // 加入特殊配置后的删除配置值
     static delSettingValue(param: string | Setting, data: string | string[]): void {
         let key = typeof param === 'string' ? param : param.key
-        if (Settings.sp.has(key)) {
-            return (Settings.sp.get(key) as SpecialSetting).del(key)(data)
+        if (SpecialSettings.sp.has(key)) {
+            return (SpecialSettings.sp.get(key) as SpecialSetting).del(key)(data)
         } else {
             DefaultSettings._delSettingValue(param, data)
         }

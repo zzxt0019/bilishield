@@ -71,6 +71,9 @@ export class DoRuleN extends DoRule {
      * @returns 是否中奖
      */
     bingo0(element: Element, checker: Checker): boolean {
+        if(checker.bingo) {
+            return checker.bingo(element)
+        }
         // 如果是always 中奖
         if (checker.always) {
             return true;
