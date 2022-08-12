@@ -1,22 +1,21 @@
 import { Setting, Settings } from "@/config/setting/setting";
+import { Button, Input, Tag } from "antd";
 import React from "react";
 
 export class SettingView extends React.Component {
-    constructor(any:any) {
+    constructor(any: any) {
         super(any)
     }
     props = {
         setting: {} as Setting,
         updateBox: () => { }
     }
-    REFS = {
-        input: React.createRef<HTMLInputElement>()
-    }
     state = {
-        settings: []
+        settings: [],
+        inputValue: ''
     }
     updateSettings = async () => {
-        this.setState({settings: await Settings.getSettingValue(this.props.setting)})
+        this.setState({ settings: await Settings.getSettingValue(this.props.setting) })
     }
     componentDidMount(): void {
         this.updateSettings()
@@ -24,24 +23,21 @@ export class SettingView extends React.Component {
     render() {
         return <div>
             <div>{this.props.setting.key + ':' + this.props.setting.name}</div>
-            <div>{this.state.settings.join(',')}</div>
-            <input ref={this.REFS.input}></input>
-            <button onClick={() => {
+            {this.state.settings.map(setting =>
+                <Tag closable={true} onClose={()=>{
+                    Settings.delSettingValue(this.props.setting, setting)
+                    this.updateSettings()
+                    this.props.updateBox()
+                }}>{setting}</Tag>)}
+            <Input type='text' onChange={(e) => this.setState({ inputValue: e.target.value })}></Input>
+            <Button onClick={() => {
                 // 添加 保存到GM
-                if (this.REFS.input.current) {
-                    Settings.addSettingValue(this.props.setting, this.REFS.input.current.value)
+                if (this.state.inputValue) {
+                    Settings.addSettingValue(this.props.setting, this.state.inputValue)
                 }
                 this.updateSettings()
                 this.props.updateBox()
-            }}>添加</button>
-            <button onClick={() => {
-                // 删除 保存到GM
-                if (this.REFS.input.current) {
-                    Settings.delSettingValue(this.props.setting, this.REFS.input.current.value)
-                }
-                this.updateSettings()
-                this.props.updateBox()
-            }}>删除</button>
+            }}>添加</Button>
         </div>
     }
 }

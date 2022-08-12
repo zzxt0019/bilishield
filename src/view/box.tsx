@@ -66,12 +66,9 @@ export class Box extends React.Component {
                                 this.forceUpdate()
                             }} />)}
                 </div>
-                <div><button onClick={() => {
+                <div><Button onClick={() => {
                     this.REFS.main.current.style.setProperty('display', 'none')
-                }}>取消</button></div>
-                <div>
-                    <Button type="dashed">测试</Button>
-                </div>
+                }}>取消</Button></div>
             </div>
 
         </div>
