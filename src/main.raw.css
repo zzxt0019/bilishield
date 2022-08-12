@@ -9,7 +9,8 @@
 
 ._main ._box {
   position: fixed;
-  background-color: #000;
+  background-color: white;
+  border: 5px groove pink;
 }
 ._main ._box button {
   background-color: aqua;

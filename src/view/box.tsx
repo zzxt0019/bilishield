@@ -1,4 +1,5 @@
 import { Settings } from "@/config/setting/setting";
+import { Content } from "antd/lib/layout/layout";
 import { Button } from "antd/lib/radio";
 import React from "react";
 import { Page } from "../config/page/page";
@@ -26,11 +27,11 @@ export class Box extends React.Component {
         }
     }
     render() {
-        return <div className="_main" ref={this.REFS.main} style={{display:''}}>
+        return <div className="_main" ref={this.REFS.main} style={{ display: 'none' }}>
             <div className="_box">
                 <div>
                     {  // 页面
-                        [...this.state.pageMap.values()].filter(page=>page.isCurrent()).map(page =>
+                        [...this.state.pageMap.values()].filter(page => page.isCurrent()).map(page =>
                             <PageView page={page} updateBox={() => {
                                 // 更新当前页面, PageView里面有page对象, 所以可以放在里面(也可以放在外面)
                                 this.forceUpdate()
