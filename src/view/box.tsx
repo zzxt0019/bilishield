@@ -1,5 +1,4 @@
 import { Settings } from "@/config/setting/setting";
-import { Content } from "antd/lib/layout/layout";
 import { Button } from "antd/lib/radio";
 import React from "react";
 import { Page } from "../config/page/page";
@@ -67,9 +66,11 @@ export class Box extends React.Component {
                                 this.forceUpdate()
                             }} />)}
                 </div>
-                <div><Button onClick={() => {
-                    this.REFS.main.current.style.setProperty('display', 'none')
-                }}>取消</Button></div>
+                <div>
+                    <Button onClick={() => {
+                        this.REFS.main.current.style.setProperty('display', 'none')
+                    }}>取消</Button>
+                </div>
             </div>
 
         </div>

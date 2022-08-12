@@ -36,24 +36,24 @@ export class PageView extends React.Component {
         return <Card>
             <Row>
                 <Col span={6} >
-                    <Typography.Paragraph
-                        type={this.props.page.working ? 'success' : 'danger'}>
+                    <Typography.Text type={this.props.page.working ? 'success' : 'danger'}>
                         {this.props.page.name}
-                    </Typography.Paragraph>
+                    </Typography.Text>
                 </Col>
                 <Col span={6} ></Col>
                 <Col span={6} >
-                    <Button
-                        onClick={this.workClick}>
+                    <Button onClick={this.workClick}>
                         {this.props.page.working ? '停' : '启'}
                     </Button>
                 </Col>
                 <Col span={6} >
-                    {this.props.page.working ?
-                        <Button
-                            onClick={this.debugClick}>
-                            {this.props.page.displayType === 'display' ? 'debug' : '正常'}
-                        </Button> : ''}
+                    {(() => {
+                        if (this.props.page.working) {
+                            return <Button onClick={this.debugClick}>
+                                {this.props.page.displayType === 'display' ? 'debug' : '正常'}
+                            </Button>
+                        }
+                    })()}
                 </Col>
             </Row>
         </Card>
