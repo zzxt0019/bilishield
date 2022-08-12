@@ -1,6 +1,5 @@
 import { Settings } from "@/config/setting/setting";
-import { Card, Col, Row } from "antd";
-import { Button } from "antd/lib/radio";
+import { Button, Card, Col, Row } from "antd";
 import React from "react";
 import { Page } from "../config/page/page";
 import { readFiles } from "../test/read-system-file";
@@ -73,9 +72,10 @@ export class Box extends React.Component {
                             <Col span={8}></Col>
                             <Col span={8}></Col>
                             <Col span={8}>
-                                <Button onClick={() => {
-                                    this.REFS.main.current.style.setProperty('display', 'none')
-                                }}>隐藏菜单</Button>
+                                <Button size="small"
+                                    onClick={() => {
+                                        this.REFS.main.current.style.setProperty('display', 'none')
+                                    }}>隐藏菜单</Button>
                             </Col>
                         </Row>
                     </Card>
