@@ -1,4 +1,5 @@
 import { Settings } from "@/config/setting/setting";
+import { Card, Col, Row } from "antd";
 import { Button } from "antd/lib/radio";
 import React from "react";
 import { Page } from "../config/page/page";
@@ -67,9 +68,18 @@ export class Box extends React.Component {
                             }} />)}
                 </div>
                 <div>
-                    <Button onClick={() => {
-                        this.REFS.main.current.style.setProperty('display', 'none')
-                    }}>取消</Button>
+                    <Card>
+                        <Row>
+                            <Col span={8}></Col>
+                            <Col span={8}></Col>
+                            <Col span={8}>
+                                <Button onClick={() => {
+                                    this.REFS.main.current.style.setProperty('display', 'none')
+                                }}>隐藏菜单</Button>
+                            </Col>
+                        </Row>
+                    </Card>
+
                 </div>
             </div>
 

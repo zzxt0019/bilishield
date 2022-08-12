@@ -1,5 +1,6 @@
 import { Setting, Settings } from "@/config/setting/setting";
-import { Button, Input, Tag } from "antd";
+import { PlusOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Input, Row, Tag } from "antd";
 import React from "react";
 
 export class SettingView extends React.Component {
@@ -21,23 +22,37 @@ export class SettingView extends React.Component {
         this.updateSettings()
     }
     render() {
-        return <div>
-            <div>{this.props.setting.key + ':' + this.props.setting.name}</div>
-            {this.state.settings.map(setting =>
-                <Tag closable={true} onClose={()=>{
-                    Settings.delSettingValue(this.props.setting, setting)
-                    this.updateSettings()
-                    this.props.updateBox()
-                }}>{setting}</Tag>)}
-            <Input type='text' onChange={(e) => this.setState({ inputValue: e.target.value })}></Input>
-            <Button onClick={() => {
-                // 添加 保存到GM
-                if (this.state.inputValue) {
-                    Settings.addSettingValue(this.props.setting, this.state.inputValue)
-                }
-                this.updateSettings()
-                this.props.updateBox()
-            }}>添加</Button>
-        </div>
+        return <Card>
+            <Card>
+                <div>
+                    {this.props.setting.key + ':' + this.props.setting.name}
+                </div>
+                {this.state.settings.map(setting =>
+                    <Tag closable={true} onClose={() => {
+                        Settings.delSettingValue(this.props.setting, setting)
+                        this.updateSettings()
+                        this.props.updateBox()
+                    }}>{setting}</Tag>
+                )}
+            </Card>
+            <Row>
+                <Col span={20}>
+                    <Input type='text' onChange={(e) => this.setState({ inputValue: e.target.value })}></Input>
+                </Col>
+                <Col span={4}>
+                    <Button
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            // 添加 保存到GM
+                            if (this.state.inputValue) {
+                                Settings.addSettingValue(this.props.setting, this.state.inputValue)
+                            }
+                            this.updateSettings()
+                            this.props.updateBox()
+                        }}></Button>
+                </Col>
+            </Row>
+        </Card>
     }
 }

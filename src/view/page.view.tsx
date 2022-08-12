@@ -39,18 +39,21 @@ export class PageView extends React.Component {
                     <Typography.Text type={this.props.page.working ? 'success' : 'danger'}>
                         {this.props.page.name}
                     </Typography.Text>
+                    <Typography.Text style={{ display: this.props.page.working && this.props.page.displayType === 'debug' ? '' : 'none' }}>
+                        (debug)
+                    </Typography.Text>
                 </Col>
                 <Col span={6} ></Col>
                 <Col span={6} >
                     <Button onClick={this.workClick}>
-                        {this.props.page.working ? '停' : '启'}
+                        {this.props.page.working ? '停止' : '启动'}
                     </Button>
                 </Col>
                 <Col span={6} >
                     {(() => {
                         if (this.props.page.working) {
                             return <Button onClick={this.debugClick}>
-                                {this.props.page.displayType === 'display' ? 'debug' : '正常'}
+                                {this.props.page.displayType === 'display' ? 'debug' : 'run'}
                             </Button>
                         }
                     })()}
