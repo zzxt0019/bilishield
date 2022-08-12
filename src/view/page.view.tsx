@@ -45,14 +45,15 @@ export class PageView extends React.Component {
                 </Col>
                 <Col span={6} ></Col>
                 <Col span={6} >
-                    <Button onClick={this.workClick}>
+                    <Button
+                        size="small" onClick={this.workClick}>
                         {this.props.page.working ? '停止' : '启动'}
                     </Button>
                 </Col>
                 <Col span={6} >
                     {(() => {
                         if (this.props.page.working) {
-                            return <Button onClick={this.debugClick}>
+                            return <Button size="small" onClick={this.debugClick}>
                                 {this.props.page.displayType === 'display' ? 'debug' : 'run'}
                             </Button>
                         }

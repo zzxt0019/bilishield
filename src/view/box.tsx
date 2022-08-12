@@ -1,5 +1,5 @@
 import { Settings } from "@/config/setting/setting";
-import { Button, Card, Col, Row } from "antd";
+import { Button, Card, Col, Row, Tabs } from "antd";
 import React from "react";
 import { Page } from "../config/page/page";
 import { readFiles } from "../test/read-system-file";
@@ -37,50 +37,50 @@ export class Box extends React.Component {
                             }} />)}
                 </div>
                 <hr />
-                <div>
-                    <UidUsernameView updateBox={() => {
-                        // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-                        for (const page of this.state.pageMap.values()) {
-                            if (page.working) {
-                                page.stop()
-                                page.start()
-                            }
-                        }
-                        this.forceUpdate()
-                    }} />
-                </div>
-                <hr />
-                <div>
-                    {  // 配置
-                        [...Settings.getSystemSettings().values()].map(setting => <SettingView
-                            key={setting.key}
-                            setting={setting}
-                            updateBox={() => {
-                                // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-                                for (const page of this.state.pageMap.values()) {
-                                    if (page.working) {
-                                        page.stop()
-                                        page.start()
-                                    }
+                <Tabs>
+                    <Tabs.TabPane key="uid2username-tab" tab={<span>uid</span>}>
+                        <UidUsernameView updateBox={() => {
+                            // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
+                            for (const page of this.state.pageMap.values()) {
+                                if (page.working) {
+                                    page.stop()
+                                    page.start()
                                 }
-                                this.forceUpdate()
-                            }} />)}
-                </div>
-                <div>
-                    <Card>
-                        <Row>
-                            <Col span={8}></Col>
-                            <Col span={8}></Col>
-                            <Col span={8}>
-                                <Button size="small"
-                                    onClick={() => {
-                                        this.REFS.main.current.style.setProperty('display', 'none')
-                                    }}>隐藏菜单</Button>
-                            </Col>
-                        </Row>
-                    </Card>
-
-                </div>
+                            }
+                            this.forceUpdate()
+                        }} />
+                    </Tabs.TabPane>
+                    {  // 配置
+                        [...Settings.getSystemSettings().values()].map(setting =>
+                            <Tabs.TabPane key={setting.key + '-tab'} tab={<span>{setting.name}</span>}>
+                                <SettingView
+                                    key={setting.key}
+                                    setting={setting}
+                                    updateBox={() => {
+                                        // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
+                                        for (const page of this.state.pageMap.values()) {
+                                            if (page.working) {
+                                                page.stop()
+                                                page.start()
+                                            }
+                                        }
+                                        this.forceUpdate()
+                                    }} />
+                            </Tabs.TabPane>)}
+                </Tabs>
+                <hr />
+                <Card>
+                    <Row>
+                        <Col span={8}></Col>
+                        <Col span={8}></Col>
+                        <Col span={8}>
+                            <Button size="small"
+                                onClick={() => {
+                                    this.REFS.main.current.style.setProperty('display', 'none')
+                                }}>隐藏菜单</Button>
+                        </Col>
+                    </Row>
+                </Card>
             </div>
 
         </div>
