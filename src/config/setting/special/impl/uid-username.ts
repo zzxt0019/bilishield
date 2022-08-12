@@ -28,12 +28,13 @@ export class UidUsername extends SpecialSetting {
             DefaultSettings._delSettingValue('uid', uid)
         }
     }
-    async uid2username(uid: string): Promise<string> {
+    async uid2username(_uid: string): Promise<string> {
         // 输入错误
-        if (uid === '') {
+        if (_uid === '') {
             return ''
         }
         // 缓存在有效期内, 取缓存
+        let uid = Number(_uid)
         let obj = GM_getValue('uid_' + uid)
         let biliUp: BiliUp = obj as BiliUp
         if (biliUp && new Date().getTime() < biliUp.expiretime) {
@@ -55,7 +56,7 @@ export class UidUsername extends SpecialSetting {
     queryUsername(
         res: (value: string | PromiseLike<string>) => void,
         rej: (reason?: any) => void,
-        uid: string, firstIndex: number, apiIndex: number
+        uid: number, firstIndex: number, apiIndex: number
     ): void {
         let api = UidUsername.apis[apiIndex]
         GM_xmlhttpRequest({
@@ -89,19 +90,19 @@ export class UidUsername extends SpecialSetting {
     }
     private static apiIndex = 0
     private static apis: {
-        url: (uid: string) => string,  // 根据uid生成url的方法(拼接url参数)
+        url: (uid: number) => string,  // 根据uid生成url的方法(拼接url参数)
         success: (json: any) => boolean,  // 根据响应json判断是否成功
         username: (json: any) => string,  // 根据响应json取到username
         change: (json: any) => boolean  // 根据响应json判断是否被拦截(被拦截则换其他api)
     }[] = [
             {
-                url: (uid: string) => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
+                url: (uid: number) => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
                 success: (json: any) => json.code === 0,
                 username: (json: any) => json.data.name,
                 change: (json: any) => json.code === -412,  // 请求被拦截
             },
             {
-                url: (uid: string) => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+                url: (uid: number) => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
                 success: (json: any) => json.code === 0,
                 username: (json: any) => json.data.card.name,
                 change: (json: any) => json.code === -412

@@ -35,12 +35,12 @@ export class UidUsernameView extends React.Component {
         return <div>
             <div>uid名称: </div>
             <div>{this.state.settings.map(item =>
-            <Tooltip title={item.uid} key={item.uid} getPopupContainer={(e)=>e}>
-                <Tag closable={true} onClose={() => {
-                    this.uidusername.del('uid')(item.uid)
-                    this.updateSettings()
-                    this.props.updateBox()
-                }} key={item.username}>{item.username}</Tag>
+                <Tooltip title={item.uid} key={item.uid} getPopupContainer={(e) => e}>
+                    <Tag closable={true} onClose={() => {
+                        this.uidusername.del('uid')(item.uid)
+                        this.updateSettings()
+                        this.props.updateBox()
+                    }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
             )}</div>
             <InputNumber controls={false} ref={this.input} onChange={async () => {
@@ -57,12 +57,11 @@ export class UidUsernameView extends React.Component {
                     this.props.updateBox()
                 }}>添加</Button>
                 <Button onClick={async () => {
-                    let uids = new Set(await this.uidusername.get('uid')())
                     GM_listValues()
                         .filter(item => item.startsWith('uid_'))
-                        .filter(item => !uids.has(item.split('_')[1]))
                         .forEach(item => GM_deleteValue(item))
-                    this.forceUpdate()
+                        console.log(GM_listValues())
+                    this.updateSettings()
                 }}>清除缓存</Button>
             </div>
         </div>
