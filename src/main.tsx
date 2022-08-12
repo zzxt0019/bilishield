@@ -2,7 +2,7 @@ import _antdStyle from 'antd/dist/antd.css';
 import "arrive";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
-import boxStyle from './main.raw.css';
+import boxStyle from './main.css';
 import { Box } from './view/box';
 const postcssJs = require('postcss-js')
 const postcss = require('postcss')

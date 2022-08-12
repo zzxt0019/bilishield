@@ -30,7 +30,7 @@ const config: Configuration = {
         use: ['babel-loader', 'ts-loader']
       },
       {
-        test: /\.raw\.css$|antd.css$/,
+        test: /\.css$/,
         use: ["raw-loader"]
       },
       {
