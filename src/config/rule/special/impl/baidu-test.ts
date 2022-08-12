@@ -5,7 +5,7 @@ export class BaiduTest extends SpecialRule {
     spCheckers = [
         {
             mainSelector: 'a',
-            bingo: (node: Element) => {
+            bingo: async (node: Element) => {
                 if(node.innerHTML.includes('abcde')) {
                     return true;
                 } else {

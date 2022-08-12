@@ -2,4 +2,7 @@ bilibili:
   name: 比例
   regexp:
     pattern: www.bilibili.com
-  
+bilibili_live:
+  name: 比例直播
+  regexp: 
+    pattern: live.bilibili.com

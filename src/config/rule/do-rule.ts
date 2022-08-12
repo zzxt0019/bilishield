@@ -91,7 +91,7 @@ export class DoRuleN extends DoRule {
      */
     async bingo0(element: Element, checker: Checker): Promise<boolean> {
         if (checker.bingo) {
-            return checker.bingo(element)
+            return await checker.bingo(element)
         }
         // 如果是always 中奖
         if (checker.always) {
