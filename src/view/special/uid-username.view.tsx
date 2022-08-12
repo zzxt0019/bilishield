@@ -1,5 +1,6 @@
 import { UidUsername } from "@/config/setting/special/impl/uid-username";
-import { Button, InputNumber, Tag, Tooltip } from "antd";
+import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
+import { Button, Card, Col, InputNumber, Row, Tag, Tooltip } from "antd";
 import React from "react";
 
 export class UidUsernameView extends React.Component {
@@ -32,38 +33,61 @@ export class UidUsernameView extends React.Component {
         this.updateSettings()
     }
     render() {
-        return <div>
-            <div>uid名称: </div>
-            <div>{this.state.settings.map(item =>
-                <Tooltip title={item.uid} key={item.uid} getPopupContainer={(e) => e}>
-                    <Tag closable={true} onClose={() => {
-                        this.uidusername.del('uid')(item.uid)
-                        this.updateSettings()
-                        this.props.updateBox()
-                    }} key={item.username}>{item.username}</Tag>
-                </Tooltip>
-            )}</div>
-            <InputNumber controls={false} ref={this.input} onChange={async () => {
-                if (this.input.current) {
-                    this.setState({ inputUid: this.input.current.value, inputUsername: await this.uidusername.uid2username(this.input.current.value) })
-                }
-            }}></InputNumber><span>{this.state.inputUsername}</span>
-            <div>
-                <Button onClick={() => {
-                    if (this.input.current) {
-                        this.uidusername.add('uid')(this.input.current.value)
-                    }
-                    this.updateSettings()
-                    this.props.updateBox()
-                }}>添加</Button>
-                <Button onClick={async () => {
-                    GM_listValues()
-                        .filter(item => item.startsWith('uid_'))
-                        .forEach(item => GM_deleteValue(item))
-                        console.log(GM_listValues())
-                    this.updateSettings()
-                }}>清除缓存</Button>
-            </div>
-        </div>
+        return <Card>
+            <Card>
+                <div>uid名称: </div>
+                {this.state.settings.map(item =>
+                    <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0} trigger='click'>
+                        <Tag closable={true} onClose={() => {
+                            this.uidusername.del('uid')(item.uid)
+                            this.updateSettings()
+                            this.props.updateBox()
+                        }} key={item.username}>{item.username}</Tag>
+                    </Tooltip>
+                )}
+            </Card>
+            <Row>
+                <Col span={10}>
+                    <InputNumber controls={false} value={this.state.inputUid} onChange={async (value) => {
+                        let uid = value + ''
+                        this.setState({ inputUid: uid, inputUsername: await this.uidusername.uid2username(uid) })
+                    }}></InputNumber>
+                </Col>
+                <Col span={8}>
+                    {(() => {
+                        if (this.state.inputUsername)
+                            return <Tag>
+                                {this.state.inputUsername}
+                            </Tag>
+                    })()}
+                </Col>
+                <Col span={3}>
+                    <Button
+                        size="small"
+                        disabled={!this.state.inputUsername}
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                            if (this.state.inputUid && this.state.inputUsername) {
+                                this.uidusername.add('uid')(this.state.inputUid)
+                            }
+                            this.setState({ inputUid: '', inputUsername: '' })
+                            this.updateSettings()
+                            this.props.updateBox()
+                        }}></Button>
+                </Col>
+                <Col span={3}>
+                    <Button
+                        size="small"
+                        icon={<SyncOutlined />}
+                        onClick={async () => {
+                            GM_listValues()
+                                .filter(item => item.startsWith('uid_'))
+                                .forEach(item => GM_deleteValue(item))
+                            console.log(GM_listValues())
+                            this.updateSettings()
+                        }}></Button>
+                </Col>
+            </Row>
+        </Card>
     }
 }
