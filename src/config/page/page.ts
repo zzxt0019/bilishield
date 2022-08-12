@@ -1,5 +1,5 @@
 import { Checker } from '../rule/checker';
-import { DisplayType as DisplayType, DoRuleN } from '../rule/do-rule';
+import { DisplayType, DoRuleN } from '../rule/do-rule';
 import { Rule } from '../rule/rule';
 import { SpecialRule } from '../rule/special/special-rule';
 import { SpecialRules } from './../rule/special/special-rules';
@@ -50,18 +50,20 @@ export class Page {
         })
         return arr;
     }
-    start(displayType: DisplayType = 'display') {
+    start(displayType?: DisplayType) {
+        if (displayType) {
+            this.displayType = displayType
+        }
         for (const rule of this.rules()) {
             document.arrive(rule.mainSelector, {
                 fireOnAttributesModification: true,
                 onceOnly: false,
                 existing: true
             }, (element: Element) => {
-                rule.display(element, displayType)
+                rule.display(element, this.displayType)
             })
         }
         this.working = true
-        this.displayType = displayType
     }
     stop() {
         for (const rule of this.rules()) {

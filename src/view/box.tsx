@@ -26,7 +26,7 @@ export class Box extends React.Component {
         }
     }
     render() {
-        return <div className="_main" ref={this.REFS.main} style={{ display: 'none' }}>
+        return <div className="_main" ref={this.REFS.main} style={{ display: '' }}>
             <div className="_box">
                 <div>
                     {  // 页面
