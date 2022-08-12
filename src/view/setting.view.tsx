@@ -37,7 +37,7 @@ export class SettingView extends React.Component {
             </Card>
             <Row>
                 <Col span={20}>
-                    <Input type='text' onChange={(e) => this.setState({ inputValue: e.target.value })}></Input>
+                    <Input type='text' value={this.state.inputValue} onChange={(e) => this.setState({ inputValue: e.target.value })}></Input>
                 </Col>
                 <Col span={4}>
                     <Button
@@ -48,6 +48,7 @@ export class SettingView extends React.Component {
                             if (this.state.inputValue) {
                                 Settings.addSettingValue(this.props.setting, this.state.inputValue)
                             }
+                            this.setState({ inputValue: '' })
                             await this.updateSettings()
                             this.props.updateBox()
                         }}></Button>
