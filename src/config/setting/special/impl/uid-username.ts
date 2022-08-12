@@ -29,56 +29,84 @@ export class UidUsername extends SpecialSetting {
         }
     }
     async uid2username(uid: string): Promise<string> {
+        // 输入错误
+        if (uid === '') {
+            return ''
+        }
+        // 缓存在有效期内, 取缓存
+        let obj = GM_getValue('uid_' + uid)
+        let biliUp: BiliUp = obj as BiliUp
+        if (biliUp && new Date().getTime() < biliUp.expiretime) {
+            return biliUp.username
+        }
+        // 异步查询
         return new Promise<string>((res, rej) => {
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
-                onload(response) {
-                    let json = JSON.parse(response.responseText)
-                    if (json.code === 0 && json.data?.name) {
-                        let username = json.data.name
-                        // let biliUp = { uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000 }
-                        // GM_setValue('uid_' + uid, biliUp)
-                        res(username)
+            this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex)
+        }).catch(() => Promise.resolve(''))
+    }
+    /**
+    * 查询用户名
+    * @param res
+    * @param rej
+    * @param uid 
+    * @param firstIndex 首次调用时的index 
+    * @param apiIndex 当前调用时的index
+    */
+    queryUsername(
+        res: (value: string | PromiseLike<string>) => void,
+        rej: (reason?: any) => void,
+        uid: string, firstIndex: number, apiIndex: number
+    ): void {
+        let api = UidUsername.apis[apiIndex]
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: api.url(uid),
+            onload: (response) => {
+                let json = JSON.parse(response.responseText)
+                if (api.success(json)) {
+                    // 成功, 记录并返回
+                    UidUsername.apiIndex = apiIndex
+                    let username = api.username(json)
+                    // 保存至GM
+                    let biliUp = { uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000 }
+                    GM_setValue('uid_' + uid, biliUp)
+                    res(username)
+                } else if (api.change(json)) {
+                    // 拦截请求, 尝试其他api
+                    apiIndex = (apiIndex + 1) % UidUsername.apis.length
+                    // 若firstIndex === apiIndex 说明循环一圈都被拦截, 不需要再查了, 直接错误
+                    if (firstIndex !== apiIndex) {
+                        this.queryUsername(res, rej, uid, firstIndex, apiIndex)
                     } else {
                         rej()
                     }
-                },
-                onerror() {
+                } else {
+                    // 其他 错误
                     rej()
                 }
-            })
-        }).catch(() => Promise.resolve(''))
+            }
+        })
     }
-
-    // uid2username(uid: string): string {
-    //     let obj = GM_getValue('uid_' + uid, {})
-    //     let biliUp: BiliUp = obj as BiliUp
-    //     if (biliUp && new Date().getTime() < biliUp.expiretime) {
-    //         return biliUp.username
-    //     } else {
-    //         try {
-    //             let request = new XMLHttpRequest()
-    //             request.open('GET', 'https://api.bilibili.com/x/space/acc/info?mid=' + uid, false)
-    //             request.send(null)
-    //             let username = JSON.parse(request.responseText).data.name
-    //             biliUp = { uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000 }
-    //             GM_setValue('uid_' + uid, biliUp)
-    //             return biliUp.username
-    //         } catch (e) {
-    //             GM_xmlhttpRequest({
-    //                 method: 'GET',
-    //                 url: 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
-    //                 onload(res) {
-    //                     let username = JSON.parse(res.responseText).data.name
-    //                     biliUp = { uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000 }
-    //                     GM_setValue('uid_' + uid, biliUp)
-    //                 }
-    //             })
-    //             return ''
-    //         }
-    //     }
-    // }
+    private static apiIndex = 0
+    private static apis: {
+        url: (uid: string) => string,  // 根据uid生成url的方法(拼接url参数)
+        success: (json: any) => boolean,  // 根据响应json判断是否成功
+        username: (json: any) => string,  // 根据响应json取到username
+        change: (json: any) => boolean  // 根据响应json判断是否被拦截(被拦截则换其他api)
+    }[] = [
+            {
+                url: (uid: string) => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
+                success: (json: any) => json.code === 0,
+                username: (json: any) => json.data.name,
+                change: (json: any) => json.code === -412,  // 请求被拦截
+            },
+            {
+                url: (uid: string) => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+                success: (json: any) => json.code === 0,
+                username: (json: any) => json.data.card.name,
+                change: (json: any) => json.code === -412
+            }
+        ]
 }
 class BiliUp {
     constructor(public uid: string, public username: string, public expiretime: number) {
