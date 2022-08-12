@@ -1,6 +1,7 @@
 import { Settings } from '../setting/setting';
 import { Checker } from "./checker";
 
+export type DisplayType = 'display' | 'debug'
 /**
  * 执行的规则
  */
@@ -18,9 +19,17 @@ export abstract class DoRule {
      * 隐藏主体元素
      * @param mainElement 主体元素
      */
-    async display(mainElement: Element) {
+    async display(mainElement: Element, desplayType: DisplayType = 'display') {
         if (await this.bingo(mainElement)) {
-            (mainElement as any).style.setProperty('background-color', 'yellow');
+            mainElement.setAttribute('displayType', desplayType)
+            switch (desplayType) {
+                case 'display':
+                    (mainElement as any).style.setProperty('display', 'none')
+                    break;
+                case 'debug':
+                    (mainElement as any).style.setProperty('background-color', 'yellow');
+                    break;
+            }
             mainElement.classList.add(DoRule.DISPLAYED_CLASS)
         }
     }
@@ -31,7 +40,15 @@ export abstract class DoRule {
         let elements = document.querySelectorAll(this.mainSelector + '.' + DoRule.DISPLAYED_CLASS)
         for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
-            (element as any).style.setProperty('background-color', '')
+            let displayType = element.getAttribute('displayType') ?? 'display';
+            switch (displayType) {
+                case 'display':
+                    (element as any).style.setProperty('display', '');
+                    break;
+                case 'debug':
+                    (element as any).style.setProperty('background-color', '')
+                    break;
+            }
             element.classList.remove(DoRule.DISPLAYED_CLASS)
         }
     }

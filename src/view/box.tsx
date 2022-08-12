@@ -30,7 +30,7 @@ export class Box extends React.Component {
             <div className="_box">
                 <div>
                     {  // 页面
-                        [...this.state.pageMap.values()].map(page =>
+                        [...this.state.pageMap.values()].filter(page=>page.isCurrent()).map(page =>
                             <PageView page={page} updateBox={() => {
                                 // 更新当前页面, PageView里面有page对象, 所以可以放在里面(也可以放在外面)
                                 this.forceUpdate()

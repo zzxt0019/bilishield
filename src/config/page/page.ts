@@ -1,5 +1,5 @@
 import { Checker } from '../rule/checker';
-import { DoRuleN } from '../rule/do-rule';
+import { DisplayType as DisplayType, DoRuleN } from '../rule/do-rule';
 import { Rule } from '../rule/rule';
 import { SpecialRule } from '../rule/special/special-rule';
 import { SpecialRules } from './../rule/special/special-rules';
@@ -33,6 +33,7 @@ export class Page {
         return this.regexp.test(location.href)
     }
     working = false
+    displayType: DisplayType = 'display'
     checkerMap: Map<string, Checker[]> = new Map()
     insert(rule: Rule) {
         let _checkers = this.checkerMap.get(rule.mainSelector);
@@ -49,17 +50,18 @@ export class Page {
         })
         return arr;
     }
-    start() {
+    start(displayType: DisplayType = 'display') {
         for (const rule of this.rules()) {
             document.arrive(rule.mainSelector, {
                 fireOnAttributesModification: true,
                 onceOnly: false,
                 existing: true
             }, (element: Element) => {
-                rule.display(element)
+                rule.display(element, displayType)
             })
         }
         this.working = true
+        this.displayType = displayType
     }
     stop() {
         for (const rule of this.rules()) {
