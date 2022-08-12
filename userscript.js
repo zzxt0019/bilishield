@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.0.1660323835045
+// @version     1.1.1660325439901
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -15,7 +15,10 @@
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
+// @grant       GM_listValues
 // @grant       GM_registerMenuCommand
+// @grant       GM_xmlhttpRequest
+// @connect     *
 // ==/UserScript==
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
