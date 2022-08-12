@@ -28,9 +28,9 @@ export class SettingView extends React.Component {
                     {this.props.setting.key + ':' + this.props.setting.name}
                 </div>
                 {this.state.settings.map(setting =>
-                    <Tag closable={true} onClose={() => {
+                    <Tag closable={true} key={setting} onClose={async () => {
                         Settings.delSettingValue(this.props.setting, setting)
-                        this.updateSettings()
+                        await this.updateSettings()
                         this.props.updateBox()
                     }}>{setting}</Tag>
                 )}
@@ -43,12 +43,12 @@ export class SettingView extends React.Component {
                     <Button
                         size="small"
                         icon={<PlusOutlined />}
-                        onClick={() => {
+                        onClick={async () => {
                             // 添加 保存到GM
                             if (this.state.inputValue) {
                                 Settings.addSettingValue(this.props.setting, this.state.inputValue)
                             }
-                            this.updateSettings()
+                            await this.updateSettings()
                             this.props.updateBox()
                         }}></Button>
                 </Col>
