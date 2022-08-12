@@ -172,6 +172,12 @@ bilibili_manga_card:
     innerSelector: p[title]
     attribute: title
     setting: bilibili_match
+bilibili_number:
+  page: bilibili
+  name: 这无缘无故的攀比之心
+  mainSelector: span.number
+  checker:
+    always: true
 
 # 比例视频页
 bilibili_video_comment: 
