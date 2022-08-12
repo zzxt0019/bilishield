@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1660325439901
+// @version     1.1.1660325872250
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -40620,6 +40620,7 @@ class SettingView extends react.Component {
       span: 20
     }, react.createElement(input, {
       type: 'text',
+      value: this.state.inputValue,
       onChange: e => this.setState({
         inputValue: e.target.value
       })
@@ -40634,6 +40635,9 @@ class SettingView extends react.Component {
           Settings.addSettingValue(this.props.setting, this.state.inputValue);
         }
 
+        this.setState({
+          inputValue: ''
+        });
         yield this.updateSettings();
         this.props.updateBox();
       })
@@ -42184,7 +42188,7 @@ class Box extends react.Component {
       className: "_main",
       ref: this.REFS.main,
       style: {
-        display: ''
+        display: 'none'
       }
     }, react.createElement("div", {
       className: "_box"
