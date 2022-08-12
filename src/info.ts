@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.0.${timestamp}
+// @version     1.1.${timestamp}
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -15,5 +15,8 @@
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
+// @grant       GM_listValues
 // @grant       GM_registerMenuCommand
+// @grant       GM_xmlhttpRequest
+// @connect     *
 // ==/UserScript==
