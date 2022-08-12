@@ -174,7 +174,7 @@ bilibili_manga_card:
     setting: bilibili_match
 bilibili_number:
   page: bilibili
-  name: 这无缘无故的攀比之心
+  name: 这无缘无故的攀比之心是从何而来
   mainSelector: span.number
   checker:
     always: true
