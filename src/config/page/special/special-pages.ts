@@ -7,6 +7,6 @@ export class SpecialPages {
         this.sp.set(specialPage.key, specialPage)
     }
     static {
-        this.init(new BaiduPage())
+        // this.init(new BaiduPage())  // 测试使用
     }
 }
