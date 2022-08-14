@@ -122,8 +122,8 @@ bilibili_ex_title:
   name: 比例首页 推广 标题
   mainSelector: .ex-card-common
   checker:
-    innerSelector: p.title
-    innerHTML: true
+    innerSelector: p[title]
+    attribute: title
     setting: bilibili_match
 bilibili_ex_up:
   page: bilibili_main
