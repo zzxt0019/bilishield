@@ -1,14 +1,14 @@
 # 测试使用
 #baidu_r:
 #  name: baidu guize
-#  page: baidu
+#  page: baidu_main
 #  mainSelector: a
 #  checker:
 #    setting: baidu_setting
 #    innerHTML: true
 #baidu_2:
 #  name: baidu2
-#  page: baidu
+#  page: baidu_main
 #  mainSelector: span.c-color-gray
 #  checker:
 #    setting: baidu_setting

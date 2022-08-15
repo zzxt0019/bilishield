@@ -11,6 +11,7 @@
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
     "@types/tampermonkey": "^4.0.5",
+    "@types/uuid": "^8.3.4",
     "babel-loader": "^8.2.5",
     "cross-env": "^7.0.3",
     "esbuild-loader": "^2.19.0",
@@ -28,6 +29,7 @@
     "postcss-js": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "uuid": "^8.3.2",
     "yaml": "^2.1.1"
   }
 }

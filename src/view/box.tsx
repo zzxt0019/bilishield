@@ -15,6 +15,10 @@ export class Box extends React.Component {
     state = {
         pageMap: new Map<string, Page>()
     }
+    props = {
+        mainClass: '_main',
+        boxClass: '_box',
+    }
 
     componentDidMount(): void {
         // 读取基础配置
@@ -30,8 +34,8 @@ export class Box extends React.Component {
     }
 
     render() {
-        return <div className="_main" ref={this.REFS.main} style={{display: 'none'}}>
-            <div className="_box">
+        return <div className={this.props.mainClass} ref={this.REFS.main} style={{display: 'none'}}>
+            <div className={this.props.boxClass}>
                 <div>
                     {  // 页面
                         [...this.state.pageMap.values()].filter(page => page.isCurrent()).map(page =>
