@@ -1,11 +1,18 @@
 # 测试使用
-# baidu_r:
-#   name: baidu guize
-#   page: baidu
-#   mainSelector: a
-#   checker:
-#     setting: baidu_setting
-#     innerHTML: true
+#baidu_r:
+#  name: baidu guize
+#  page: baidu
+#  mainSelector: a
+#  checker:
+#    setting: baidu_setting
+#    innerHTML: true
+#baidu_2:
+#  name: baidu2
+#  page: baidu
+#  mainSelector: span.c-color-gray
+#  checker:
+#    setting: baidu_setting
+#    innerHTML: true
 # 比例首页
 bilibili_rank_up:
   name: 比例首页排行榜 up用户名

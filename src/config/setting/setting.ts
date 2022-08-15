@@ -3,6 +3,7 @@ import settingText from '../../yaml/setting.yaml';
 import {DefaultSettings} from "./default-setting";
 import {SpecialSetting} from "./special/special-setting";
 import {SpecialSettings} from './special/special-settings';
+import {CheckType} from "@/config/rule/checker";
 
 /**
  * 数据配置
@@ -10,10 +11,12 @@ import {SpecialSettings} from './special/special-settings';
 export class Setting {
     key: string
     name: string
+    type: CheckType
 
     constructor(setting: Setting) {
         this.key = setting.key
         this.name = setting.name
+        this.type = setting.type
     }
 }
 
@@ -23,7 +26,9 @@ export class Settings {
         let obj = yaml.parse(settingText)
         Settings.settingMap = new Map()
         Object.keys(obj).forEach(key => {
-            Settings.settingMap.set(key, {key, name: obj[key]})
+            let setting = obj[key]
+            setting.key = key
+            Settings.settingMap.set(key, setting)
         })
     }
 
@@ -68,6 +73,15 @@ export class Settings {
             return (SpecialSettings.sp.get(key) as SpecialSetting).del(key)(data)
         } else {
             DefaultSettings._delSettingValue(param, data)
+        }
+    }
+
+    static getCheckType(param: string | Setting): CheckType {
+        let key = typeof param === 'string' ? param : param.key
+        if (SpecialSettings.sp.has(key)) {
+            return (SpecialSettings.sp.get(key) as SpecialSetting).type(key)()
+        } else {
+            return (Settings.settingMap.get(key) as Setting).type
         }
     }
 }

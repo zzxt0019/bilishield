@@ -1,4 +1,5 @@
 import {SpecialPage} from "./spceial-page";
+import {BaiduPage} from "@/config/page/special/impl/baidu-page";
 
 export class SpecialPages {
     static sp: Map<string, SpecialPage> = new Map()
@@ -8,6 +9,6 @@ export class SpecialPages {
     }
 
     static {
-        // this.init(new BaiduPage())  // 测试使用
+        this.init(new BaiduPage())  // 测试使用
     }
 }

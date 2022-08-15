@@ -1,5 +1,7 @@
 import {DefaultSettings} from "../../default-setting";
 import {SpecialSetting} from "../special-setting";
+import {CheckType} from "@/config/rule/checker";
+
 
 export class UidUsername extends SpecialSetting {
     get(key: 'uid' | 'username'): () => Promise<string[]> {
@@ -29,6 +31,18 @@ export class UidUsername extends SpecialSetting {
     del(key: 'uid'): (uid: string | string[]) => void {
         return (uid: string | string[]) => {
             DefaultSettings._delSettingValue('uid', uid)
+        }
+    }
+
+    type(key: 'uid' | 'username'): () => CheckType {
+        return () => {
+            if (key === 'uid') {
+                return 'equal'
+            } else if (key === 'username') {
+                return 'like'
+            } else {
+                return 'like'
+            }
         }
     }
 

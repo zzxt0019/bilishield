@@ -1,3 +1,9 @@
-baidu_setting: 百度配置
-bilibili_card: 卡片
-bilibili_match: 文字匹配
+#baidu_setting:
+#  name: 百度配置
+#  type: regexp
+bilibili_card:
+  name: 卡片
+  type: like
+bilibili_match:
+  name: 文字匹配
+  type: regexp

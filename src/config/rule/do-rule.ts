@@ -1,5 +1,5 @@
 import {Settings} from '../setting/setting';
-import {Checker} from "./checker";
+import {Checker, CheckType} from "./checker";
 
 export type DisplayType = 'display' | 'debug'
 
@@ -108,16 +108,47 @@ export class DoRuleN extends DoRule {
         // 是innerHTML 判断innerHTML是否在data的范围
         if (checker.innerHTML && checker.setting) {
             for (const settingData of await Settings.getSettingValue(checker.setting)) {
-                if (element.innerHTML.includes(settingData)) {
-                    return true;
+                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting);
+                switch (type) {
+                    case 'equal':
+                        if (element.innerHTML === settingData) {
+                            return true;
+                        }
+                        break;
+                    case 'like':
+                        if (element.innerHTML.includes(settingData)) {
+                            return true;
+                        }
+                        break;
+                    case 'regexp':
+                        if (new RegExp(settingData).test(element.innerHTML)) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }
-        // 有attribute 判断attribute的value是否在data的范围
-        if (checker.attribute && checker.setting) {
+        // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
+        if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
             for (const settingData of await Settings.getSettingValue(checker.setting)) {
-                if (element.getAttribute(checker.attribute)?.includes(settingData)) {
-                    return true;
+                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting);
+                let value: string = element.getAttribute(checker.attribute) as string
+                switch (type) {
+                    case 'equal':
+                        if (value === settingData) {
+                            return true;
+                        }
+                        break;
+                    case 'like':
+                        if (value.includes(settingData)) {
+                            return true;
+                        }
+                        break;
+                    case 'regexp':
+                        if (new RegExp(settingData).test(value)) {
+                            return true;
+                        }
+                        break;
                 }
             }
         }
