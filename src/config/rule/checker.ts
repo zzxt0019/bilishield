@@ -1,10 +1,12 @@
-import { Setting } from '@/config/setting/setting';
+import {Setting} from '@/config/setting/setting';
+
 /**
  * 内部检查器配置 判断条件
  */
 export interface Checker {
     innerSelector?: string  // 内部选择器 判断的目标
     setting?: Setting  // 数据配置
+    // ↖ 可能需要规则部分配置范围(eq, regexp), 但一般不需要, 仅通过setting里配置 (此处先留一条注释)
     bingo?: (element: Element) => Promise<boolean>  // 第0层判断 只有特殊规则会用到
     always?: boolean  // 第1层判断 true表示有即选中, false进入下一层
     innerHTML?: boolean  // 第2层判断 true表示根据innerHTML判断, false进入下一层

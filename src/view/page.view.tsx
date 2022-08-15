@@ -1,12 +1,13 @@
-import { Page } from "@/config/page/page";
-import { DisplayType } from "@/config/rule/do-rule";
-import { Button, Card, Col, Row, Typography } from "antd";
+import {Page} from "@/config/page/page";
+import {DisplayType} from "@/config/rule/do-rule";
+import {Button, Card, Col, Row, Typography} from "antd";
 import React from "react";
 
 export class PageView extends React.Component {
     props = {
         page: {} as Page,
-        updateBox: () => { }
+        updateBox: () => {
+        }
     }
     /**
      * 点击启停按钮, 运行/停止此页规则
@@ -32,25 +33,27 @@ export class PageView extends React.Component {
         // 刷新父组件
         this.props.updateBox()
     }
+
     render() {
         return <Card>
             <Row>
-                <Col span={6} >
+                <Col span={6}>
                     <Typography.Text type={this.props.page.working ? 'success' : 'danger'}>
                         {this.props.page.name}
                     </Typography.Text>
-                    <Typography.Text style={{ display: this.props.page.working && this.props.page.displayType === 'debug' ? '' : 'none' }}>
+                    <Typography.Text
+                        style={{display: this.props.page.working && this.props.page.displayType === 'debug' ? '' : 'none'}}>
                         (debug)
                     </Typography.Text>
                 </Col>
-                <Col span={6} ></Col>
-                <Col span={6} >
+                <Col span={6}></Col>
+                <Col span={6}>
                     <Button
                         size="small" onClick={this.workClick}>
                         {this.props.page.working ? '停止' : '启动'}
                     </Button>
                 </Col>
-                <Col span={6} >
+                <Col span={6}>
                     {(() => {
                         if (this.props.page.working) {
                             return <Button size="small" onClick={this.debugClick}>

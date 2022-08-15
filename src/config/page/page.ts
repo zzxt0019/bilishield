@@ -1,8 +1,9 @@
-import { Checker } from '../rule/checker';
-import { DisplayType, DoRuleN } from '../rule/do-rule';
-import { Rule } from '../rule/rule';
-import { SpecialRule } from '../rule/special/special-rule';
-import { SpecialRules } from './../rule/special/special-rules';
+import {Checker} from '../rule/checker';
+import {DisplayType, DoRuleN} from '../rule/do-rule';
+import {Rule} from '../rule/rule';
+import {SpecialRule} from '../rule/special/special-rule';
+import {SpecialRules} from './../rule/special/special-rules';
+
 /**
  * 页面配置
  */
@@ -29,12 +30,15 @@ export class Page {
             })
         }
     }
+
     isCurrent(): boolean {
         return this.regexp.test(location.href)
     }
+
     working = false
     displayType: DisplayType = 'display'
     checkerMap: Map<string, Checker[]> = new Map()
+
     insert(rule: Rule) {
         let _checkers = this.checkerMap.get(rule.mainSelector);
         let checkers = _checkers ? _checkers : []
@@ -43,6 +47,7 @@ export class Page {
             this.checkerMap.set(rule.mainSelector, checkers)
         }
     }
+
     rules() {
         let arr: DoRuleN[] = []
         this.checkerMap.forEach((checkers, mainSelector) => {
@@ -50,6 +55,7 @@ export class Page {
         })
         return arr;
     }
+
     start(displayType?: DisplayType) {
         if (displayType) {
             this.displayType = displayType
@@ -65,6 +71,7 @@ export class Page {
         }
         this.working = true
     }
+
     stop() {
         for (const rule of this.rules()) {
             document.unbindArrive(rule.mainSelector);
@@ -73,6 +80,7 @@ export class Page {
         this.working = false
     }
 }
+
 interface PageOptions {
     key: string
     name?: string

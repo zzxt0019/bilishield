@@ -1,4 +1,4 @@
-import { SpecialRule } from "../special-rule";
+import {SpecialRule} from "../special-rule";
 
 export class BaiduTest extends SpecialRule {
     pageKey = 'baidu'
@@ -6,7 +6,7 @@ export class BaiduTest extends SpecialRule {
         {
             mainSelector: 'a',
             bingo: async (node: Element) => {
-                if(node.innerHTML.includes('abcde')) {
+                if (node.innerHTML.includes('abcde')) {
                     return true;
                 } else {
                     return false;

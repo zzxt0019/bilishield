@@ -1,28 +1,33 @@
-import { Settings } from '../setting/setting';
-import { Checker } from "./checker";
+import {Settings} from '../setting/setting';
+import {Checker} from "./checker";
 
 export type DisplayType = 'display' | 'debug'
+
 /**
  * 执行的规则
  */
 export abstract class DoRule {
     private static readonly DISPLAYED_CLASS = 'testtest'
+
     constructor(public mainSelector: string) {
 
     }
+
     /**
      * 主体是否中奖
      * @param mainElement 主体元素
      */
     abstract bingo(mainElement: Element): Promise<boolean>
+
     /**
      * 隐藏主体元素
      * @param mainElement 主体元素
+     * @param displayType 处理方式
      */
-    async display(mainElement: Element, desplayType: DisplayType = 'display') {
+    async display(mainElement: Element, displayType: DisplayType = 'display') {
         if (await this.bingo(mainElement)) {
-            mainElement.setAttribute('displayType', desplayType)
-            switch (desplayType) {
+            mainElement.setAttribute('displayType', displayType)
+            switch (displayType) {
                 case 'display':
                     (mainElement as any).style.setProperty('display', 'none')
                     break;
@@ -33,6 +38,7 @@ export abstract class DoRule {
             mainElement.classList.add(DoRule.DISPLAYED_CLASS)
         }
     }
+
     /**
      * 显示主体元素
      */
@@ -54,6 +60,7 @@ export abstract class DoRule {
     }
 
 }
+
 /**
  * 执行的多规则
  */
@@ -61,6 +68,7 @@ export class DoRuleN extends DoRule {
     constructor(public mainSelector: string, public checkers: Checker[]) {
         super(mainSelector)
     }
+
     async bingo(mainElement: Element): Promise<boolean> {
         // 所有检查器之中满足一个即为中奖
         for (const checker of this.checkers) {
@@ -75,14 +83,14 @@ export class DoRuleN extends DoRule {
                 }
             } else {
                 // 没有内部选择器, 即为当前元素, 判断
-                let element = mainElement
-                if (await this.bingo0(element, checker)) {
+                if (await this.bingo0(mainElement, checker)) {
                     return true;
                 }
             }
         }
         return false;
     }
+
     /**
      * 判断当前一个元素是否中奖
      * @param element 当前元素

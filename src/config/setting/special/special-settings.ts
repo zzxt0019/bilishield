@@ -1,5 +1,5 @@
-import { SpecialSetting } from "./special-setting";
-import { UidUsername } from "./impl/uid-username";
+import {SpecialSetting} from "./special-setting";
+import {UidUsername} from "./impl/uid-username";
 
 export class SpecialSettings {
     static sp: Map<string, SpecialSetting> = new Map()

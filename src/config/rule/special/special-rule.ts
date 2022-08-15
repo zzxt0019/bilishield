@@ -1,4 +1,3 @@
-
 export abstract class SpecialRule {
     abstract pageKey: string
     abstract spCheckers: {

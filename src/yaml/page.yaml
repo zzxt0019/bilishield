@@ -1,6 +1,6 @@
 bilibili_all:
   name: 比例全部
-  regexp: 
+  regexp:
     pattern: bilibili.com
 bilibili_main:
   name: 比例首页
@@ -8,5 +8,5 @@ bilibili_main:
     pattern: www.bilibili.com/$
 bilibili_live:
   name: 比例直播
-  regexp: 
+  regexp:
     pattern: live.bilibili.com

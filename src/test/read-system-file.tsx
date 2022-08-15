@@ -1,10 +1,11 @@
-import { SpecialPages } from "@/config/page/special/special-pages";
-import { Rule } from "@/config/rule/rule";
-import { Settings } from "@/config/setting/setting";
+import {SpecialPages} from "@/config/page/special/special-pages";
+import {Rule} from "@/config/rule/rule";
+import {Settings} from "@/config/setting/setting";
 import * as yaml from "yaml";
-import { Page } from '../config/page/page';
+import {Page} from '../config/page/page';
 import pageText from '../yaml/page.yaml';
 import ruleText from '../yaml/rule.yaml';
+
 export function readFiles() {
     let pageData = yaml.parse(pageText);
     let pageMap: Map<string, Page> = new Map()

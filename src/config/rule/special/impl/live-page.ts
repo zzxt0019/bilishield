@@ -1,5 +1,5 @@
-import { Settings } from '@/config/setting/setting';
-import { SpecialRule } from "../special-rule";
+import {Settings} from '@/config/setting/setting';
+import {SpecialRule} from "../special-rule";
 
 export class LivePageRule extends SpecialRule {
     pageKey = 'bilibili_live'

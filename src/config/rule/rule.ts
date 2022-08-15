@@ -1,5 +1,5 @@
-import { Checker } from './checker';
-import { BaiduTest } from './special/impl/baidu-test';
+import {Checker} from './checker';
+
 /**
  * 规则配置
  */

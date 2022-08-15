@@ -1,43 +1,47 @@
-import { UidUsername } from "@/config/setting/special/impl/uid-username";
-import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
-import { Button, Card, Col, InputNumber, Row, Tag, Tooltip } from "antd";
+import {UidUsername} from "@/config/setting/special/impl/uid-username";
+import {PlusOutlined, SyncOutlined} from '@ant-design/icons';
+import {Button, Card, Col, InputNumber, Row, Tag, Tooltip} from "antd";
 import React from "react";
 
 export class UidUsernameView extends React.Component {
     uidusername = new UidUsername()
     input = React.createRef<HTMLInputElement>()
     props = {
-        updateBox: () => { }
+        updateBox: () => {
+        }
     }
     state: {
         settings: { username: string, uid: string }[],
         inputUid: string,
         inputUsername: string
     } = {
-            settings: [],
-            inputUid: '',
-            inputUsername: ''
-        }
+        settings: [],
+        inputUid: '',
+        inputUsername: ''
+    }
     updateSettings = async () => {
         let uids = await this.uidusername.get('uid')()
         Promise.all(uids.map(uid => this.uidusername.uid2username(uid)))
             .then((usernames) => {
                 let settings: { username: string, uid: string }[] = []
                 uids.forEach((uid, i) => {
-                    settings.push({ uid, username: usernames[i] })
+                    settings.push({uid, username: usernames[i]})
                 })
-                this.setState({ settings })
+                this.setState({settings})
             })
     }
+
     componentDidMount(): void {
         this.updateSettings()
     }
+
     render() {
         return <Card>
             <Card>
-                <div>uid名称: </div>
+                <div>uid名称:</div>
                 {this.state.settings.map(item =>
-                    <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0} trigger='click'>
+                    <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
+                             trigger='click'>
                         <Tag closable={true} onClose={() => {
                             this.uidusername.del('uid')(item.uid)
                             this.updateSettings()
@@ -50,7 +54,7 @@ export class UidUsernameView extends React.Component {
                 <Col span={10}>
                     <InputNumber controls={false} value={this.state.inputUid} onChange={async (value) => {
                         let uid = value + ''
-                        this.setState({ inputUid: uid, inputUsername: await this.uidusername.uid2username(uid) })
+                        this.setState({inputUid: uid, inputUsername: await this.uidusername.uid2username(uid)})
                     }}></InputNumber>
                 </Col>
                 <Col span={8}>
@@ -65,12 +69,12 @@ export class UidUsernameView extends React.Component {
                     <Button
                         size="small"
                         disabled={!this.state.inputUsername}
-                        icon={<PlusOutlined />}
+                        icon={<PlusOutlined/>}
                         onClick={() => {
                             if (this.state.inputUid && this.state.inputUsername) {
                                 this.uidusername.add('uid')(this.state.inputUid)
                             }
-                            this.setState({ inputUid: '', inputUsername: '' })
+                            this.setState({inputUid: '', inputUsername: ''})
                             this.updateSettings()
                             this.props.updateBox()
                         }}></Button>
@@ -78,7 +82,7 @@ export class UidUsernameView extends React.Component {
                 <Col span={3}>
                     <Button
                         size="small"
-                        icon={<SyncOutlined />}
+                        icon={<SyncOutlined/>}
                         onClick={async () => {
                             GM_listValues()
                                 .filter(item => item.startsWith('uid_'))

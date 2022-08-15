@@ -1,4 +1,4 @@
-import { SpecialPage } from '../spceial-page';
+import {SpecialPage} from '../spceial-page';
 
 export class BaiduPage extends SpecialPage {
     constructor() {
@@ -10,6 +10,7 @@ export class BaiduPage extends SpecialPage {
             }
         })
     }
+
     isCurrent(): boolean {
         return this.regexp.test(location.href)
     }
