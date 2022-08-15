@@ -42,7 +42,7 @@ export class UidUsernameView extends React.Component {
                 {this.state.settings.map(item =>
                     <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
                              trigger='click'>
-                        <Tag closable={true} onClose={() => {
+                        <Tag closable={true} style={{userSelect:'none'}} onClose={() => {
                             this.uidusername.del('uid')(item.uid)
                             this.updateSettings()
                             this.props.updateBox()
@@ -87,7 +87,6 @@ export class UidUsernameView extends React.Component {
                             GM_listValues()
                                 .filter(item => item.startsWith('uid_'))
                                 .forEach(item => GM_deleteValue(item))
-                            console.log(GM_listValues())
                             this.updateSettings()
                         }}></Button>
                 </Col>

@@ -13,7 +13,10 @@ export class SettingView extends React.Component {
         updateBox: () => {
         }
     }
-    state = {
+    state: {
+        settings: string[],
+        inputValue: string
+    } = {
         settings: [],
         inputValue: ''
     }
@@ -32,23 +35,27 @@ export class SettingView extends React.Component {
                     {this.props.setting.key + ':' + this.props.setting.name}
                 </div>
                 {this.state.settings.map(setting =>
-                    <Tag closable={true} key={setting} onClose={async () => {
-                        Settings.delSettingValue(this.props.setting, setting)
-                        await this.updateSettings()
-                        this.props.updateBox()
-                    }}>{setting}</Tag>
+                    <Tag closable={true} key={setting} style={{userSelect: 'none'}}
+                         onDoubleClick={(e) => this.setState({inputValue: (e.target as any).textContent})}
+                         onClose={async () => {
+                             Settings.delSettingValue(this.props.setting, setting)
+                             await this.updateSettings()
+                             this.props.updateBox()
+                         }}>{setting}</Tag>
                 )}
             </Card>
             <Row>
                 <Col span={20}>
                     <Input type='text' value={this.state.inputValue}
+                           allowClear={true}
                            onChange={(e) => this.setState({inputValue: e.target.value})}></Input>
                 </Col>
                 <Col span={4}>
                     <Button
                         size="small"
                         icon={<PlusOutlined/>}
-                        disabled={!this.state.inputValue}
+                        // 输入框为空 或者 输入框与已有配置相同  disabled
+                        disabled={!this.state.inputValue || this.state.settings.filter(setting => setting === this.state.inputValue).length > 0}
                         onClick={async () => {
                             // 添加 保存到GM
                             if (this.state.inputValue) {
