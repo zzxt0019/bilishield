@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1660449936340
+// @version     1.1.1660548339620
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -8998,7 +8998,7 @@ var react = __webpack_require__(7294);
 // EXTERNAL MODULE: ./node_modules/react-dom/client.js
 var client = __webpack_require__(745);
 ;// CONCATENATED MODULE: ./src/main.css
-/* harmony default export */ const main = ("._main {\n  bottom: 6vh;\n  color: #777777;\n  position: absolute;\n  top: 10px;\n  right: 400px;\n  z-index: 99999;\n}\n\n._main ._box {\n  position: fixed;\n  background-color: white;\n  border: 5px groove pink;\n  width: 350px;\n}");
+/* harmony default export */ const main = ("._main {\n    bottom: 6vh;\n    color: #777777;\n    position: absolute;\n    top: 10px;\n    right: 400px;\n    z-index: 99999;\n}\n\n._main ._box {\n    position: fixed;\n    background-color: white;\n    border: 5px groove pink;\n    width: 350px;\n}");
 ;// CONCATENATED MODULE: ./node_modules/yaml/browser/dist/nodes/Node.js
 const ALIAS = Symbol.for('yaml.alias');
 const DOC = Symbol.for('yaml.document');
@@ -16571,7 +16571,7 @@ function public_api_stringify(value, replacer, options) {
 
 
 ;// CONCATENATED MODULE: ./src/yaml/setting.yaml
-/* harmony default export */ const setting = ("baidu_setting: 百度配置\nbilibili_card: 卡片\nbilibili_match: 文字匹配\n");
+/* harmony default export */ const setting = ("#baidu_setting:\n#  name: 百度配置\n#  type: regexp\nbilibili_card:\n  name: 卡片\n  type: like\nbilibili_match:\n  name: 文字匹配\n  type: regexp\n");
 ;// CONCATENATED MODULE: ./src/config/setting/default-setting.ts
 class DefaultSettings {
   /*******************
@@ -16675,6 +16675,18 @@ class UidUsername extends SpecialSetting {
     };
   }
 
+  type(key) {
+    return () => {
+      if (key === 'uid') {
+        return 'equal';
+      } else if (key === 'username') {
+        return 'like';
+      } else {
+        return 'like';
+      }
+    };
+  }
+
   uid2username(_uid) {
     return __awaiter(this, void 0, void 0, function* () {
       // 输入错误
@@ -16698,13 +16710,13 @@ class UidUsername extends SpecialSetting {
     });
   }
   /**
-  * 查询用户名
-  * @param res
-  * @param rej
-  * @param uid
-  * @param firstIndex 首次调用时的index
-  * @param apiIndex 当前调用时的index
-  */
+   * 查询用户名
+   * @param res
+   * @param rej
+   * @param uid
+   * @param firstIndex 首次调用时的index
+   * @param apiIndex 当前调用时的index
+   */
 
 
   queryUsername(res, rej, uid, firstIndex, apiIndex) {
@@ -16825,6 +16837,7 @@ class Setting {
   constructor(setting) {
     this.key = setting.key;
     this.name = setting.name;
+    this.type = setting.type;
   }
 
 }
@@ -16879,16 +16892,25 @@ class Settings {
     }
   }
 
+  static getCheckType(param) {
+    let key = typeof param === 'string' ? param : param.key;
+
+    if (SpecialSettings.sp.has(key)) {
+      return SpecialSettings.sp.get(key).type(key)();
+    } else {
+      return Settings.settingMap.get(key).type;
+    }
+  }
+
 }
 
 (() => {
   let obj = parse(setting);
   Settings.settingMap = new Map();
   Object.keys(obj).forEach(key => {
-    Settings.settingMap.set(key, {
-      key,
-      name: obj[key]
-    });
+    let setting = obj[key];
+    setting.key = key;
+    Settings.settingMap.set(key, setting);
   });
 })();
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/defineProperty.js
@@ -31507,6 +31529,7 @@ button_Button.__ANT_BUTTON = true;
 
 /* harmony default export */ const es_button = (button_button);
 ;// CONCATENATED MODULE: ./src/config/page/special/special-pages.ts
+// import {BaiduPage} from "@/config/page/special/impl/baidu-page";
 class SpecialPages {
   static init(specialPage) {
     this.sp.set(specialPage.key, specialPage);
@@ -31580,15 +31603,16 @@ class DoRule {
   /**
    * 隐藏主体元素
    * @param mainElement 主体元素
+   * @param displayType 处理方式
    */
 
 
-  display(mainElement, desplayType = 'display') {
+  display(mainElement, displayType = 'display') {
     return do_rule_awaiter(this, void 0, void 0, function* () {
       if (yield this.bingo(mainElement)) {
-        mainElement.setAttribute('displayType', desplayType);
+        mainElement.setAttribute('displayType', displayType);
 
-        switch (desplayType) {
+        switch (displayType) {
           case 'display':
             mainElement.style.setProperty('display', 'none');
             break;
@@ -31660,9 +31684,7 @@ class DoRuleN extends DoRule {
           }
         } else {
           // 没有内部选择器, 即为当前元素, 判断
-          let element = mainElement;
-
-          if (yield this.bingo0(element, checker)) {
+          if (yield this.bingo0(mainElement, checker)) {
             return true;
           }
         }
@@ -31680,7 +31702,7 @@ class DoRuleN extends DoRule {
 
 
   bingo0(element, checker) {
-    var _a;
+    var _a, _b;
 
     return do_rule_awaiter(this, void 0, void 0, function* () {
       if (checker.bingo) {
@@ -31695,17 +31717,60 @@ class DoRuleN extends DoRule {
 
       if (checker.innerHTML && checker.setting) {
         for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          if (element.innerHTML.includes(settingData)) {
-            return true;
+          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting);
+
+          switch (type) {
+            case 'equal':
+              if (element.innerHTML === settingData) {
+                return true;
+              }
+
+              break;
+
+            case 'like':
+              if (element.innerHTML.includes(settingData)) {
+                return true;
+              }
+
+              break;
+
+            case 'regexp':
+              if (new RegExp(settingData).test(element.innerHTML)) {
+                return true;
+              }
+
+              break;
           }
         }
-      } // 有attribute 判断attribute的value是否在data的范围
+      } // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
 
 
-      if (checker.attribute && checker.setting) {
+      if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
         for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          if ((_a = element.getAttribute(checker.attribute)) === null || _a === void 0 ? void 0 : _a.includes(settingData)) {
-            return true;
+          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting);
+          let value = element.getAttribute(checker.attribute);
+
+          switch (type) {
+            case 'equal':
+              if (value === settingData) {
+                return true;
+              }
+
+              break;
+
+            case 'like':
+              if (value.includes(settingData)) {
+                return true;
+              }
+
+              break;
+
+            case 'regexp':
+              if (new RegExp(settingData).test(value)) {
+                return true;
+              }
+
+              break;
           }
         }
       }
@@ -31717,57 +31782,6 @@ class DoRuleN extends DoRule {
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rule.ts
 class SpecialRule {}
-;// CONCATENATED MODULE: ./src/config/rule/special/impl/baidu-test.ts
-var baidu_test_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
-
-
-class BaiduTest extends SpecialRule {
-  constructor() {
-    super(...arguments);
-    this.pageKey = 'baidu';
-    this.spCheckers = [{
-      mainSelector: 'a',
-      bingo: node => baidu_test_awaiter(this, void 0, void 0, function* () {
-        if (node.innerHTML.includes('abcde')) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-    }];
-  }
-
-}
 ;// CONCATENATED MODULE: ./src/config/rule/special/impl/live-page.ts
 var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
@@ -31881,7 +31895,7 @@ class LivePageRule extends SpecialRule {
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
 var special_rules_a;
 
-
+ // import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
 
 class SpecialRules {
   static init(specialRule) {
@@ -31893,8 +31907,7 @@ special_rules_a = SpecialRules;
 SpecialRules.sp = new Map();
 
 (() => {
-  special_rules_a.init(new BaiduTest());
-
+  // this.init(new BaiduTest())
   special_rules_a.init(new LivePageRule());
 })();
 ;// CONCATENATED MODULE: ./src/config/page/page.ts
@@ -31982,9 +31995,9 @@ class Page {
 
 }
 ;// CONCATENATED MODULE: ./src/yaml/page.yaml
-/* harmony default export */ const page = ("bilibili_all:\n  name: 比例全部\n  regexp: \n    pattern: bilibili.com\nbilibili_main:\n  name: 比例首页\n  regexp:\n    pattern: www.bilibili.com/$\nbilibili_live:\n  name: 比例直播\n  regexp: \n    pattern: live.bilibili.com");
+/* harmony default export */ const page = ("bilibili_all:\n  name: 比例全部\n  regexp:\n    pattern: bilibili.com\nbilibili_main:\n  name: 比例首页\n  regexp:\n    pattern: www.bilibili.com/$\nbilibili_live:\n  name: 比例直播\n  regexp:\n    pattern: live.bilibili.com");
 ;// CONCATENATED MODULE: ./src/yaml/rule.yaml
-/* harmony default export */ const rule = ("# 测试使用\n# baidu_r:\n#   name: baidu guize\n#   page: baidu\n#   mainSelector: a\n#   checker:\n#     setting: baidu_setting\n#     innerHTML: true\n# 比例首页\nbilibili_rank_up:\n  name: 比例首页排行榜 up用户名\n  page: bilibili_main\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: .info .name\n    setting: username\n    innerHTML: true\nbilibili_rank_title:\n  page: bilibili_main\n  name: 比例首页排行榜 标题\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: '[title]'\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_pgc:\n  page: bilibili_main\n  name: 比例首页排行榜 番剧国创\n  mainSelector: .pgc-rank-wrap\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_manka:\n  page: bilibili_main\n  name: 比例首页排行榜 漫画\n  mainSelector: .manga-rank-item\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_upperright_video:\n  page: bilibili_main\n  name: 比例首页 右上视频\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperright_video_up:\n  page: bilibili_main\n  name: 比例首页 右上视频 UP\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: p.up\n    setting: username\n    innerHTML: true\nbilibili_upperleft_card:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperleft_card_adv:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: i.bypb-icon\nbilibili_left_video_title:\n  page: bilibili_main\n  name: 比例首页 左边视频块 标题\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.title\n    setting: bilibili_match\n    attribute: title\nbilibili_left_video_up:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_left_video_adv:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    always: true\n    innerSelector: .gg-normal-icon\nbilibili_zhuanlan_title:\n  page: bilibili_main\n  name: 比例首页 专栏 标题\n  mainSelector: .article-card\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_zhuanlan_up:\n  page: bilibili_main\n  name: 比例首页 专栏 UP\n  mainSelector: .article-card\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_banner_adv:\n  page: bilibili_main\n  name: 比例首页 广告横条\n  mainSelector: a.banner-card.b-wrap\n  checker:\n    always: true\n    innerSelector: .gg-icon\n\n\nbilibili_ex_title:\n  page: bilibili_main\n  name: 比例首页 推广 标题\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_ex_up:\n  page: bilibili_main\n  name: 比例首页 推广 UP\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: a.ex-up\n    innerHTML: true\n    setting: username\nbilibili__live_up:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.name\n    innerHTML: true\n    setting: username\nbilibili__live_title:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili__live_type:\n  page: bilibili_main\n  name: 比例首页 直播 分类\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.tag\n    innerHTML: true\n    setting: bilibili_match\nbilibili_timeline_card:\n  page: bilibili_main\n  name: 比例首页 番剧国创左侧卡片\n  mainSelector: .time-line-card.item\n  checker:\n    innerSelector: a[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_manga_card:\n  page: bilibili_main\n  name: 比例首页 漫画左侧卡片\n  mainSelector: .manga-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_number:\n  page: bilibili_main\n  name: 这无缘无故的攀比之心是从何而来\n  mainSelector: span.number\n  checker:\n    always: true\n\n# 比例整体(评论区)\nbilibili_all_comment_card: \n  name: 主评论卡片\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker: \n    setting: bilibili_card\n    innerSelector: .sailing-img\n    attribute: alt\nbilibili_all_comment_img: \n  name: 主评论图片\n  page: bilibili_all\n  mainSelector: .list-item\n  checker: \n    setting: bilibili_card\n    innerSelector: p.text img\n    attribute: alt\nbilibili_all_comment_uid:\n  name: 主评论人\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\nbilibili_all_inner_comment_img: \n  name: 子评论图片\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker: \n    setting: bilibili_card\n    innerSelector: img\n    attribute: alt\nbilibili_all_inner_comment_uid: \n  name: 子评论人\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\n\n# 比例直播页面\nbilibili_live_right_word:\n  name: 直播右侧弹幕 关键字\n  page: bilibili_live\n  mainSelector: .chat-item.danmaku-item\n  checker:\n    setting: bilibili_match\n    attribute: data-danmaku\nbilibili_live_roll_word:\n  name: 直播中央弹幕 关键字\n  page: bilibili_live\n  mainSelector: .bilibili-danmaku.mode-roll\n  checker:\n    setting: bilibili_match\n    attribute: data-danmaku");
+/* harmony default export */ const rule = ("# 测试使用\n#baidu_r:\n#  name: baidu guize\n#  page: baidu\n#  mainSelector: a\n#  checker:\n#    setting: baidu_setting\n#    innerHTML: true\n#baidu_2:\n#  name: baidu2\n#  page: baidu\n#  mainSelector: span.c-color-gray\n#  checker:\n#    setting: baidu_setting\n#    innerHTML: true\n# 比例首页\nbilibili_rank_up:\n  name: 比例首页排行榜 up用户名\n  page: bilibili_main\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: .info .name\n    setting: username\n    innerHTML: true\nbilibili_rank_title:\n  page: bilibili_main\n  name: 比例首页排行榜 标题\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: '[title]'\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_pgc:\n  page: bilibili_main\n  name: 比例首页排行榜 番剧国创\n  mainSelector: .pgc-rank-wrap\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_manka:\n  page: bilibili_main\n  name: 比例首页排行榜 漫画\n  mainSelector: .manga-rank-item\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_upperright_video:\n  page: bilibili_main\n  name: 比例首页 右上视频\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperright_video_up:\n  page: bilibili_main\n  name: 比例首页 右上视频 UP\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: p.up\n    setting: username\n    innerHTML: true\nbilibili_upperleft_card:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperleft_card_adv:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: i.bypb-icon\nbilibili_left_video_title:\n  page: bilibili_main\n  name: 比例首页 左边视频块 标题\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.title\n    setting: bilibili_match\n    attribute: title\nbilibili_left_video_up:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_left_video_adv:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    always: true\n    innerSelector: .gg-normal-icon\nbilibili_zhuanlan_title:\n  page: bilibili_main\n  name: 比例首页 专栏 标题\n  mainSelector: .article-card\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_zhuanlan_up:\n  page: bilibili_main\n  name: 比例首页 专栏 UP\n  mainSelector: .article-card\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_banner_adv:\n  page: bilibili_main\n  name: 比例首页 广告横条\n  mainSelector: a.banner-card.b-wrap\n  checker:\n    always: true\n    innerSelector: .gg-icon\n\n\nbilibili_ex_title:\n  page: bilibili_main\n  name: 比例首页 推广 标题\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_ex_up:\n  page: bilibili_main\n  name: 比例首页 推广 UP\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: a.ex-up\n    innerHTML: true\n    setting: username\nbilibili__live_up:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.name\n    innerHTML: true\n    setting: username\nbilibili__live_title:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili__live_type:\n  page: bilibili_main\n  name: 比例首页 直播 分类\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.tag\n    innerHTML: true\n    setting: bilibili_match\nbilibili_timeline_card:\n  page: bilibili_main\n  name: 比例首页 番剧国创左侧卡片\n  mainSelector: .time-line-card.item\n  checker:\n    innerSelector: a[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_manga_card:\n  page: bilibili_main\n  name: 比例首页 漫画左侧卡片\n  mainSelector: .manga-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_number:\n  page: bilibili_main\n  name: 这无缘无故的攀比之心是从何而来\n  mainSelector: span.number\n  checker:\n    always: true\n\n# 比例整体(评论区)\nbilibili_all_comment_card:\n  name: 主评论卡片\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker:\n    setting: bilibili_card\n    innerSelector: .sailing-img\n    attribute: alt\nbilibili_all_comment_img:\n  name: 主评论图片\n  page: bilibili_all\n  mainSelector: .list-item\n  checker:\n    setting: bilibili_card\n    innerSelector: p.text img\n    attribute: alt\nbilibili_all_comment_uid:\n  name: 主评论人\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\nbilibili_all_inner_comment_img:\n  name: 子评论图片\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker:\n    setting: bilibili_card\n    innerSelector: img\n    attribute: alt\nbilibili_all_inner_comment_uid:\n  name: 子评论人\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\n\n# 比例直播页面\nbilibili_live_right_word:\n  name: 直播右侧弹幕 关键字\n  page: bilibili_live\n  mainSelector: .chat-item.danmaku-item\n  checker:\n    setting: bilibili_match\n    attribute: data-danmaku\nbilibili_live_roll_word:\n  name: 直播中央弹幕 关键字\n  page: bilibili_live\n  mainSelector: .bilibili-danmaku.mode-roll\n  checker:\n    setting: bilibili_match\n    attribute: data-danmaku");
 ;// CONCATENATED MODULE: ./src/test/read-system-file.tsx
 
 
@@ -40585,6 +40598,12 @@ class SettingView extends react.Component {
     return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, this.props.setting.key + ':' + this.props.setting.name), this.state.settings.map(setting => react.createElement(tag, {
       closable: true,
       key: setting,
+      style: {
+        userSelect: 'none'
+      },
+      onDoubleClick: e => this.setState({
+        inputValue: e.target.textContent
+      }),
       onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
         Settings.delSettingValue(this.props.setting, setting);
         yield this.updateSettings();
@@ -40595,6 +40614,7 @@ class SettingView extends react.Component {
     }, react.createElement(input, {
       type: 'text',
       value: this.state.inputValue,
+      allowClear: true,
       onChange: e => this.setState({
         inputValue: e.target.value
       })
@@ -40603,6 +40623,8 @@ class SettingView extends react.Component {
     }, react.createElement(es_button, {
       size: "small",
       icon: react.createElement(icons_PlusOutlined, null),
+      // 输入框为空 或者 输入框与已有配置相同  disabled
+      disabled: !this.state.inputValue || this.state.settings.filter(setting => setting === this.state.inputValue).length > 0,
       onClick: () => setting_view_awaiter(this, void 0, void 0, function* () {
         // 添加 保存到GM
         if (this.state.inputValue) {
@@ -42055,7 +42077,7 @@ class UidUsernameView extends react.Component {
   }
 
   render() {
-    return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, "uid\u540D\u79F0: "), this.state.settings.map(item => react.createElement(es_tooltip, {
+    return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, "uid\u540D\u79F0:"), this.state.settings.map(item => react.createElement(es_tooltip, {
       title: item.uid,
       key: item.uid,
       getPopupContainer: e => e,
@@ -42063,6 +42085,9 @@ class UidUsernameView extends react.Component {
       trigger: 'click'
     }, react.createElement(tag, {
       closable: true,
+      style: {
+        userSelect: 'none'
+      },
       onClose: () => {
         this.uidusername.del('uid')(item.uid);
         this.updateSettings();
@@ -42110,7 +42135,6 @@ class UidUsernameView extends react.Component {
       icon: react.createElement(icons_SyncOutlined, null),
       onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
         GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
-        console.log(GM_listValues());
         this.updateSettings();
       })
     }))));
