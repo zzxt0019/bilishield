@@ -48,6 +48,7 @@ export class SettingView extends React.Component {
                     <Button
                         size="small"
                         icon={<PlusOutlined/>}
+                        disabled={!this.state.inputValue}
                         onClick={async () => {
                             // 添加 保存到GM
                             if (this.state.inputValue) {
