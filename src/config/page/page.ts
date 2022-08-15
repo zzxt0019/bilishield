@@ -1,5 +1,5 @@
 import {Checker} from '../rule/checker';
-import {DisplayType, DoRuleN} from '../rule/do-rule';
+import {DoRuleN} from '../rule/do-rule';
 import {Rule} from '../rule/rule';
 import {SpecialRule} from '../rule/special/special-rule';
 import {SpecialRules} from './../rule/special/special-rules';
@@ -36,7 +36,6 @@ export class Page {
     }
 
     working = false
-    displayType: DisplayType = 'display'
     checkerMap: Map<string, Checker[]> = new Map()
 
     insert(rule: Rule) {
@@ -56,17 +55,14 @@ export class Page {
         return arr;
     }
 
-    start(displayType?: DisplayType) {
-        if (displayType) {
-            this.displayType = displayType
-        }
+    start() {
         for (const rule of this.rules()) {
             document.arrive(rule.mainSelector, {
                 fireOnAttributesModification: true,
                 onceOnly: false,
                 existing: true
             }, (element: Element) => {
-                rule.display(element, this.displayType)
+                rule.display(element)
             })
         }
         this.working = true

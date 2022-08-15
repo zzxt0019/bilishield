@@ -1,13 +1,12 @@
 import {Settings} from '../setting/setting';
 import {Checker, CheckType} from "./checker";
+import {DISPLAY_CLASS} from "@/main-static";
 
-export type DisplayType = 'display' | 'debug'
 
 /**
  * 执行的规则
  */
 export abstract class DoRule {
-    private static readonly DISPLAYED_CLASS = 'testtest'
 
     constructor(public mainSelector: string) {
 
@@ -22,20 +21,10 @@ export abstract class DoRule {
     /**
      * 隐藏主体元素
      * @param mainElement 主体元素
-     * @param displayType 处理方式
      */
-    async display(mainElement: Element, displayType: DisplayType = 'display') {
+    async display(mainElement: Element) {
         if (await this.bingo(mainElement)) {
-            mainElement.setAttribute('displayType', displayType)
-            switch (displayType) {
-                case 'display':
-                    (mainElement as any).style.setProperty('display', 'none')
-                    break;
-                case 'debug':
-                    (mainElement as any).style.setProperty('background-color', 'yellow');
-                    break;
-            }
-            mainElement.classList.add(DoRule.DISPLAYED_CLASS)
+            mainElement.classList.add(DISPLAY_CLASS)
         }
     }
 
@@ -43,19 +32,9 @@ export abstract class DoRule {
      * 显示主体元素
      */
     show() {
-        let elements = document.querySelectorAll(this.mainSelector + '.' + DoRule.DISPLAYED_CLASS)
+        let elements = document.querySelectorAll(this.mainSelector + '.' + DISPLAY_CLASS)
         for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
-            let displayType = element.getAttribute('displayType') ?? 'display';
-            switch (displayType) {
-                case 'display':
-                    (element as any).style.setProperty('display', '');
-                    break;
-                case 'debug':
-                    (element as any).style.setProperty('background-color', '')
-                    break;
-            }
-            element.classList.remove(DoRule.DISPLAYED_CLASS)
+            elements[i].classList.remove(DISPLAY_CLASS)
         }
     }
 

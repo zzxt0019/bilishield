@@ -1,37 +1,36 @@
-import antdStyle from 'antd/dist/antd.css';
 import "arrive";
 import React from "react";
 import {createRoot, Root} from "react-dom/client";
-import boxStyle from './main.css';
 import {Box} from './view/box';
-import {v4 as uuidV4} from "uuid";
+import * as STATIC from './main-static'
+import {displayType} from './main-static'
+import antdStyle from 'antd/dist/antd.css';
+import boxStyle from './style/main.css';
+import displayStyle from './style/display/display.css';
+import debugStyle from './style/display/debug.css';
 
 const postcssJs = require('postcss-js')
 const postcss = require('postcss')
-const BOX_CLASS: string = 'b' + uuidV4().replaceAll('-', '')
-const MAIN_CLASS: string = 'm' + uuidV4().replaceAll('-', '')
-const APP_ID: string = 'a' + uuidV4().replaceAll('-', '')
-const BOX_STYLE_ID: string = 'b' + uuidV4().replaceAll('-', '')
-const ANTD_STYLE_ID: string = 'b' + uuidV4().replaceAll('-', '')
-init()
 
+init()
 
 async function init() {
     let root = createReact();
-    initAntdStyle().then(antdStyle => createStyle(ANTD_STYLE_ID, antdStyle)())
-    initBoxStyle().then(boxStyle => createStyle(BOX_STYLE_ID, boxStyle)())
+    initAntdStyle().then(antdStyle => createStyle(STATIC.ANTD_STYLE_ID, antdStyle)())
+    initBoxStyle().then(boxStyle => createStyle(STATIC.BOX_STYLE_ID, boxStyle)())
+    initDisplay();
     // 监听APP_ID
-    document.leave('#' + APP_ID, {
+    document.leave('#' + STATIC.APP_ID, {
         fireOnAttributesModification: true,
         onceOnly: false,
         existing: false
-    }, () => {
+    }, function () {
         root.unmount()
         root = createReact()
     })
     // 油猴菜单展示/隐藏配置
     GM_registerMenuCommand('配置', () => {
-        let main = document.querySelector('.' + MAIN_CLASS) as HTMLDivElement
+        let main = document.querySelector('.' + STATIC.MAIN_CLASS) as HTMLDivElement
         main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none')
     })
 }
@@ -43,13 +42,13 @@ async function init() {
 
 function createReact(): Root {
     let div: Element
-    if (!document.getElementById(APP_ID)) {
+    if (!document.getElementById(STATIC.APP_ID)) {
         div = document.createElement('div')
-        div.setAttribute("id", APP_ID);
+        div.setAttribute("id", STATIC.APP_ID);
         document.body.appendChild(div);
     }
-    let root = createRoot(document.getElementById(APP_ID) as Element)
-    root.render(<Box mainClass={MAIN_CLASS} boxClass={BOX_CLASS}/>)
+    let root = createRoot(document.getElementById(STATIC.APP_ID) as Element)
+    root.render(<Box mainClass={STATIC.MAIN_CLASS} boxClass={STATIC.BOX_CLASS}/>)
     return root;
 }
 
@@ -66,7 +65,7 @@ function createStyle(id: string, style: string) {
             fireOnAttributesModification: true,
             onceOnly: false,
             existing: false
-        }, () => {
+        }, function () {
             createStyle(id, style)
         })
     }
@@ -77,7 +76,7 @@ async function initAntdStyle(): Promise<string> {
         let oldObj = postcssJs.objectify(postcss.parse(antdStyle))
         let newObj: any = {}
         Object.keys(oldObj).forEach(key => {
-            newObj['.' + MAIN_CLASS + ' .' + BOX_CLASS + ' ' + key] = oldObj[key]
+            newObj['.' + STATIC.MAIN_CLASS + ' .' + STATIC.BOX_CLASS + ' ' + key] = oldObj[key]
         })
         postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
             res(result.css)
@@ -90,10 +89,53 @@ async function initBoxStyle(): Promise<string> {
         let oldObj = postcssJs.objectify(postcss.parse(boxStyle))
         let newObj: any = {}
         Object.keys(oldObj).forEach(key => {
-            newObj[key.replace('_main', MAIN_CLASS).replace('_box', BOX_CLASS)] = oldObj[key]
+            newObj[key.replace('_main', STATIC.MAIN_CLASS).replace('_box', STATIC.BOX_CLASS)] = oldObj[key]
         })
         postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
             res(result.css)
         })
     })
+}
+
+async function initDisplay() {
+    let displayObj = postcssJs.objectify(postcss.parse(displayStyle));
+    let newDisplayObj: any = {};
+    Object.keys(displayObj).forEach(key => {
+        newDisplayObj[key.replace('_display', STATIC.DISPLAY_CLASS)] = displayObj[key];
+    })
+    let debugObj = postcssJs.objectify(postcss.parse(debugStyle));
+    let newDebugObj: any = {};
+    Object.keys(debugObj).forEach(key => {
+        newDebugObj[key.replace('_display', STATIC.DISPLAY_CLASS)] = debugObj[key];
+    })
+    Promise.all([
+        postcss().process(newDisplayObj, {parser: postcssJs}),
+        postcss().process(newDebugObj, {parser: postcssJs}),
+    ]).then(result => {
+        console.log('result', result)
+        // todo 等待整理
+        STATIC.data.display = result[0].css
+        STATIC.data.debug = result[1].css
+        createDisplayStyle({display: result[0].css, debug: result[1].css})()
+    })
+}
+
+function createDisplayStyle(data: { display: string, debug: string }, type: displayType = 'display') {
+    if (!document.getElementById(STATIC.DISPLAY_STYLE_ID)) {
+        let element = document.createElement('style')
+        element.setAttribute('id', STATIC.DISPLAY_STYLE_ID)
+        element.setAttribute('type', 'text/css')
+        element.setAttribute('displayType', type)
+        element.innerHTML = data[type]
+        document.body.appendChild(element)
+    }
+    return () => {
+        document.leave('#' + STATIC.DISPLAY_STYLE_ID, {
+            fireOnAttributesModification: true,
+            onceOnly: false,
+            existing: false
+        }, function () {
+            createDisplayStyle(data, (this.getAttribute('displayType') ?? 'display') as displayType)
+        })
+    }
 }

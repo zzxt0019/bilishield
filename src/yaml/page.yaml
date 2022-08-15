@@ -2,6 +2,10 @@
 #  name: 百度配置
 #  regexp:
 #    pattern: baidu.com
+#baidu_main2:
+#  name: 百度配置2
+#  regexp:
+#    pattern: baidu.com
 bilibili_all:
   name: 比例全部
   regexp:
