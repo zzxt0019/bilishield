@@ -1,6 +1,6 @@
 import React from "react";
 import {Button} from "antd";
-import {data} from "@/main-static";
+import {CSS_INNER_HTML, DISPLAY_STYLE_ID} from "@/main-static";
 
 export class DisplayType extends React.Component {
     state: {
@@ -13,15 +13,16 @@ export class DisplayType extends React.Component {
 
         // todo 等待整理
         return <div>
-            {document.getElementById('ABCDEFG')?.getAttribute('displayType')}
+            {document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType')}
             <Button onClick={() => {
-                if (document.getElementById('ABCDEFG')?.getAttribute('displayType') === 'display') {
-                    document.getElementById('ABCDEFG')?.setAttribute('displayType', 'debug');
-                    (document.getElementById('ABCDEFG') as Element).innerHTML = data.debug
+                if (document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') === 'display') {
+                    document.getElementById(DISPLAY_STYLE_ID)?.setAttribute('displayType', 'debug');
+                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.debug
                 } else {
-                    document.getElementById('ABCDEFG')?.setAttribute('displayType', 'display');
-                    (document.getElementById('ABCDEFG') as Element).innerHTML = data.display
+                    document.getElementById(DISPLAY_STYLE_ID)?.setAttribute('displayType', 'display');
+                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.display
                 }
+                this.forceUpdate()
             }}>[换]</Button>
         </div>
     }

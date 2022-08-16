@@ -37,19 +37,22 @@ export class Box extends React.Component {
     render() {
         return <div className={this.props.mainClass} ref={this.REFS.main} style={{display: 'none'}}>
             <div className={this.props.boxClass}>
-                <Layout>
-                    <Layout.Content>
-                        {  // 页面
-                            [...this.state.pageMap.values()].filter(page => page.isCurrent()).map(page =>
-                                <PageView page={page} updateBox={() => {
-                                    // 更新当前页面, PageView里面有page对象, 所以可以放在里面(也可以放在外面)
-                                    this.forceUpdate()
-                                }}/>)}
-                    </Layout.Content>
-                    <Layout.Sider>
-                        <DisplayType></DisplayType>
-                    </Layout.Sider>
-                </Layout>
+                {(() => {
+                    if ([...this.state.pageMap.values()].filter(page => page.isCurrent()).length !== 0)
+                        return <Layout>
+                            <Layout.Content>
+                                {  // 页面
+                                    [...this.state.pageMap.values()].filter(page => page.isCurrent()).map(page =>
+                                        <PageView page={page} updateBox={() => {
+                                            // 更新当前页面, PageView里面有page对象, 所以可以放在里面(也可以放在外面)
+                                            this.forceUpdate()
+                                        }}/>)}
+                            </Layout.Content>
+                            <Layout.Sider theme="light">
+                                <DisplayType></DisplayType>
+                            </Layout.Sider>
+                        </Layout>
+                })()}
                 <hr/>
                 <Tabs>
                     <Tabs.TabPane key="uid2username-tab" tab={<span>uid</span>}>

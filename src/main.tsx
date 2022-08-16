@@ -112,10 +112,8 @@ async function initDisplay() {
         postcss().process(newDisplayObj, {parser: postcssJs}),
         postcss().process(newDebugObj, {parser: postcssJs}),
     ]).then(result => {
-        console.log('result', result)
-        // todo 等待整理
-        STATIC.data.display = result[0].css
-        STATIC.data.debug = result[1].css
+        STATIC.CSS_INNER_HTML.display = result[0].css
+        STATIC.CSS_INNER_HTML.debug = result[1].css
         createDisplayStyle({display: result[0].css, debug: result[1].css})()
     })
 }
