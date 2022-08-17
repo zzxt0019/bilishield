@@ -1,96 +1,94 @@
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {PlusOutlined, SyncOutlined} from '@ant-design/icons';
-import {Button, Card, Col, InputNumber, Row, Tag, Tooltip} from "antd";
-import React from "react";
+import {Button, Card, Col, Input, Row, Tag, Tooltip} from "antd";
+import React, {useEffect, useState} from "react";
 
-export class UidUsernameView extends React.Component {
-    uidusername = new UidUsername()
-    input = React.createRef<HTMLInputElement>()
-    props = {
-        updateBox: () => {
-        }
-    }
-    state: {
-        settings: { username: string, uid: string }[],
-        inputUid: string,
-        inputUsername: string
-    } = {
-        settings: [],
-        inputUid: '',
-        inputUsername: ''
-    }
-    updateSettings = async () => {
-        let uids = await this.uidusername.get('uid')()
-        Promise.all(uids.map(uid => this.uidusername.uid2username(uid)))
+export function UidUsernameView(props: {
+    updateBox: () => void
+}) {
+    const uu: UidUsername = useState(new UidUsername())[0];
+    const [settings, setSettings] = useState<{ username: string, uid: string }[]>([]);
+    const [inputUid, setInputUid] = useState('');
+    const [inputUsername, setInputUsername] = useState('');
+    const updateSettings = async () => {
+        let uids = await uu.get('uid')()
+        Promise.all(uids.map(uid => uu.uid2username(uid)))
             .then((usernames) => {
                 let settings: { username: string, uid: string }[] = []
                 uids.forEach((uid, i) => {
                     settings.push({uid, username: usernames[i]})
                 })
-                this.setState({settings})
+                setSettings(settings)
             })
     }
-
-    componentDidMount(): void {
-        this.updateSettings()
-    }
-
-    render() {
-        return <Card>
-            <Card>
-                <div>uid名称:</div>
-                {this.state.settings.map(item =>
-                    <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
-                             trigger='click'>
-                        <Tag closable={true} style={{userSelect:'none'}} onClose={() => {
-                            this.uidusername.del('uid')(item.uid)
-                            this.updateSettings()
-                            this.props.updateBox()
-                        }} key={item.username}>{item.username}</Tag>
-                    </Tooltip>
-                )}
-            </Card>
-            <Row>
-                <Col span={10}>
-                    <InputNumber controls={false} value={this.state.inputUid} onChange={async (value) => {
-                        let uid = value + ''
-                        this.setState({inputUid: uid, inputUsername: await this.uidusername.uid2username(uid)})
-                    }}></InputNumber>
-                </Col>
-                <Col span={8}>
-                    {(() => {
-                        if (this.state.inputUsername)
-                            return <Tag>
-                                {this.state.inputUsername}
-                            </Tag>
-                    })()}
-                </Col>
-                <Col span={3}>
-                    <Button
-                        size="small"
-                        disabled={!this.state.inputUsername}
-                        icon={<PlusOutlined/>}
-                        onClick={() => {
-                            if (this.state.inputUid && this.state.inputUsername) {
-                                this.uidusername.add('uid')(this.state.inputUid)
-                            }
-                            this.setState({inputUid: '', inputUsername: ''})
-                            this.updateSettings()
-                            this.props.updateBox()
-                        }}></Button>
-                </Col>
-                <Col span={3}>
-                    <Button
-                        size="small"
-                        icon={<SyncOutlined/>}
-                        onClick={async () => {
-                            GM_listValues()
-                                .filter(item => item.startsWith('uid_'))
-                                .forEach(item => GM_deleteValue(item))
-                            this.updateSettings()
-                        }}></Button>
-                </Col>
-            </Row>
+    useEffect(() => {
+        updateSettings()
+    }, [])
+    return <Card>
+        <Card>
+            <div>uid名称:</div>
+            {settings.map(item =>
+                <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
+                         trigger='click'>
+                    <Tag closable={true} style={{userSelect: 'none'}}
+                         onDoubleClick={() => {
+                             setInputUid(item.uid);
+                             setInputUsername(item.username);
+                         }}
+                         onClose={() => {
+                             uu.del('uid')(item.uid)
+                             updateSettings()
+                             props.updateBox()
+                         }} key={item.username}>{item.username}</Tag>
+                </Tooltip>
+            )}
         </Card>
-    }
+        <Row>
+            <Col span={10}>
+                <Input allowClear={true} value={inputUid}
+                       onChange={async (e) => {
+                           let value = e.target.value
+                           if (!value) {
+                               setInputUid('')
+                               setInputUsername('')
+                           } else if (/^[1-9](\d+)?$/.test(value)) {
+                               setInputUid(value + '');
+                               setInputUsername(await uu.uid2username(value + ''));
+                           } else {  // 不是正整数 => 不改变(变为上一次的值)
+                               setInputUid(inputUid);
+                               setInputUsername(inputUsername);
+                           }
+                       }}></Input>
+            </Col>
+            <Col span={8}>
+                {!!inputUsername && <Tag>{inputUsername}</Tag>}
+            </Col>
+            <Col span={3}>
+                <Button
+                    size="small"
+                    disabled={!inputUsername}
+                    icon={<PlusOutlined/>}
+                    onClick={() => {
+                        if (inputUid && inputUsername) {
+                            uu.add('uid')(inputUid)
+                        }
+                        setInputUid('');
+                        setInputUsername('');
+                        updateSettings()
+                        props.updateBox()
+                    }}></Button>
+            </Col>
+            <Col span={3}>
+                <Button
+                    size="small"
+                    icon={<SyncOutlined/>}
+                    onClick={async () => {
+                        GM_listValues()
+                            .filter(item => item.startsWith('uid_'))
+                            .forEach(item => GM_deleteValue(item))
+                        updateSettings()
+                    }}></Button>
+            </Col>
+        </Row>
+    </Card>;
 }
