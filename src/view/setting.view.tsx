@@ -27,7 +27,7 @@ export function SettingView(props: {
                          setInputValue((e.target as any).textContent)
                      }}
                      onClose={async () => {
-                         Settings.delSettingValue(setting, setting)
+                         Settings.delSettingValue(props.setting, setting)
                          await updateSettings()
                          updateBox()
                      }}>{setting}</Tag>
