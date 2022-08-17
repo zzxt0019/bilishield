@@ -17,10 +17,16 @@ export class DisplayType extends React.Component {
             <Button onClick={() => {
                 if (document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') === 'display') {
                     document.getElementById(DISPLAY_STYLE_ID)?.setAttribute('displayType', 'debug');
-                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.debug
+                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.debug;
+                    ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+                        (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.debug;
+                    });
                 } else {
                     document.getElementById(DISPLAY_STYLE_ID)?.setAttribute('displayType', 'display');
-                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.display
+                    (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.display;
+                    ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+                        (document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML.display;
+                    });
                 }
                 this.forceUpdate()
             }}>[换]</Button>

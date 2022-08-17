@@ -31,7 +31,7 @@ export abstract class DoRule {
     /**
      * 显示主体元素
      */
-    show() {
+    show(document: Document = window.document) {
         let elements = document.querySelectorAll(this.mainSelector + '.' + DISPLAY_CLASS)
         for (let i = 0; i < elements.length; i++) {
             elements[i].classList.remove(DISPLAY_CLASS)

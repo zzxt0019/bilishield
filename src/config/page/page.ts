@@ -63,6 +63,16 @@ export class Page {
                 existing: true
             }, (element: Element) => {
                 rule.display(element)
+            });
+            // iframe里执行start()
+            ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+                document.arrive(rule.mainSelector, {
+                    fireOnAttributesModification: true,
+                    onceOnly: false,
+                    existing: true
+                }, (element: Element) => {
+                    rule.display(element)
+                })
             })
         }
         this.working = true
@@ -71,9 +81,47 @@ export class Page {
     stop() {
         for (const rule of this.rules()) {
             document.unbindArrive(rule.mainSelector);
-            rule.show()
+            rule.show();
+            // iframe里执行stop()
+            ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+                document.unbindArrive(rule.mainSelector);
+                rule.show(document);
+            });
         }
         this.working = false
+    }
+
+    /**
+     * 初始化start
+     * @param document
+     */
+    arrive(document: Document) {
+        if (this.isCurrent()) {
+            for (let rule of this.rules()) {
+                document.arrive(rule.mainSelector, {
+                    fireOnAttributesModification: true,
+                    onceOnly: false,
+                    existing: true
+                }, (element: Element) => {
+                    rule.display(element)
+                })
+            }
+            if (document === window.document) {
+                this.working = true;
+            }
+        }
+    }
+
+    /**
+     * dom离开时stop
+     * @param document
+     */
+    leave(document: Document) {
+        if(this.isCurrent()) {
+            for(let rule of this.rules()) {
+                document.unbindArrive(rule.mainSelector);
+            }
+        }
     }
 }
 

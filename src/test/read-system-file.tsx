@@ -26,11 +26,5 @@ export function readFiles() {
         }
         pageMap.get(rule0.page)?.insert(new Rule(rule0))
     })
-    console.log(pageMap)
-    pageMap.forEach(page => {
-        if (page.isCurrent()) {
-            page.start()
-        }
-    })
     return pageMap
 }
