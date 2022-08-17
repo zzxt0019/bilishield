@@ -6,6 +6,7 @@ import React, {useEffect, useState} from "react";
 export function UidUsernameView(props: {
     updateBox: () => void
 }) {
+    const {updateBox} = props;
     const uu: UidUsername = useState(new UidUsername())[0];
     const [settings, setSettings] = useState<{ username: string, uid: string }[]>([]);
     const [inputUid, setInputUid] = useState('');
@@ -38,7 +39,7 @@ export function UidUsernameView(props: {
                          onClose={() => {
                              uu.del('uid')(item.uid)
                              updateSettings()
-                             props.updateBox()
+                             updateBox()
                          }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
             )}
@@ -75,7 +76,7 @@ export function UidUsernameView(props: {
                         setInputUid('');
                         setInputUsername('');
                         updateSettings()
-                        props.updateBox()
+                        updateBox()
                     }}></Button>
             </Col>
             <Col span={3}>
