@@ -124,7 +124,7 @@ export class DoRuleN extends DoRule {
                         }
                         break;
                     case 'regexp':
-                        if (new RegExp(settingData).test(value)) {
+                        if (new RegExp(settingData, 'i').test(value)) {
                             return true;
                         }
                         break;
