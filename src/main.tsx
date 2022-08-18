@@ -168,6 +168,16 @@ function iframeArrive(displayPromise: Promise<{ display: string, debug: string }
             for (const page of pageMap.values()) {
                 page.arrive((element as any).contentWindow);
             }
+            setInterval(()=>{
+                if (innerDocument !== (element as any).contentDocument) {
+                    innerDocument = (element as any).contentDocument;
+                    displayPromise.then(data => createDisplayStyle(data, 'display', innerDocument));
+                    for (const page of pageMap.values()) {
+                        page.stop()
+                        page.start()
+                    }
+                }
+            },1000)
         } catch (ignore) {
         }
     })

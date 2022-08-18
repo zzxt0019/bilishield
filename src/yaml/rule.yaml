@@ -243,4 +243,4 @@ bilibili_live_roll_word:
   mainSelector: .bilibili-danmaku.mode-roll
   checker:
     setting: bilibili_match
-    attribute: data-danmaku
+    innerHTML: true

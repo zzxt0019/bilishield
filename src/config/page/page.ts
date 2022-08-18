@@ -4,6 +4,7 @@ import {Rule} from '../rule/rule';
 import {SpecialRule} from '../rule/special/special-rule';
 import {SpecialRules} from './../rule/special/special-rules';
 import {MyObserver} from "@/observer/impl/my-observer";
+import {ArriveObserver} from "@/observer/impl/arrive-observer";
 
 /**
  * 页面配置
@@ -11,8 +12,9 @@ import {MyObserver} from "@/observer/impl/my-observer";
 export class Page {
     key: string  // 页面key yaml的key 相当于id
     name: string  // 页面名称 用于展示
-    regexp: RegExp  // 正则表达式 真实页面是否匹配配置页面
-    observer = new MyObserver()
+    regexp: RegExp;  // 正则表达式 真实页面是否匹配配置页面
+    observer = new ArriveObserver();
+    iframeObserver = new MyObserver();
 
     constructor(page: PageOptions) {
         this.key = page.key
@@ -61,30 +63,13 @@ export class Page {
     start() {
         for (const rule of this.rules()) {
             this.observer.start(rule, window, -1);
-            // document.arrive(rule.mainSelector, {
-            //     fireOnAttributesModification: true,
-            //     onceOnly: false,
-            //     existing: true
-            // }, (element: Element) => {
-            //     rule.display(element)
-            // });
             for (let i = 0; i < window.frames.length; i++) {
                 try {
                     let frame = window.frames[i];
-                    this.observer.start(rule, frame, i);
+                    this.iframeObserver.start(rule, frame, i);
                 } catch (ignore) {
                 }
             }
-            // iframe里执行start()
-            // ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
-            //     document.arrive(rule.mainSelector, {
-            //         fireOnAttributesModification: true,
-            //         onceOnly: false,
-            //         existing: true
-            //     }, (element: Element) => {
-            //         rule.display(element)
-            //     })
-            // })
         }
         this.working = true
     }
@@ -98,15 +83,11 @@ export class Page {
             for (let i = 0; i < window.frames.length; i++) {
                 try {
                     let frame = window.frames[i];
-                    this.observer.stop(rule, frame, i);
+                    this.iframeObserver.stop(rule, frame, i);
                     rule.show(frame.document)
                 } catch (ignore) {
                 }
             }
-            // ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
-            //     document.unbindArrive(rule.mainSelector);
-            //     rule.show(document);
-            // });
         }
         this.working = false
     }
@@ -126,15 +107,11 @@ export class Page {
                         }
                     }
                 }
-
-                this.observer.start(rule, window0, windowKey);
-                document.arrive(rule.mainSelector, {
-                    fireOnAttributesModification: true,
-                    onceOnly: false,
-                    existing: true
-                }, (element: Element) => {
-                    rule.display(element)
-                })
+                if (window0 === window) {
+                    this.observer.start(rule, window0, windowKey);
+                } else {
+                    this.iframeObserver.start(rule, window0, windowKey);
+                }
             }
             if (document === window.document) {
                 this.working = true;
@@ -157,7 +134,11 @@ export class Page {
                         }
                     }
                 }
-                this.observer.stop(rule, window0, windowKey);
+                if (window0 === window) {
+                    this.observer.stop(rule, window0, windowKey);
+                } else {
+                    this.iframeObserver.stop(rule, window0, windowKey);
+                }
             }
         }
     }
