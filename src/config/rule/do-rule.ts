@@ -100,7 +100,7 @@ export class DoRuleN extends DoRule {
                         }
                         break;
                     case 'regexp':
-                        if (new RegExp(settingData).test(element.innerHTML)) {
+                        if (new RegExp(settingData, 'i').test(element.innerHTML)) {
                             return true;
                         }
                         break;
