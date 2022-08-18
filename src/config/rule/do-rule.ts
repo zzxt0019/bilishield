@@ -23,7 +23,7 @@ export abstract class DoRule {
      * @param mainElement 主体元素
      */
     async display(mainElement: Element) {
-        if (await this.bingo(mainElement)) {
+        if (await this.bingo(mainElement) && !mainElement.classList.contains(DISPLAY_CLASS)) {
             mainElement.classList.add(DISPLAY_CLASS)
         }
     }
