@@ -3,6 +3,7 @@ import {DoRuleN} from '../rule/do-rule';
 import {Rule} from '../rule/rule';
 import {SpecialRule} from '../rule/special/special-rule';
 import {SpecialRules} from './../rule/special/special-rules';
+import {MyObserver} from "@/observer/impl/my-observer";
 
 /**
  * 页面配置
@@ -11,6 +12,8 @@ export class Page {
     key: string  // 页面key yaml的key 相当于id
     name: string  // 页面名称 用于展示
     regexp: RegExp  // 正则表达式 真实页面是否匹配配置页面
+    observer = new MyObserver()
+
     constructor(page: PageOptions) {
         this.key = page.key
         this.name = page.name ?? page.key
@@ -57,47 +60,74 @@ export class Page {
 
     start() {
         for (const rule of this.rules()) {
-            document.arrive(rule.mainSelector, {
-                fireOnAttributesModification: true,
-                onceOnly: false,
-                existing: true
-            }, (element: Element) => {
-                rule.display(element)
-            });
+            this.observer.start(rule, window, -1);
+            // document.arrive(rule.mainSelector, {
+            //     fireOnAttributesModification: true,
+            //     onceOnly: false,
+            //     existing: true
+            // }, (element: Element) => {
+            //     rule.display(element)
+            // });
+            for (let i = 0; i < window.frames.length; i++) {
+                try {
+                    let frame = window.frames[i];
+                    this.observer.start(rule, frame, i);
+                } catch (ignore) {
+                }
+            }
             // iframe里执行start()
-            ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
-                document.arrive(rule.mainSelector, {
-                    fireOnAttributesModification: true,
-                    onceOnly: false,
-                    existing: true
-                }, (element: Element) => {
-                    rule.display(element)
-                })
-            })
+            // ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+            //     document.arrive(rule.mainSelector, {
+            //         fireOnAttributesModification: true,
+            //         onceOnly: false,
+            //         existing: true
+            //     }, (element: Element) => {
+            //         rule.display(element)
+            //     })
+            // })
         }
         this.working = true
     }
 
     stop() {
         for (const rule of this.rules()) {
-            document.unbindArrive(rule.mainSelector);
+            this.observer.stop(rule, window, -1);
+            // document.unbindArrive(rule.mainSelector);
             rule.show();
             // iframe里执行stop()
-            ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
-                document.unbindArrive(rule.mainSelector);
-                rule.show(document);
-            });
+            for (let i = 0; i < window.frames.length; i++) {
+                try {
+                    let frame = window.frames[i];
+                    this.observer.stop(rule, frame, i);
+                    rule.show(frame.document)
+                } catch (ignore) {
+                }
+            }
+            // ((unsafeWindow as any).iframeDocuments as Set<any>).forEach(document => {
+            //     document.unbindArrive(rule.mainSelector);
+            //     rule.show(document);
+            // });
         }
         this.working = false
     }
 
     /**
      * 初始化start
-     * @param document
+     * @param window0
      */
-    arrive(document: Document) {
+    arrive(window0: Window) {
         if (this.isCurrent()) {
             for (let rule of this.rules()) {
+                let windowKey = -1;
+                if (window0 !== window) {
+                    for (let i = 0; i < window.frames.length; i++) {
+                        if (window0 === window.frames[i]) {
+                            windowKey = i;
+                        }
+                    }
+                }
+
+                this.observer.start(rule, window0, windowKey);
                 document.arrive(rule.mainSelector, {
                     fireOnAttributesModification: true,
                     onceOnly: false,
@@ -114,12 +144,20 @@ export class Page {
 
     /**
      * dom离开时stop
-     * @param document
+     * @param window0
      */
-    leave(document: Document) {
-        if(this.isCurrent()) {
-            for(let rule of this.rules()) {
-                document.unbindArrive(rule.mainSelector);
+    leave(window0: Window) {
+        if (this.isCurrent()) {
+            for (let rule of this.rules()) {
+                let windowKey = -1;
+                if (window0 !== window) {
+                    for (let i = 0; i < window.frames.length; i++) {
+                        if (window0 === window.frames[i]) {
+                            windowKey = i;
+                        }
+                    }
+                }
+                this.observer.stop(rule, window0, windowKey);
             }
         }
     }

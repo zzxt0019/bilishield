@@ -17,9 +17,6 @@ const postcss = require('postcss')
 init()
 
 async function init() {
-    if (!(unsafeWindow as any).iframeDocuments) {
-        (unsafeWindow as any).iframeDocuments = new Set();  // 初始化 iframeDocuments
-    }
     let pageMap = readFiles();
     let root = createReact(pageMap);  // 创建box
     initAntdStyle().then(antdStyle => createStyle(STATIC.ANTD_STYLE_ID, antdStyle, window.document)())  // 读取antd css; 创建样式(监听防消失)
@@ -55,7 +52,7 @@ async function init() {
 
 function createReact(pageMap: Map<string, Page>): Root {
     for (const page of pageMap.values()) {
-        page.arrive(window.document);
+        page.arrive(window);
     }
     let div: Element
     if (!document.getElementById(STATIC.APP_ID)) {
@@ -167,10 +164,9 @@ function iframeArrive(displayPromise: Promise<{ display: string, debug: string }
             let innerDocument = (element as any).contentDocument as Document;
             innerDocument.arrive = document.arrive;
             innerDocument.unbindArrive = document.unbindArrive;
-            ((unsafeWindow as any).iframeDocuments).add(innerDocument);
             displayPromise.then(data => createDisplayStyle(data, 'display', innerDocument));
             for (const page of pageMap.values()) {
-                page.arrive(innerDocument);
+                page.arrive((element as any).contentWindow);
             }
         } catch (ignore) {
         }
@@ -187,7 +183,7 @@ function iframeLeave(pageMap: Map<string, Page>) {
             try {
                 let document = (this as any).contentDocument as Document;
                 for (const page of pageMap.values()) {
-                    page.leave(document);
+                    page.leave((this as any).contentWindow);
                 }
             } catch (ignore) {
             }
