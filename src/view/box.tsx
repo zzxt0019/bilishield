@@ -13,7 +13,7 @@ export function Box(props: {
     pageMap: Map<string, Page>
 }) {
     const {mainClass, boxClass, pageMap} = props
-    const mainRef = useRef<HTMLDivElement>()
+    const mainRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         return () => {
             for (const page of props.pageMap.values()) {
@@ -31,10 +31,7 @@ export function Box(props: {
                         <Layout.Content>
                             {  // 页面
                                 [...pageMap.values()].filter(page => page.isCurrent()).map(page =>
-                                    <PageView page={page} updateBox={() => {
-                                        // 更新当前页面, PageView里面有page对象, 所以可以放在里面(也可以放在外面)
-                                        this.forceUpdate()
-                                    }}/>)}
+                                    <PageView page={page}/>)}
                         </Layout.Content>
                         <Layout.Sider theme="light">
                             <DisplayType></DisplayType>
@@ -52,7 +49,6 @@ export function Box(props: {
                                 page.start()
                             }
                         }
-                        this.forceUpdate()
                     }}/>
                 </Tabs.TabPane>
                 {  // 配置
@@ -69,7 +65,6 @@ export function Box(props: {
                                             page.start()
                                         }
                                     }
-                                    this.forceUpdate()
                                 }}/>
                         </Tabs.TabPane>)}
             </Tabs>
@@ -81,7 +76,7 @@ export function Box(props: {
                     <Col span={8}>
                         <Button size="small"
                                 onClick={() => {
-                                    mainRef.current.style.setProperty('display', 'none')
+                                    (mainRef as any).current.style.setProperty('display', 'none')
                                 }}>隐藏菜单</Button>
                     </Col>
                 </Row>

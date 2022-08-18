@@ -1,12 +1,12 @@
 import {Page} from "@/config/page/page";
 import {Button, Card, Col, Row, Typography} from "antd";
-import React from "react";
+import React, {useState} from "react";
 
 export function PageView(props: {
     page: Page,
-    updateBox: () => void
 }) {
-    const {page, updateBox} = props
+    const {page} = props
+    const [working, setWorking] = useState(page.working);
     const workClick = () => {
         // 切换工作状态
         if (page.working) {
@@ -14,8 +14,7 @@ export function PageView(props: {
         } else {
             page.start()
         }
-        // 刷新父组件
-        updateBox()
+        setWorking(page.working);
     }
     return <Card>
         <Row>
