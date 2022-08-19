@@ -25,10 +25,6 @@ async function init() {
     let displayPromise = initDisplay(window.document);  // 读取display css
     displayPromise.then(data => createDisplayStyle(data, 'display', window.document)());  // 创建样式(监听防消失)
 
-    iframeArrive(displayPromise, pageMap);  // 监听新iframe加入
-    iframeLeave(pageMap);  // 监听iframe离开
-
-
     // 监听APP_ID
     document.leave('#' + STATIC.APP_ID, {
         fireOnAttributesModification: true,
@@ -43,6 +39,36 @@ async function init() {
         let main = document.querySelector('.' + STATIC.MAIN_CLASS) as HTMLDivElement
         main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none')
     })
+
+    interface FrameData {
+        frame: Window,
+        document?: Document,
+    }
+
+    let framesData: FrameData[] = [];
+    setInterval(() => {
+        for (let i = 0; i < window.frames.length; i++) {
+            let frame = window.frames[i];
+            // 第一次
+            if (!framesData[i] || framesData[i].frame !== frame) {
+                let frameData: Partial<FrameData> = {};
+                framesData[i] = frameData as FrameData;
+                frameData.frame = frame;
+            }
+            // 不跨域且dom改变了
+            try {
+                if (frame.document && framesData[i].document !== frame.document) {
+                    framesData[i].document = frame.document;
+                    displayPromise.then(data => createDisplayStyle(data, 'display', frame.document));
+                    for (const page of pageMap.values()) {
+                        page.stop()
+                        page.start()
+                    }
+                }
+            } catch (ignore) {
+            }
+        }
+    }, 500);
 }
 
 /**
@@ -168,7 +194,7 @@ function iframeArrive(displayPromise: Promise<{ display: string, debug: string }
             for (const page of pageMap.values()) {
                 page.arrive((element as any).contentWindow);
             }
-            setInterval(()=>{
+            setInterval(() => {
                 if (innerDocument !== (element as any).contentDocument) {
                     innerDocument = (element as any).contentDocument;
                     displayPromise.then(data => createDisplayStyle(data, 'display', innerDocument));
@@ -177,7 +203,7 @@ function iframeArrive(displayPromise: Promise<{ display: string, debug: string }
                         page.start()
                     }
                 }
-            },1000)
+            }, 1000)
         } catch (ignore) {
         }
     })
