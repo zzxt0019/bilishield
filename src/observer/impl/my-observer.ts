@@ -5,7 +5,7 @@ import {DISPLAY_CLASS} from "@/main-static";
 export class MyObserver extends Observer {
     private observerMap: Map<string, MutationObserver> = new Map()
 
-    start(rule: DoRuleN, window: Window, windowKey: number) {
+    start(rule: DoRuleN, window: Window) {
         let key = this.wrKey(rule, window);
         if (!this.observerMap.has(key)) {
             this.handle(rule, window);  // start处理(第一次)
@@ -24,7 +24,7 @@ export class MyObserver extends Observer {
         }
     }
 
-    stop(rule: DoRuleN, window: Window, windowKey: number) {
+    stop(rule: DoRuleN, window: Window) {
         let key = this.wrKey(rule, window);
         this.observerMap.get(key)?.disconnect();
         this.observerMap.delete(key);

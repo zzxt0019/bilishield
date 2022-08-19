@@ -17,7 +17,7 @@ export abstract class Observer {
         return this.windowKey(window0) + ':' + rule.mainSelector;
     }
 
-    abstract start(rule: DoRuleN, window: Window, windowKey: number): void
+    abstract start(rule: DoRuleN, window: Window): void
 
-    abstract stop(rule: DoRuleN, window: Window, windowKey: number): void
+    abstract stop(rule: DoRuleN, window: Window): void
 }

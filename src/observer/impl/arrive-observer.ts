@@ -3,7 +3,7 @@ import {DoRuleN} from "@/config/rule/do-rule";
 
 export class ArriveObserver extends Observer {
 
-    start(rule: DoRuleN, window: Window, windowKey: number) {
+    start(rule: DoRuleN, window: Window) {
         window.document.arrive(rule.mainSelector, {
             fireOnAttributesModification: true,
             existing: true,
@@ -12,7 +12,7 @@ export class ArriveObserver extends Observer {
         })
     }
 
-    stop(rule: DoRuleN, window: Window, windowKey: number) {
+    stop(rule: DoRuleN, window: Window) {
         window.document.unbindArrive(rule.mainSelector);
     }
 }

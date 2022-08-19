@@ -62,11 +62,11 @@ export class Page {
 
     start() {
         for (const rule of this.rules()) {
-            this.observer.start(rule, window, -1);
+            this.observer.start(rule, window);
             for (let i = 0; i < window.frames.length; i++) {
                 try {
                     let frame = window.frames[i];
-                    this.iframeObserver.start(rule, frame, i);
+                    this.iframeObserver.start(rule, frame);
                 } catch (ignore) {
                 }
             }
@@ -76,14 +76,14 @@ export class Page {
 
     stop() {
         for (const rule of this.rules()) {
-            this.observer.stop(rule, window, -1);
+            this.observer.stop(rule, window);
             // document.unbindArrive(rule.mainSelector);
             rule.show();
             // iframe里执行stop()
             for (let i = 0; i < window.frames.length; i++) {
                 try {
                     let frame = window.frames[i];
-                    this.iframeObserver.stop(rule, frame, i);
+                    this.iframeObserver.stop(rule, frame);
                     rule.show(frame.document)
                 } catch (ignore) {
                 }
@@ -99,18 +99,10 @@ export class Page {
     arrive(window0: Window) {
         if (this.isCurrent()) {
             for (let rule of this.rules()) {
-                let windowKey = -1;
-                if (window0 !== window) {
-                    for (let i = 0; i < window.frames.length; i++) {
-                        if (window0 === window.frames[i]) {
-                            windowKey = i;
-                        }
-                    }
-                }
                 if (window0 === window) {
-                    this.observer.start(rule, window0, windowKey);
+                    this.observer.start(rule, window0);
                 } else {
-                    this.iframeObserver.start(rule, window0, windowKey);
+                    this.iframeObserver.start(rule, window0);
                 }
             }
             if (document === window.document) {
@@ -126,18 +118,10 @@ export class Page {
     leave(window0: Window) {
         if (this.isCurrent()) {
             for (let rule of this.rules()) {
-                let windowKey = -1;
-                if (window0 !== window) {
-                    for (let i = 0; i < window.frames.length; i++) {
-                        if (window0 === window.frames[i]) {
-                            windowKey = i;
-                        }
-                    }
-                }
                 if (window0 === window) {
-                    this.observer.stop(rule, window0, windowKey);
+                    this.observer.stop(rule, window0);
                 } else {
-                    this.iframeObserver.stop(rule, window0, windowKey);
+                    this.iframeObserver.stop(rule, window0);
                 }
             }
         }
