@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1660912413295
+// @version     1.1.1660913824623
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -16755,16 +16755,17 @@ class UidUsername extends SpecialSetting {
 }
 UidUsername.apiIndex = 0;
 UidUsername.apis = [{
+  url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+  success: json => json.code === 0,
+  username: json => json.data.card.name,
+  change: json => json.code === -412 // 请求被拦截
+
+}, {
   url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
   success: json => json.code === 0,
   username: json => json.data.name,
   change: json => json.code === -412 // 请求被拦截
 
-}, {
-  url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
-  success: json => json.code === 0,
-  username: json => json.data.card.name,
-  change: json => json.code === -412
 }];
 
 class BiliUp {
