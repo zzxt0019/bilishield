@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1660828453200
+// @version     1.1.1660912413295
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -40784,15 +40784,21 @@ function DisplayType() {
       if (((_a = document.getElementById(DISPLAY_STYLE_ID)) === null || _a === void 0 ? void 0 : _a.getAttribute('displayType')) === 'display') {
         (_b = document.getElementById(DISPLAY_STYLE_ID)) === null || _b === void 0 ? void 0 : _b.setAttribute('displayType', 'debug');
         document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.debug;
-        unsafeWindow.iframeDocuments.forEach(document => {
-          document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.debug;
-        });
+
+        for (let i = 0; i < window.frames.length; i++) {
+          try {
+            window.frames[i].document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.debug;
+          } catch (ignore) {}
+        }
       } else {
         (_c = document.getElementById(DISPLAY_STYLE_ID)) === null || _c === void 0 ? void 0 : _c.setAttribute('displayType', 'display');
         document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.display;
-        unsafeWindow.iframeDocuments.forEach(document => {
-          document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.display;
-        });
+
+        for (let i = 0; i < window.frames.length; i++) {
+          try {
+            window.frames[i].document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML.display;
+          } catch (ignore) {}
+        }
       }
 
       setDisplayType((_d = document.getElementById(DISPLAY_STYLE_ID)) === null || _d === void 0 ? void 0 : _d.getAttribute('displayType'));
@@ -41242,7 +41248,26 @@ SpecialRules.sp = new Map();
   special_rules_a.init(new LivePageRule());
 })();
 ;// CONCATENATED MODULE: ./src/observer/observer.ts
-class Observer {}
+class Observer {
+  windowKey(window0) {
+    if (window0 === window) {
+      return -1;
+    }
+
+    for (let i = 0; i < window.frames.length; i++) {
+      if (window0 === window.frames[i]) {
+        return i;
+      }
+    }
+
+    return -1; // 都没有是错的, 默认-1为主window(然后不做处理)
+  }
+
+  wrKey(rule, window0) {
+    return this.windowKey(window0) + ':' + rule.mainSelector;
+  }
+
+}
 ;// CONCATENATED MODULE: ./src/observer/impl/my-observer.ts
 
 
@@ -41252,39 +41277,44 @@ class MyObserver extends Observer {
     this.observerMap = new Map();
   }
 
-  start(rule, window, windowKey) {
+  start(rule, window) {
+    let key = this.wrKey(rule, window);
+
+    if (!this.observerMap.has(key)) {
+      this.handle(rule, window); // start处理(第一次)
+
+      let observer = new MutationObserver(() => {
+        this.handle(rule, window); // 变化后处理
+      });
+      observer.observe(window.document, {
+        childList: true,
+        subtree: true
+      });
+      this.observerMap.set(key, observer);
+    }
+  }
+
+  handle(rule, window) {
     let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
 
     for (let i = 0; i < mains.length; i++) {
       rule.display(mains[i]);
     }
-
-    let observer = new MutationObserver(() => {
-      let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
-
-      for (let i = 0; i < mains.length; i++) {
-        rule.display(mains[i]);
-      }
-    });
-    observer.observe(window.document, {
-      childList: true,
-      subtree: true
-    });
-    this.observerMap.set(windowKey + ':' + rule.mainSelector, observer);
   }
 
-  stop(rule, window, windowKey) {
+  stop(rule, window) {
     var _a;
 
-    (_a = this.observerMap.get(windowKey + ':' + rule.mainSelector)) === null || _a === void 0 ? void 0 : _a.disconnect();
-    this.observerMap.delete(windowKey + ':' + rule.mainSelector);
+    let key = this.wrKey(rule, window);
+    (_a = this.observerMap.get(key)) === null || _a === void 0 ? void 0 : _a.disconnect();
+    this.observerMap.delete(key);
   }
 
 }
 ;// CONCATENATED MODULE: ./src/observer/impl/arrive-observer.ts
 
 class ArriveObserver extends Observer {
-  start(rule, window, windowKey) {
+  start(rule, window) {
     window.document.arrive(rule.mainSelector, {
       fireOnAttributesModification: true,
       existing: true
@@ -41293,7 +41323,7 @@ class ArriveObserver extends Observer {
     });
   }
 
-  stop(rule, window, windowKey) {
+  stop(rule, window) {
     window.document.unbindArrive(rule.mainSelector);
   }
 
@@ -41359,12 +41389,12 @@ class Page {
 
   start() {
     for (const rule of this.rules()) {
-      this.observer.start(rule, window, -1);
+      this.observer.start(rule, window);
 
       for (let i = 0; i < window.frames.length; i++) {
         try {
           let frame = window.frames[i];
-          this.iframeObserver.start(rule, frame, i);
+          this.iframeObserver.start(rule, frame);
         } catch (ignore) {}
       }
     }
@@ -41374,14 +41404,14 @@ class Page {
 
   stop() {
     for (const rule of this.rules()) {
-      this.observer.stop(rule, window, -1); // document.unbindArrive(rule.mainSelector);
+      this.observer.stop(rule, window); // document.unbindArrive(rule.mainSelector);
 
       rule.show(); // iframe里执行stop()
 
       for (let i = 0; i < window.frames.length; i++) {
         try {
           let frame = window.frames[i];
-          this.iframeObserver.stop(rule, frame, i);
+          this.iframeObserver.stop(rule, frame);
           rule.show(frame.document);
         } catch (ignore) {}
       }
@@ -41398,20 +41428,10 @@ class Page {
   arrive(window0) {
     if (this.isCurrent()) {
       for (let rule of this.rules()) {
-        let windowKey = -1;
-
-        if (window0 !== window) {
-          for (let i = 0; i < window.frames.length; i++) {
-            if (window0 === window.frames[i]) {
-              windowKey = i;
-            }
-          }
-        }
-
         if (window0 === window) {
-          this.observer.start(rule, window0, windowKey);
+          this.observer.start(rule, window0);
         } else {
-          this.iframeObserver.start(rule, window0, windowKey);
+          this.iframeObserver.start(rule, window0);
         }
       }
 
@@ -41429,20 +41449,10 @@ class Page {
   leave(window0) {
     if (this.isCurrent()) {
       for (let rule of this.rules()) {
-        let windowKey = -1;
-
-        if (window0 !== window) {
-          for (let i = 0; i < window.frames.length; i++) {
-            if (window0 === window.frames[i]) {
-              windowKey = i;
-            }
-          }
-        }
-
         if (window0 === window) {
-          this.observer.stop(rule, window0, windowKey);
+          this.observer.stop(rule, window0);
         } else {
-          this.iframeObserver.stop(rule, window0, windowKey);
+          this.iframeObserver.stop(rule, window0);
         }
       }
     }
@@ -41549,10 +41559,6 @@ function init() {
     let displayPromise = initDisplay(window.document); // 读取display css
 
     displayPromise.then(data => createDisplayStyle(data, 'display', window.document)()); // 创建样式(监听防消失)
-
-    iframeArrive(displayPromise, pageMap); // 监听新iframe加入
-
-    iframeLeave(pageMap); // 监听iframe离开
     // 监听APP_ID
 
     document.leave('#' + APP_ID, {
@@ -41570,6 +41576,31 @@ function init() {
       let main = document.querySelector('.' + MAIN_CLASS);
       main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
     });
+    let framesData = [];
+    setInterval(() => {
+      for (let i = 0; i < window.frames.length; i++) {
+        let frame = window.frames[i]; // 第一次
+
+        if (!framesData[i] || framesData[i].frame !== frame) {
+          let frameData = {};
+          framesData[i] = frameData;
+          frameData.frame = frame;
+        } // 不跨域且dom改变了
+
+
+        try {
+          if (frame.document && framesData[i].document !== frame.document) {
+            framesData[i].document = frame.document;
+            displayPromise.then(data => createDisplayStyle(data, 'display', frame.document));
+
+            for (const page of pageMap.values()) {
+              page.stop();
+              page.start();
+            }
+          }
+        } catch (ignore) {}
+      }
+    }, 500);
   });
 }
 /**
