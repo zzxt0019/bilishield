@@ -116,17 +116,17 @@ export class UidUsername extends SpecialSetting {
         change: (json: any) => boolean  // 根据响应json判断是否被拦截(被拦截则换其他api)
     }[] = [
         {
+            url: (uid: number) => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+            success: (json: any) => json.code === 0,
+            username: (json: any) => json.data.card.name,
+            change: (json: any) => json.code === -412,  // 请求被拦截
+        },
+        {
             url: (uid: number) => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
             success: (json: any) => json.code === 0,
             username: (json: any) => json.data.name,
             change: (json: any) => json.code === -412,  // 请求被拦截
         },
-        {
-            url: (uid: number) => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
-            success: (json: any) => json.code === 0,
-            username: (json: any) => json.data.card.name,
-            change: (json: any) => json.code === -412
-        }
     ]
 }
 
