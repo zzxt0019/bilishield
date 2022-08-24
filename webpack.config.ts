@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {BannerPlugin, type Configuration} from 'webpack'
-import {ESBuildMinifyPlugin} from "esbuild-loader";
+import {ESBuildMinifyPlugin} from 'esbuild-loader';
 
 const config: Configuration = {
     resolve: {
@@ -26,7 +26,7 @@ const config: Configuration = {
             new ESBuildMinifyPlugin({
                 target: 'es2016',
                 banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
-                    .replace("${timestamp}", String(new Date().getTime()))
+                    .replace('${timestamp}', String(new Date().getTime()))
                     .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
                 include: /min/
             })
@@ -45,8 +45,12 @@ const config: Configuration = {
                 use: ["raw-loader"]
             },
             {
+                test: /\.less$/,
+                use: ['raw-loader', 'less-loader']
+            },
+            {
                 test: /\.yml|\.yaml$/,
-                use: ["raw-loader"]
+                use: ['raw-loader']
             }
         ],
     },
@@ -55,7 +59,7 @@ const config: Configuration = {
             raw: true,
             include: /^((?!min).)*$/,
             banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
-                .replace("${timestamp}", String(new Date().getTime()))
+                .replace('${timestamp}', String(new Date().getTime()))
                 .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
         })
     ]

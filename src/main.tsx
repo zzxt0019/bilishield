@@ -5,11 +5,11 @@ import {Box} from './view/box';
 import * as STATIC from './main-static'
 import {displayType} from './main-static'
 import antdStyle from 'antd/dist/antd.css';
-import boxStyle from './style/main.css';
-import displayStyle from './style/display/display.css';
-import debugStyle from './style/display/debug.css';
+import boxStyle from './style/main.less';
+import displayStyle from './style/display/display.less';
+import debugStyle from './style/display/debug.less';
 import {readFiles} from "@/test/read-system-file";
-import {Page} from "@/config/page/page";
+import {Page} from '@/config/page/page';
 
 const postcssJs = require('postcss-js')
 const postcss = require('postcss')
