@@ -18,22 +18,12 @@ init()
 
 async function init() {
     let pageMap = readFiles();
-    let root = createReact(pageMap);  // 创建box
+    createReact(pageMap)();  // 创建box
     initAntdStyle().then(antdStyle => createStyle(STATIC.ANTD_STYLE_ID, antdStyle, window.document)())  // 读取antd css; 创建样式(监听防消失)
     initBoxStyle().then(boxStyle => createStyle(STATIC.BOX_STYLE_ID, boxStyle, window.document)())  // 读取box css; 创建样式(监听防消失)
 
-    let displayPromise = initDisplay(window.document);  // 读取display css
+    let displayPromise = initDisplay();  // 读取display css
     displayPromise.then(data => createDisplayStyle(data, 'display', window.document)());  // 创建样式(监听防消失)
-
-    // 监听APP_ID
-    document.leave('#' + STATIC.APP_ID, {
-        fireOnAttributesModification: true,
-        onceOnly: false,
-        existing: false
-    }, function () {
-        root.unmount()
-        root = createReact(pageMap)
-    })
     // 油猴菜单展示/隐藏配置
     GM_registerMenuCommand('配置', () => {
         let main = document.querySelector('.' + STATIC.MAIN_CLASS) as HTMLDivElement
@@ -76,7 +66,10 @@ async function init() {
  * @returns root
  */
 
-function createReact(pageMap: Map<string, Page>): Root {
+function createReact(pageMap: Map<string, Page>, root: { root?: Root } = {root: undefined}) {
+    if (root.root) {
+        root.root.unmount();
+    }
     for (const page of pageMap.values()) {
         page.arrive(window);
     }
@@ -86,11 +79,60 @@ function createReact(pageMap: Map<string, Page>): Root {
         div.setAttribute("id", STATIC.APP_ID);
         document.body.appendChild(div);
     }
-    let root = createRoot(document.getElementById(STATIC.APP_ID) as Element)
-    root.render(<Box mainClass={STATIC.MAIN_CLASS} boxClass={STATIC.BOX_CLASS} pageMap={pageMap}/>)
-    return root;
+    root.root = createRoot(document.getElementById(STATIC.APP_ID) as Element)
+    root.root.render(<Box mainClass={STATIC.MAIN_CLASS} boxClass={STATIC.BOX_CLASS} pageMap={pageMap}/>)
+    return () => {
+        document.leave('#' + STATIC.APP_ID, {
+            fireOnAttributesModification: true,
+            onceOnly: false,
+            existing: false
+        }, function () {
+            createReact(pageMap, root);
+        })
+    };
 }
 
+
+/**
+ * 读取antd.css
+ * 添加.mainClass .boxClass 防止影响页面其他元素
+ */
+async function initAntdStyle(): Promise<string> {
+    return new Promise<string>((res) => {
+        let oldObj = postcssJs.objectify(postcss.parse(antdStyle))
+        let newObj: any = {}
+        Object.keys(oldObj).forEach(key => {
+            newObj['.' + STATIC.MAIN_CLASS + ' .' + STATIC.BOX_CLASS + ' ' + key] = oldObj[key]
+        })
+        postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
+            res(result.css)
+        })
+    })
+}
+
+/**
+ * 读取main.css
+ * 替换._main ._box 防止与页面其他class重复
+ */
+async function initBoxStyle(): Promise<string> {
+    return new Promise<string>((res) => {
+        let oldObj = postcssJs.objectify(postcss.parse(boxStyle))
+        let newObj: any = {}
+        Object.keys(oldObj).forEach(key => {
+            newObj[key.replace('_main', STATIC.MAIN_CLASS).replace('_box', STATIC.BOX_CLASS)] = oldObj[key]
+        })
+        postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
+            res(result.css)
+        })
+    })
+}
+
+/**
+ * 创建样式返回监听方法
+ * @param id
+ * @param style
+ * @param document
+ */
 function createStyle(id: string, style: string, document: Document) {
     if (!document.getElementById(id)) {
         let element = document.createElement('style')
@@ -110,33 +152,11 @@ function createStyle(id: string, style: string, document: Document) {
     }
 }
 
-async function initAntdStyle(): Promise<string> {
-    return new Promise<string>((res) => {
-        let oldObj = postcssJs.objectify(postcss.parse(antdStyle))
-        let newObj: any = {}
-        Object.keys(oldObj).forEach(key => {
-            newObj['.' + STATIC.MAIN_CLASS + ' .' + STATIC.BOX_CLASS + ' ' + key] = oldObj[key]
-        })
-        postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
-            res(result.css)
-        })
-    })
-}
-
-async function initBoxStyle(): Promise<string> {
-    return new Promise<string>((res) => {
-        let oldObj = postcssJs.objectify(postcss.parse(boxStyle))
-        let newObj: any = {}
-        Object.keys(oldObj).forEach(key => {
-            newObj[key.replace('_main', STATIC.MAIN_CLASS).replace('_box', STATIC.BOX_CLASS)] = oldObj[key]
-        })
-        postcss().process(newObj, {parser: postcssJs}).then((result: any) => {
-            res(result.css)
-        })
-    })
-}
-
-async function initDisplay(document: Document): Promise<{ display: string, debug: string }> {
+/**
+ * 读取display.css
+ * 替换._display 防止页面其他元素重复
+ */
+async function initDisplay(): Promise<{ display: string, debug: string }> {
     let displayObj = postcssJs.objectify(postcss.parse(displayStyle));
     let newDisplayObj: any = {};
     Object.keys(displayObj).forEach(key => {
@@ -159,6 +179,13 @@ async function initDisplay(document: Document): Promise<{ display: string, debug
     })
 }
 
+/**
+ * 创建displayStyle
+ * 返回监听方法
+ * @param data
+ * @param type
+ * @param document
+ */
 function createDisplayStyle(data: { display: string, debug: string }, type: displayType, document: Document) {
     if (!document.getElementById(STATIC.DISPLAY_STYLE_ID)) {
         let element = document.createElement('style')
@@ -177,51 +204,4 @@ function createDisplayStyle(data: { display: string, debug: string }, type: disp
             createDisplayStyle(data, (this.getAttribute('displayType') ?? 'display') as displayType, document)
         })
     }
-}
-
-function iframeArrive(displayPromise: Promise<{ display: string, debug: string }>, pageMap: Map<string, Page>) {
-    // 监听iframe
-    document.arrive('iframe', {
-        fireOnAttributesModification: true,
-        onceOnly: false,
-        existing: true
-    }, (element) => {
-        try {
-            let innerDocument = (element as any).contentDocument as Document;
-            innerDocument.arrive = document.arrive;
-            innerDocument.unbindArrive = document.unbindArrive;
-            displayPromise.then(data => createDisplayStyle(data, 'display', innerDocument));
-            for (const page of pageMap.values()) {
-                page.arrive((element as any).contentWindow);
-            }
-            setInterval(() => {
-                if (innerDocument !== (element as any).contentDocument) {
-                    innerDocument = (element as any).contentDocument;
-                    displayPromise.then(data => createDisplayStyle(data, 'display', innerDocument));
-                    for (const page of pageMap.values()) {
-                        page.stop()
-                        page.start()
-                    }
-                }
-            }, 1000)
-        } catch (ignore) {
-        }
-    })
-}
-
-function iframeLeave(pageMap: Map<string, Page>) {
-    document.leave('iframe', {
-            fireOnAttributesModification: true,
-            onceOnly: false,
-            existing: false
-        },
-        function () {
-            try {
-                let document = (this as any).contentDocument as Document;
-                for (const page of pageMap.values()) {
-                    page.leave((this as any).contentWindow);
-                }
-            } catch (ignore) {
-            }
-        });
 }
