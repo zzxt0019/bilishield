@@ -1,9 +1,9 @@
-import React, {useState} from "react";
+import React from "react";
 import {Button} from "antd";
 import {CSS_INNER_HTML, DISPLAY_STYLE_ID} from "@/main-static";
 
 export function DisplayType() {
-    const [displayType, setDisplayType] = useState(
+    const [displayType, setDisplayType] = React.useState(
         document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') as string
     )
     // todo 等待整理

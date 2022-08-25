@@ -1,6 +1,6 @@
 import {Settings} from "@/config/setting/setting";
-import {Button, Card, Col, Layout, Row, Tabs} from "antd";
-import React, {useEffect, useRef} from "react";
+import {Button, Col, Layout, Row, Tabs} from "antd";
+import React from "react";
 import {Page} from "@/config/page/page";
 import {PageView} from "./page.view";
 import {SettingView} from "./setting.view";
@@ -13,8 +13,8 @@ export function Box(props: {
     pageMap: Map<string, Page>
 }) {
     const {mainClass, boxClass, pageMap} = props
-    const mainRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
+    const mainRef = React.useRef<HTMLDivElement>(null)
+    React.useEffect(() => {
         return () => {
             for (const page of props.pageMap.values()) {
                 if (page.working) {
@@ -69,18 +69,16 @@ export function Box(props: {
                         </Tabs.TabPane>)}
             </Tabs>
             <hr/>
-            <Card>
-                <Row>
-                    <Col span={8}></Col>
-                    <Col span={8}></Col>
-                    <Col span={8}>
-                        <Button size="small"
-                                onClick={() => {
-                                    (mainRef as any).current.style.setProperty('display', 'none')
-                                }}>隐藏菜单</Button>
-                    </Col>
-                </Row>
-            </Card>
+            <Row>
+                <Col span={8}></Col>
+                <Col span={8}></Col>
+                <Col span={8}>
+                    <Button size="small"
+                            onClick={() => {
+                                (mainRef as any).current.style.setProperty('display', 'none')
+                            }}>隐藏菜单</Button>
+                </Col>
+            </Row>
         </div>
     </div>
 }

@@ -1,16 +1,16 @@
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {PlusOutlined, SyncOutlined} from '@ant-design/icons';
 import {Button, Card, Col, Input, Row, Tag, Tooltip} from "antd";
-import React, {useEffect, useState} from "react";
+import React from "react";
 
 export function UidUsernameView(props: {
     updateBox: () => void
 }) {
     const {updateBox} = props;
-    const uu: UidUsername = useState(new UidUsername())[0];
-    const [settings, setSettings] = useState<{ username: string, uid: string }[]>([]);
-    const [inputUid, setInputUid] = useState('');
-    const [inputUsername, setInputUsername] = useState('');
+    const uu: UidUsername = React.useState(new UidUsername())[0];
+    const [settings, setSettings] = React.useState<{ username: string, uid: string }[]>([]);
+    const [inputUid, setInputUid] = React.useState('');
+    const [inputUsername, setInputUsername] = React.useState('');
     const updateSettings = async () => {
         let uids = await uu.get('uid')()
         Promise.all(uids.map(uid => uu.uid2username(uid)))
@@ -22,7 +22,7 @@ export function UidUsernameView(props: {
                 setSettings(settings)
             })
     }
-    useEffect(() => {
+    React.useEffect(() => {
         updateSettings()
     }, [])
     return <Card>

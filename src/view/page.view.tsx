@@ -1,12 +1,12 @@
 import {Page} from "@/config/page/page";
 import {Button, Card, Col, Row, Typography} from "antd";
-import React, {useState} from "react";
+import React from "react";
 
 export function PageView(props: {
     page: Page,
 }) {
     const {page} = props
-    const [working, setWorking] = useState(page.working);
+    const [working, setWorking] = React.useState(page.working);
     const workClick = () => {
         // 切换工作状态
         if (page.working) {
@@ -19,7 +19,7 @@ export function PageView(props: {
     return <Card>
         <Row>
             <Col span={12}>
-                <Typography.Text type={page.working ? 'success' : 'danger'}>
+                <Typography.Text type={working ? 'success' : 'danger'}>
                     {page.name}
                 </Typography.Text>
             </Col>
@@ -27,7 +27,7 @@ export function PageView(props: {
             <Col span={6}>
                 <Button
                     size="small" onClick={workClick}>
-                    {page.working ? '停止' : '启动'}
+                    {working ? '停止' : '启动'}
                 </Button>
             </Col>
         </Row>

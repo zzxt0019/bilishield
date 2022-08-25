@@ -1,19 +1,19 @@
 import {Setting, Settings} from "@/config/setting/setting";
 import {PlusOutlined} from '@ant-design/icons';
 import {Button, Card, Col, Input, Row, Tag} from "antd";
-import React, {useEffect, useState} from "react";
+import React from "react";
 
 export function SettingView(props: {
     setting: Setting,
     updateBox: () => void
 }) {
     const {setting, updateBox} = props
-    const [settings, setSettings] = useState<string[]>([]);
-    const [inputValue, setInputValue] = useState('');
+    const [settings, setSettings] = React.useState<string[]>([]);
+    const [inputValue, setInputValue] = React.useState('');
     const updateSettings = async () => {
         setSettings(await Settings.getSettingValue(setting));
     };
-    useEffect(() => {
+    React.useEffect(() => {
         updateSettings()
     }, [])
     return <Card>
