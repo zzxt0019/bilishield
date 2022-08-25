@@ -21,44 +21,15 @@ async function init() {
     createReact(pageMap)();  // 创建box
     initAntdStyle().then(antdStyle => createStyle(STATIC.ANTD_STYLE_ID, antdStyle, window.document)())  // 读取antd css; 创建样式(监听防消失)
     initBoxStyle().then(boxStyle => createStyle(STATIC.BOX_STYLE_ID, boxStyle, window.document)())  // 读取box css; 创建样式(监听防消失)
-
-    let displayPromise = initDisplay();  // 读取display css
-    displayPromise.then(data => createDisplayStyle(data, 'display', window.document)());  // 创建样式(监听防消失)
+    initDisplay().then(data => {
+        createDisplayStyle(data, 'display', window.document)()
+        iframes({displayStyle: data.display, pageMap: pageMap})
+    })
     // 油猴菜单展示/隐藏配置
     GM_registerMenuCommand('配置', () => {
         let main = document.querySelector('.' + STATIC.MAIN_CLASS) as HTMLDivElement
         main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none')
     })
-
-    interface FrameData {
-        frame: Window,
-        document?: Document,
-    }
-
-    let framesData: FrameData[] = [];
-    setInterval(() => {
-        for (let i = 0; i < window.frames.length; i++) {
-            let frame = window.frames[i];
-            // 第一次
-            if (!framesData[i] || framesData[i].frame !== frame) {
-                let frameData: Partial<FrameData> = {};
-                framesData[i] = frameData as FrameData;
-                frameData.frame = frame;
-            }
-            // 不跨域且dom改变了
-            try {
-                if (frame.document && framesData[i].document !== frame.document) {
-                    framesData[i].document = frame.document;
-                    displayPromise.then(data => createDisplayStyle(data, 'display', frame.document));
-                    for (const page of pageMap.values()) {
-                        page.stop()
-                        page.start()
-                    }
-                }
-            } catch (ignore) {
-            }
-        }
-    }, 500);
 }
 
 /**
@@ -204,4 +175,36 @@ function createDisplayStyle(data: { display: string, debug: string }, type: disp
             createDisplayStyle(data, (this.getAttribute('displayType') ?? 'display') as displayType, document)
         })
     }
+}
+
+function iframes(data: { displayStyle: string, pageMap: Map<string, Page> }) {
+    interface FrameData {
+        frame: Window,
+        document?: Document,
+    }
+
+    let framesData: FrameData[] = [];
+    setInterval(() => {
+        for (let i = 0; i < window.frames.length; i++) {
+            let frame = window.frames[i];
+            // 第一次
+            if (!framesData[i] || framesData[i].frame !== frame) {
+                let frameData: Partial<FrameData> = {};
+                framesData[i] = frameData as FrameData;
+                frameData.frame = frame;
+            }
+            // 不跨域且dom改变了
+            try {
+                if (frame.document && framesData[i].document !== frame.document) {
+                    framesData[i].document = frame.document;
+                    createDisplayStyle({display: data.displayStyle, debug: ''}, 'display', frame.document)
+                    for (const page of data.pageMap.values()) {
+                        page.stop()
+                        page.start()
+                    }
+                }
+            } catch (ignore) {
+            }
+        }
+    }, 500);
 }
