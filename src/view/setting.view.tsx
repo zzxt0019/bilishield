@@ -43,7 +43,7 @@ export function SettingView(props: {
             </Col>
             <Col span={4}>
                 <Button
-                    size="small"
+                    block
                     icon={<PlusOutlined/>}
                     // 输入框为空 或者 输入框与已有配置相同  disabled
                     disabled={!inputValue || settings.filter(setting => setting === inputValue).length > 0}

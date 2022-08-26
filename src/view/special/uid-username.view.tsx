@@ -66,7 +66,7 @@ export function UidUsernameView(props: {
             </Col>
             <Col span={3}>
                 <Button
-                    size="small"
+                    block
                     disabled={!inputUsername}
                     icon={<PlusOutlined/>}
                     onClick={() => {
@@ -81,7 +81,7 @@ export function UidUsernameView(props: {
             </Col>
             <Col span={3}>
                 <Button
-                    size="small"
+                    block
                     icon={<SyncOutlined/>}
                     onClick={async () => {
                         GM_listValues()
