@@ -8,11 +8,9 @@ import {UidUsernameView} from "./special/uid-username.view";
 import {DisplayType} from "@/view/display-type";
 
 export function Box(props: {
-    mainClass: string,
-    boxClass: string,
     pageMap: Map<string, Page>
 }) {
-    const {mainClass, boxClass, pageMap} = props
+    const {pageMap} = props
     const mainRef = React.useRef<HTMLDivElement>(null)
     React.useEffect(() => {
         return () => {
@@ -23,8 +21,21 @@ export function Box(props: {
             }
         }
     })
-    return <div className={mainClass} ref={mainRef} style={{display: 'none'}}>
-        <div className={boxClass}>
+    return <div ref={mainRef} style={{
+        display: 'none',
+        bottom: '6vh',
+        color: '#777777',
+        position: 'absolute',
+        top: '10px',
+        right: '400px',
+        zIndex: 99999,
+    }}>
+        <div style={{
+            position: 'fixed',
+            backgroundColor: 'white',
+            border: '5px groove pink',
+            width: '350px',
+        }}>
             {(() => {
                 if ([...pageMap.values()].filter(page => page.isCurrent()).length !== 0)
                     return <Layout>
