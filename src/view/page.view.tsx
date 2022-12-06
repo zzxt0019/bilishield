@@ -16,20 +16,22 @@ export function PageView(props: {
         }
         setWorking(page.working);
     }
-    return <Card>
-        <Row>
-            <Col span={12}>
-                <Typography.Text type={working ? 'success' : 'danger'}>
-                    {page.name}
-                </Typography.Text>
-            </Col>
-            <Col span={6}></Col>
-            <Col span={6}>
-                <Button
-                    size="small" onClick={workClick}>
-                    {working ? '停止' : '启动'}
-                </Button>
-            </Col>
-        </Row>
-    </Card>
+    return <>
+        <Card>
+            <Row>
+                <Col span={14}>
+                    <Typography.Text type={working ? 'success' : 'danger'}>
+                        {page.name}
+                    </Typography.Text>
+                </Col>
+                <Col span={4}></Col>
+                <Col span={6}>
+                    <Button
+                        size="small" onClick={workClick}>
+                        {working ? '停止' : '启动'}
+                    </Button>
+                </Col>
+            </Row>
+        </Card>
+    </>
 }
