@@ -1,6 +1,6 @@
-#baidu_setting:
-#  name: 百度配置
-#  type: regexp
+baidu_setting:
+  name: 百度配置
+  type: regexp
 bilibili_card:
   name: 卡片
   type: like

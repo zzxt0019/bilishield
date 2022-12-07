@@ -3,6 +3,8 @@ import * as path from 'path'
 import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
 
+const CopyPlugin = require('copy-webpack-plugin');
+
 const config: Configuration = {
     resolve: {
         alias: {
@@ -61,6 +63,12 @@ const config: Configuration = {
             banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
                 .replace('${timestamp}', String(new Date().getTime()))
                 .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
+        }),
+        new CopyPlugin({
+            patterns: [{
+                from: __dirname + '/gh-index.html',
+                to: __dirname + '/dist/index.html',
+            }]
         })
     ]
 };

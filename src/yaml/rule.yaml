@@ -6,14 +6,20 @@
 #  checker:
 #    setting: baidu_setting
 #    innerHTML: true
-#baidu_2:
-#  name: baidu2
-#  page: baidu_main
-#  mainSelector: span.c-color-gray
-#  checker:
-#    setting: baidu_setting
-#    innerHTML: true
+baidu_2:
+  name: baidu2
+  page: baidu_main
+  mainSelector: span.c-color-gray
+  checker:
+    setting: baidu_setting
+    innerHTML: true
 # 比例首页
+zhihu:
+  name: zhihutubiao
+  page: zhihu
+  mainSelector: a[aria-label]
+  checker:
+    always: true
 bilibili_rank_up:
   name: 比例首页排行榜 up用户名
   page: bilibili_main
