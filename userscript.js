@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1670384806478
+// @version     1.1.1671440893254
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -5018,7 +5018,7 @@ function createNode(value, tagName, ctx) {
     if (value instanceof String ||
         value instanceof Number ||
         value instanceof Boolean ||
-        (typeof BigInt === 'function' && value instanceof BigInt) // not supported everywhere
+        (typeof BigInt !== 'undefined' && value instanceof BigInt) // not supported everywhere
     ) {
         // https://tc39.es/ecma262/#sec-serializejsonproperty
         value = value.valueOf();
@@ -7199,7 +7199,8 @@ class YAMLSet extends YAMLMap {
         let pair;
         if (isPair(key))
             pair = key;
-        else if (typeof key === 'object' &&
+        else if (key &&
+            typeof key === 'object' &&
             'key' in key &&
             'value' in key &&
             key.value === null)
@@ -8303,6 +8304,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
     if (ctx.atRoot)
         ctx.atRoot = false;
     let offset = bm.offset;
+    let commentEnd = null;
     for (const collItem of bm.items) {
         const { start, key, sep, value } = collItem;
         // key properties
@@ -8322,7 +8324,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
                     onError(offset, 'BAD_INDENT', startColMsg);
             }
             if (!keyProps.anchor && !keyProps.tag && !sep) {
-                // TODO: assert being at last item?
+                commentEnd = keyProps.end;
                 if (keyProps.comment) {
                     if (map.comment)
                         map.comment += '\n' + keyProps.comment;
@@ -8392,7 +8394,9 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError) {
             map.items.push(pair);
         }
     }
-    map.range = [bm.offset, offset, offset];
+    if (commentEnd && commentEnd < offset)
+        onError(commentEnd, 'IMPOSSIBLE', 'Map comment with trailing content');
+    map.range = [bm.offset, offset, commentEnd ?? offset];
     return map;
 }
 
@@ -8408,6 +8412,7 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
     if (ctx.atRoot)
         ctx.atRoot = false;
     let offset = bs.offset;
+    let commentEnd = null;
     for (const { start, value } of bs.items) {
         const props = resolveProps(start, {
             indicator: 'seq-item-ind',
@@ -8416,16 +8421,15 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
             onError,
             startOnNewline: true
         });
-        offset = props.end;
         if (!props.found) {
             if (props.anchor || props.tag || value) {
                 if (value && value.type === 'block-seq')
-                    onError(offset, 'BAD_INDENT', 'All sequence items must start at the same column');
+                    onError(props.end, 'BAD_INDENT', 'All sequence items must start at the same column');
                 else
                     onError(offset, 'MISSING_CHAR', 'Sequence item without - indicator');
             }
             else {
-                // TODO: assert being at last item?
+                commentEnd = props.end;
                 if (props.comment)
                     seq.comment = props.comment;
                 continue;
@@ -8433,13 +8437,13 @@ function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError) {
         }
         const node = value
             ? composeNode(ctx, value, props, onError)
-            : composeEmptyNode(ctx, offset, start, null, props, onError);
+            : composeEmptyNode(ctx, props.end, start, null, props, onError);
         if (ctx.schema.compat)
             flowIndentCheck(bs.indent, value, onError);
         offset = node.range[2];
         seq.items.push(node);
     }
-    seq.range = [bs.offset, offset, offset];
+    seq.range = [bs.offset, offset, commentEnd ?? offset];
     return seq;
 }
 
@@ -9336,7 +9340,7 @@ function composeNode(ctx, token, props, onError) {
         node.srcToken = token;
     return node;
 }
-function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anchor, tag }, onError) {
+function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anchor, tag, end }, onError) {
     const token = {
         type: 'scalar',
         offset: emptyScalarPosition(offset, before, pos),
@@ -9351,8 +9355,10 @@ function composeEmptyNode(ctx, offset, before, pos, { spaceBefore, comment, anch
     }
     if (spaceBefore)
         node.spaceBefore = true;
-    if (comment)
+    if (comment) {
         node.comment = comment;
+        node.range[2] = end;
+    }
     return node;
 }
 function composeAlias({ options }, { offset, source, end }, onError) {
@@ -11881,30 +11887,23 @@ class DefaultSettings {
   static _getSettingValue(param) {
     let key = typeof param === 'string' ? param : param.key;
     return GM_getValue('settings.' + key, []);
-  } // 原始的设置配置值
-
-
+  }
+  // 原始的设置配置值
   static _setSettingValue(param, data) {
     let key = typeof param === 'string' ? param : param.key;
     GM_setValue('settings.' + key, data);
-  } // 原始的添加配置值
-
-
+  }
+  // 原始的添加配置值
   static _addSettingValue(param, data) {
     let oldData = DefaultSettings._getSettingValue(param);
-
     oldData.push(...(typeof data === 'string' ? [data] : data));
-
     DefaultSettings._setSettingValue(param, [...new Set(oldData)]);
-  } // 原始的删除配置值
-
-
+  }
+  // 原始的删除配置值
   static _delSettingValue(param, data) {
     let delSet = new Set(typeof data === 'string' ? [data] : data);
-
     DefaultSettings._setSettingValue(param, DefaultSettings._getSettingValue(param).filter(item => !delSet.has(item)));
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-setting.ts
 class SpecialSetting {}
@@ -11915,7 +11914,6 @@ var __awaiter = undefined && undefined.__awaiter || function (thisArg, _argument
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -11924,7 +11922,6 @@ var __awaiter = undefined && undefined.__awaiter || function (thisArg, _argument
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -11932,15 +11929,12 @@ var __awaiter = undefined && undefined.__awaiter || function (thisArg, _argument
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
-
 
 
 class UidUsername extends SpecialSetting {
@@ -11952,29 +11946,24 @@ class UidUsername extends SpecialSetting {
         let uids = yield this.get('uid')();
         return Promise.all(uids.map(uid => this.uid2username(uid)));
       }
-
       return [];
     });
   }
-
   set(key) {
     return uid => {
       DefaultSettings._setSettingValue('uid', uid);
     };
   }
-
   add(key) {
     return uid => {
       DefaultSettings._addSettingValue('uid', uid);
     };
   }
-
   del(key) {
     return uid => {
       DefaultSettings._delSettingValue('uid', uid);
     };
   }
-
   type(key) {
     return () => {
       if (key === 'uid') {
@@ -11986,24 +11975,20 @@ class UidUsername extends SpecialSetting {
       }
     };
   }
-
   uid2username(_uid) {
     return __awaiter(this, void 0, void 0, function* () {
       // 输入错误
       if (_uid === '') {
         return '';
-      } // 缓存在有效期内, 取缓存
-
-
+      }
+      // 缓存在有效期内, 取缓存
       let uid = Number(_uid);
       let obj = GM_getValue('uid_' + uid);
       let biliUp = obj;
-
       if (biliUp && new Date().getTime() < biliUp.expiretime) {
         return biliUp.username;
-      } // 异步查询
-
-
+      }
+      // 异步查询
       return new Promise((res, rej) => {
         this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex);
       }).catch(() => Promise.resolve(''));
@@ -12017,8 +12002,6 @@ class UidUsername extends SpecialSetting {
    * @param firstIndex 首次调用时的index
    * @param apiIndex 当前调用时的index
    */
-
-
   queryUsername(res, rej, uid, firstIndex, apiIndex) {
     let api = UidUsername.apis[apiIndex];
     GM_xmlhttpRequest({
@@ -12026,12 +12009,11 @@ class UidUsername extends SpecialSetting {
       url: api.url(uid),
       onload: response => {
         let json = JSON.parse(response.responseText);
-
         if (api.success(json)) {
           // 成功, 记录并返回
           UidUsername.apiIndex = apiIndex;
-          let username = api.username(json); // 保存至GM
-
+          let username = api.username(json);
+          // 保存至GM
           let biliUp = {
             uid,
             username,
@@ -12041,8 +12023,8 @@ class UidUsername extends SpecialSetting {
           res(username);
         } else if (api.change(json)) {
           // 拦截请求, 尝试其他api
-          apiIndex = (apiIndex + 1) % UidUsername.apis.length; // 若firstIndex === apiIndex 说明循环一圈都被拦截, 不需要再查了, 直接错误
-
+          apiIndex = (apiIndex + 1) % UidUsername.apis.length;
+          // 若firstIndex === apiIndex 说明循环一圈都被拦截, 不需要再查了, 直接错误
           if (firstIndex !== apiIndex) {
             this.queryUsername(res, rej, uid, firstIndex, apiIndex);
           } else {
@@ -12055,7 +12037,6 @@ class UidUsername extends SpecialSetting {
       }
     });
   }
-
 }
 UidUsername.apiIndex = 0;
 UidUsername.apis = [{
@@ -12063,13 +12044,11 @@ UidUsername.apis = [{
   success: json => json.code === 0,
   username: json => json.data.card.name,
   change: json => json.code === -412 // 请求被拦截
-
 }, {
   url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
   success: json => json.code === 0,
   username: json => json.data.name,
   change: json => json.code === -412 // 请求被拦截
-
 }];
 
 class BiliUp {
@@ -12078,19 +12057,15 @@ class BiliUp {
     this.username = username;
     this.expiretime = expiretime;
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
 var _a;
 
-
 class SpecialSettings {}
 _a = SpecialSettings;
 SpecialSettings.sp = new Map();
-
 (() => {
   _a.sp.set('uid', new UidUsername());
-
   _a.sp.set('username', _a.sp.get('uid'));
 })();
 ;// CONCATENATED MODULE: ./src/config/setting/setting.ts
@@ -12100,7 +12075,6 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -12109,7 +12083,6 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -12117,11 +12090,9 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
@@ -12129,82 +12100,67 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
 
 
 
-
 /**
  * 数据配置
  */
-
 class Setting {
   constructor(setting) {
     this.key = setting.key;
     this.name = setting.name;
     this.type = setting.type;
   }
-
 }
 class Settings {
   static getSystemSettings() {
     return Settings.settingMap;
-  } // 加入特殊配置后的获取配置值
-
-
+  }
+  // 加入特殊配置后的获取配置值
   static getSettingValue(param) {
     return setting_awaiter(this, void 0, void 0, function* () {
       let key = typeof param === 'string' ? param : param.key;
-
       if (SpecialSettings.sp.has(key)) {
         return SpecialSettings.sp.get(key).get(key)();
       } else {
         return DefaultSettings._getSettingValue(param);
       }
     });
-  } // 加入特殊配置后的设置配置值
-
-
+  }
+  // 加入特殊配置后的设置配置值
   static setSettingValue(param, data) {
     let key = typeof param === 'string' ? param : param.key;
-
     if (SpecialSettings.sp.has(key)) {
       return SpecialSettings.sp.get(key).set(key)(data);
     } else {
       DefaultSettings._setSettingValue(param, data);
     }
-  } // 加入特殊配置后的添加配置值
-
-
+  }
+  // 加入特殊配置后的添加配置值
   static addSettingValue(param, data) {
     let key = typeof param === 'string' ? param : param.key;
-
     if (SpecialSettings.sp.has(key)) {
       return SpecialSettings.sp.get(key).add(key)(data);
     } else {
       DefaultSettings._addSettingValue(param, data);
     }
-  } // 加入特殊配置后的删除配置值
-
-
+  }
+  // 加入特殊配置后的删除配置值
   static delSettingValue(param, data) {
     let key = typeof param === 'string' ? param : param.key;
-
     if (SpecialSettings.sp.has(key)) {
       return SpecialSettings.sp.get(key).del(key)(data);
     } else {
       DefaultSettings._delSettingValue(param, data);
     }
   }
-
   static getCheckType(param) {
     let key = typeof param === 'string' ? param : param.key;
-
     if (SpecialSettings.sp.has(key)) {
       return SpecialSettings.sp.get(key).type(key)();
     } else {
       return Settings.settingMap.get(key).type;
     }
   }
-
 }
-
 (() => {
   let obj = parse(setting);
   Settings.settingMap = new Map();
@@ -13293,6 +13249,19 @@ function declaration (value, root, parent, length) {
 	return node(value, root, parent, DECLARATION, substr(value, 0, length), substr(value, length + 1, -1), length)
 }
 
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/hooks/useMemo.js
+
+function useMemo_useMemo(getValue, condition, shouldUpdate) {
+  var cacheRef = react.useRef({});
+  if (!('value' in cacheRef.current) || shouldUpdate(cacheRef.current.condition, condition)) {
+    cacheRef.current.value = getValue();
+    cacheRef.current.condition = condition;
+  }
+  return cacheRef.current.value;
+}
+// EXTERNAL MODULE: ./node_modules/shallowequal/index.js
+var shallowequal = __webpack_require__(6774);
+var shallowequal_default = /*#__PURE__*/__webpack_require__.n(shallowequal);
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/classCallCheck.js
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -13350,6 +13319,11 @@ var Entity = /*#__PURE__*/function () {
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/StyleContext.js
 
 
+var _excluded = (/* unused pure expression or super */ null && (["children"]));
+
+
+
+
 var StyleContext_ATTR_TOKEN = 'data-token-hash';
 var StyleContext_ATTR_MARK = 'data-css-hash';
 var ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
@@ -13357,11 +13331,12 @@ var ATTR_DEV_CACHE_PATH = 'data-dev-cache-path';
 var CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
 var CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
 function createCache() {
-  if (typeof document !== 'undefined') {
-    var styles = document.body.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]"));
+  if (typeof document !== 'undefined' && document.head && document.body) {
+    var styles = document.body.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]")) || [];
     var firstChild = document.head.firstChild;
     Array.from(styles).forEach(function (style) {
       style[CSS_IN_JS_INSTANCE] = style[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID;
+      // Not force move if no head
       document.head.insertBefore(style, firstChild);
     });
     // Deduplicate of moved styles
@@ -13386,29 +13361,24 @@ var StyleContext = /*#__PURE__*/react.createContext({
   defaultCache: true
 });
 var StyleProvider = function StyleProvider(props) {
-  var autoClear = props.autoClear,
-    mock = props.mock,
-    cache = props.cache,
-    hashPriority = props.hashPriority,
-    container = props.container,
-    children = props.children;
-  var _React$useContext = React.useContext(StyleContext),
-    parentCache = _React$useContext.cache,
-    parentAutoClear = _React$useContext.autoClear,
-    parentMock = _React$useContext.mock,
-    parentDefaultCache = _React$useContext.defaultCache,
-    parentHashPriority = _React$useContext.hashPriority,
-    parentContainer = _React$useContext.container;
-  var context = React.useMemo(function () {
-    return {
-      autoClear: autoClear !== null && autoClear !== void 0 ? autoClear : parentAutoClear,
-      mock: mock !== null && mock !== void 0 ? mock : parentMock,
-      cache: cache || parentCache || createCache(),
-      defaultCache: !cache && parentDefaultCache,
-      hashPriority: hashPriority !== null && hashPriority !== void 0 ? hashPriority : parentHashPriority,
-      container: container || parentContainer
-    };
-  }, [autoClear, parentAutoClear, parentMock, parentCache, mock, cache, parentDefaultCache, hashPriority, parentHashPriority, container, parentContainer]);
+  var children = props.children,
+    restProps = _objectWithoutProperties(props, _excluded);
+  var parentContext = React.useContext(StyleContext);
+  var context = useMemo(function () {
+    var mergedContext = _objectSpread({}, parentContext);
+    Object.keys(restProps).forEach(function (key) {
+      var value = restProps[key];
+      if (restProps[key] !== undefined) {
+        mergedContext[key] = value;
+      }
+    });
+    var cache = restProps.cache;
+    mergedContext.cache = mergedContext.cache || createCache();
+    mergedContext.defaultCache = !cache && parentContext.defaultCache;
+    return mergedContext;
+  }, [parentContext, restProps], function (prev, next) {
+    return !shallowEqual(prev[0], next[0]) || !shallowEqual(prev[1], next[1]);
+  });
   return /*#__PURE__*/React.createElement(StyleContext.Provider, {
     value: context
   }, children);
@@ -13849,7 +13819,8 @@ function useStyleRegister(info, styleFn) {
     mock = _React$useContext.mock,
     defaultCache = _React$useContext.defaultCache,
     hashPriority = _React$useContext.hashPriority,
-    container = _React$useContext.container;
+    container = _React$useContext.container,
+    ssrInline = _React$useContext.ssrInline;
   var tokenKey = token._tokenKey;
   var fullPath = [tokenKey].concat(_toConsumableArray(path));
   // Check if need insert style
@@ -13914,7 +13885,7 @@ function useStyleRegister(info, styleFn) {
     cachedStyleId = _useGlobalCache2[2];
   return function (node) {
     var styleNode;
-    if (isMergedClientSide || !defaultCache) {
+    if (!ssrInline || isMergedClientSide || !defaultCache) {
       styleNode = /*#__PURE__*/react.createElement(Empty, null);
     } else {
       var _objectSpread2;
@@ -14379,7 +14350,7 @@ var genFocusStyle = function genFocusStyle(token) {
   };
 };
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.0.4');
+/* harmony default export */ const version = ('5.0.7');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -14863,6 +14834,7 @@ var names = {
 };
 
 ;// CONCATENATED MODULE: ./node_modules/@ctrl/tinycolor/dist/module/format-input.js
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 
 
 
@@ -15478,6 +15450,13 @@ var TinyColor = /** @class */ (function () {
         return this;
     };
     /**
+     * Returns whether the color is monochrome.
+     */
+    TinyColor.prototype.isMonochrome = function () {
+        var s = this.toHsl().s;
+        return s === 0;
+    };
+    /**
      * Returns the object as a HSVA object.
      */
     TinyColor.prototype.toHsv = function () {
@@ -15936,25 +15915,6 @@ function genColorMapToken(seed, _ref) {
     colorWhite: '#fff'
   });
 }
-;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/shared/genFontSizes.js
-// https://zhuanlan.zhihu.com/p/32746810
-function getFontSizes(base) {
-  var fontSizes = new Array(10).fill(null).map(function (_, index) {
-    var i = index - 1;
-    var baseSize = base * Math.pow(2.71828, i / 5);
-    var intSize = index > 1 ? Math.floor(baseSize) : Math.ceil(baseSize);
-    // Convert to even
-    return Math.floor(intSize / 2) * 2;
-  });
-  fontSizes[1] = base;
-  return fontSizes.map(function (size) {
-    var height = size + 8;
-    return {
-      size: size,
-      lineHeight: height / size
-    };
-  });
-}
 ;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/shared/genRadius.js
 var genRadius = function genRadius(radiusBase) {
   var radiusLG = radiusBase;
@@ -16005,26 +15965,16 @@ var genRadius = function genRadius(radiusBase) {
 ;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/shared/genCommonMapToken.js
 
 
-
 function genCommonMapToken(token) {
   var motionUnit = token.motionUnit,
     motionBase = token.motionBase,
-    fontSize = token.fontSize,
     borderRadius = token.borderRadius,
     lineWidth = token.lineWidth;
-  var fontSizes = getFontSizes(fontSize);
   return extends_extends({
     // motion
     motionDurationFast: (motionBase + motionUnit).toFixed(1) + "s",
     motionDurationMid: (motionBase + motionUnit * 2).toFixed(1) + "s",
     motionDurationSlow: (motionBase + motionUnit * 3).toFixed(1) + "s",
-    // font
-    fontSizes: fontSizes.map(function (fs) {
-      return fs.size;
-    }),
-    lineHeights: fontSizes.map(function (fs) {
-      return fs.lineHeight;
-    }),
     // line
     lineWidthBold: lineWidth + 1
   }, shared_genRadius(borderRadius));
@@ -16082,7 +16032,58 @@ var generateNeutralColorPalettes = function generateNeutralColorPalettes(bgBaseC
     colorBorderSecondary: getSolidColor(colorBgBase, 6)
   };
 };
+;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/shared/genFontSizes.js
+// https://zhuanlan.zhihu.com/p/32746810
+function getFontSizes(base) {
+  var fontSizes = new Array(10).fill(null).map(function (_, index) {
+    var i = index - 1;
+    var baseSize = base * Math.pow(2.71828, i / 5);
+    var intSize = index > 1 ? Math.floor(baseSize) : Math.ceil(baseSize);
+    // Convert to even
+    return Math.floor(intSize / 2) * 2;
+  });
+  fontSizes[1] = base;
+  return fontSizes.map(function (size) {
+    var height = size + 8;
+    return {
+      size: size,
+      lineHeight: height / size
+    };
+  });
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/shared/genFontMapToken.js
+
+var genFontMapToken = function genFontMapToken(fontSize) {
+  var fontSizePairs = getFontSizes(fontSize);
+  var fontSizes = fontSizePairs.map(function (pair) {
+    return pair.size;
+  });
+  var lineHeights = fontSizePairs.map(function (pair) {
+    return pair.lineHeight;
+  });
+  return {
+    fontSizeSM: fontSizes[0],
+    fontSize: fontSizes[1],
+    fontSizeLG: fontSizes[2],
+    fontSizeXL: fontSizes[3],
+    fontSizeHeading1: fontSizes[6],
+    fontSizeHeading2: fontSizes[5],
+    fontSizeHeading3: fontSizes[4],
+    fontSizeHeading4: fontSizes[3],
+    fontSizeHeading5: fontSizes[2],
+    lineHeight: lineHeights[1],
+    lineHeightLG: lineHeights[2],
+    lineHeightSM: lineHeights[0],
+    lineHeightHeading1: lineHeights[6],
+    lineHeightHeading2: lineHeights[5],
+    lineHeightHeading3: lineHeights[4],
+    lineHeightHeading4: lineHeights[3],
+    lineHeightHeading5: lineHeights[2]
+  };
+};
+/* harmony default export */ const shared_genFontMapToken = (genFontMapToken);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/theme/themes/default/index.js
+
 
 
 
@@ -16102,10 +16103,10 @@ function derivative(token) {
     prev = extends_extends(extends_extends({}, prev), cur);
     return prev;
   }, {});
-  return extends_extends(extends_extends(extends_extends(extends_extends(extends_extends(extends_extends({}, token), colorPalettes), genColorMapToken(token, {
+  return extends_extends(extends_extends(extends_extends(extends_extends(extends_extends(extends_extends(extends_extends({}, token), colorPalettes), genColorMapToken(token, {
     generateColorPalettes: generateColorPalettes,
     generateNeutralColorPalettes: generateNeutralColorPalettes
-  })), genSizeMapToken(token)), shared_genControlHeight(token)), genCommonMapToken(token));
+  })), shared_genFontMapToken(token.fontSize)), genSizeMapToken(token)), shared_genControlHeight(token)), genCommonMapToken(token));
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/theme/util/getAlphaColor.js
 
@@ -16174,15 +16175,12 @@ function formatToken(derivativeToken) {
     delete overrideTokens[token];
   });
   var mergedToken = extends_extends(extends_extends({}, restToken), overrideTokens);
-  var fontSizes = mergedToken.fontSizes,
-    lineHeights = mergedToken.lineHeights;
   var screenXS = 480;
   var screenSM = 576;
   var screenMD = 768;
   var screenLG = 992;
   var screenXL = 1200;
   var screenXXL = 1600;
-  var fontSizeSM = fontSizes[0];
   // Generate alias token
   var aliasToken = extends_extends(extends_extends(extends_extends({}, mergedToken), {
     colorLink: mergedToken.colorInfoText,
@@ -16211,24 +16209,7 @@ function formatToken(derivativeToken) {
     colorErrorOutline: util_getAlphaColor(mergedToken.colorErrorBg, mergedToken.colorBgContainer),
     colorWarningOutline: util_getAlphaColor(mergedToken.colorWarningBg, mergedToken.colorBgContainer),
     // Font
-    fontSizeSM: fontSizeSM,
-    fontSize: fontSizes[1],
-    fontSizeLG: fontSizes[2],
-    fontSizeXL: fontSizes[3],
-    fontSizeHeading1: fontSizes[6],
-    fontSizeHeading2: fontSizes[5],
-    fontSizeHeading3: fontSizes[4],
-    fontSizeHeading4: fontSizes[3],
-    fontSizeHeading5: fontSizes[2],
-    fontSizeIcon: fontSizeSM,
-    lineHeight: lineHeights[1],
-    lineHeightLG: lineHeights[2],
-    lineHeightSM: lineHeights[0],
-    lineHeightHeading1: lineHeights[6],
-    lineHeightHeading2: lineHeights[5],
-    lineHeightHeading3: lineHeights[4],
-    lineHeightHeading4: lineHeights[3],
-    lineHeightHeading5: lineHeights[2],
+    fontSizeIcon: mergedToken.fontSizeSM,
     // Control
     lineWidth: mergedToken.lineWidth,
     controlOutlineWidth: mergedToken.lineWidth * 2,
@@ -16814,7 +16795,7 @@ function _objectWithoutPropertiesLoose(source, excluded) {
 }
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
 
-function _objectWithoutProperties(source, excluded) {
+function objectWithoutProperties_objectWithoutProperties(source, excluded) {
   if (source == null) return {};
   var target = _objectWithoutPropertiesLoose(source, excluded);
   var key, i;
@@ -16851,17 +16832,14 @@ function normalizeAttrs() {
   var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   return Object.keys(attrs).reduce(function (acc, key) {
     var val = attrs[key];
-
     switch (key) {
       case 'class':
         acc.className = val;
         delete acc.class;
         break;
-
       default:
         acc[key] = val;
     }
-
     return acc;
   }, {});
 }
@@ -16873,7 +16851,6 @@ function utils_generate(node, key, rootProps) {
       return utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
     }));
   }
-
   return /*#__PURE__*/react.createElement(node.tag, objectSpread2_objectSpread2(objectSpread2_objectSpread2({
     key: key
   }, normalizeAttrs(node.attrs)), rootProps), (node.children || []).map(function (child, index) {
@@ -16888,11 +16865,10 @@ function normalizeTwoToneColors(twoToneColor) {
   if (!twoToneColor) {
     return [];
   }
-
   return Array.isArray(twoToneColor) ? twoToneColor : [twoToneColor];
-} // These props make sure that the SVG behaviours like general text.
+}
+// These props make sure that the SVG behaviours like general text.
 // Reference: https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
-
 var svgBaseProps = {
   width: '1em',
   height: '1em',
@@ -16903,10 +16879,8 @@ var svgBaseProps = {
 var iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  font-style: normal;\n  line-height: 0;\n  text-align: center;\n  text-transform: none;\n  vertical-align: -0.125em;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\n.anticon > * {\n  line-height: 1;\n}\n\n.anticon svg {\n  display: inline-block;\n}\n\n.anticon::before {\n  display: none;\n}\n\n.anticon .anticon-icon {\n  display: block;\n}\n\n.anticon[tabindex] {\n  cursor: pointer;\n}\n\n.anticon-spin::before,\n.anticon-spin {\n  display: inline-block;\n  -webkit-animation: loadingCircle 1s infinite linear;\n  animation: loadingCircle 1s infinite linear;\n}\n\n@-webkit-keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n";
 var useInsertStyles = function useInsertStyles() {
   var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : iconStyles;
-
   var _useContext = (0,react.useContext)(Context),
-      csp = _useContext.csp;
-
+    csp = _useContext.csp;
   (0,react.useEffect)(function () {
     updateCSS(styleStr, '@ant-design-icons', {
       prepend: true,
@@ -16917,59 +16891,49 @@ var useInsertStyles = function useInsertStyles() {
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/IconBase.js
 
 
-var _excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
+var IconBase_excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
 
 var twoToneColorPalette = {
   primaryColor: '#333',
   secondaryColor: '#E6E6E6',
   calculated: false
 };
-
 function setTwoToneColors(_ref) {
   var primaryColor = _ref.primaryColor,
-      secondaryColor = _ref.secondaryColor;
+    secondaryColor = _ref.secondaryColor;
   twoToneColorPalette.primaryColor = primaryColor;
   twoToneColorPalette.secondaryColor = secondaryColor || getSecondaryColor(primaryColor);
   twoToneColorPalette.calculated = !!secondaryColor;
 }
-
 function getTwoToneColors() {
   return objectSpread2_objectSpread2({}, twoToneColorPalette);
 }
-
 var IconBase = function IconBase(props) {
   var icon = props.icon,
-      className = props.className,
-      onClick = props.onClick,
-      style = props.style,
-      primaryColor = props.primaryColor,
-      secondaryColor = props.secondaryColor,
-      restProps = _objectWithoutProperties(props, _excluded);
-
+    className = props.className,
+    onClick = props.onClick,
+    style = props.style,
+    primaryColor = props.primaryColor,
+    secondaryColor = props.secondaryColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, IconBase_excluded);
   var colors = twoToneColorPalette;
-
   if (primaryColor) {
     colors = {
       primaryColor: primaryColor,
       secondaryColor: secondaryColor || getSecondaryColor(primaryColor)
     };
   }
-
   useInsertStyles();
   utils_warning(isIconDefinition(icon), "icon should be icon definiton, but got ".concat(icon));
-
   if (!isIconDefinition(icon)) {
     return null;
   }
-
   var target = icon;
-
   if (target && typeof target.icon === 'function') {
     target = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, target), {}, {
       icon: target.icon(colors.primaryColor, colors.secondaryColor)
     });
   }
-
   return utils_generate(target.icon, "svg-".concat(target.name), objectSpread2_objectSpread2({
     className: className,
     onClick: onClick,
@@ -16981,7 +16945,6 @@ var IconBase = function IconBase(props) {
     'aria-hidden': 'true'
   }, restProps));
 };
-
 IconBase.displayName = 'IconReact';
 IconBase.getTwoToneColors = getTwoToneColors;
 IconBase.setTwoToneColors = setTwoToneColors;
@@ -16992,10 +16955,9 @@ IconBase.setTwoToneColors = setTwoToneColors;
 
 function setTwoToneColor(twoToneColor) {
   var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
-      _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
-      primaryColor = _normalizeTwoToneColo2[0],
-      secondaryColor = _normalizeTwoToneColo2[1];
-
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
   return components_IconBase.setTwoToneColors({
     primaryColor: primaryColor,
     secondaryColor: secondaryColor
@@ -17003,11 +16965,9 @@ function setTwoToneColor(twoToneColor) {
 }
 function getTwoToneColor() {
   var colors = components_IconBase.getTwoToneColors();
-
   if (!colors.calculated) {
     return colors.primaryColor;
   }
-
   return [colors.primaryColor, colors.secondaryColor];
 }
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/AntdIcon.js
@@ -17021,43 +16981,37 @@ var AntdIcon_excluded = ["className", "icon", "spin", "rotate", "tabIndex", "onC
 
 
 
- // Initial setting
-// should move it to antd main repo?
 
+// Initial setting
+// should move it to antd main repo?
 setTwoToneColor('#1890ff');
 var Icon = /*#__PURE__*/react.forwardRef(function (props, ref) {
   var _classNames;
-
   var className = props.className,
-      icon = props.icon,
-      spin = props.spin,
-      rotate = props.rotate,
-      tabIndex = props.tabIndex,
-      onClick = props.onClick,
-      twoToneColor = props.twoToneColor,
-      restProps = _objectWithoutProperties(props, AntdIcon_excluded);
-
+    icon = props.icon,
+    spin = props.spin,
+    rotate = props.rotate,
+    tabIndex = props.tabIndex,
+    onClick = props.onClick,
+    twoToneColor = props.twoToneColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, AntdIcon_excluded);
   var _React$useContext = react.useContext(Context),
-      _React$useContext$pre = _React$useContext.prefixCls,
-      prefixCls = _React$useContext$pre === void 0 ? 'anticon' : _React$useContext$pre;
-
-  var classString = classnames_default()(prefixCls, (_classNames = {}, defineProperty_defineProperty(_classNames, "".concat(prefixCls, "-").concat(icon.name), !!icon.name), defineProperty_defineProperty(_classNames, "".concat(prefixCls, "-spin"), !!spin || icon.name === 'loading'), _classNames), className);
+    _React$useContext$pre = _React$useContext.prefixCls,
+    prefixCls = _React$useContext$pre === void 0 ? 'anticon' : _React$useContext$pre,
+    rootClassName = _React$useContext.rootClassName;
+  var classString = classnames_default()(rootClassName, prefixCls, (_classNames = {}, defineProperty_defineProperty(_classNames, "".concat(prefixCls, "-").concat(icon.name), !!icon.name), defineProperty_defineProperty(_classNames, "".concat(prefixCls, "-spin"), !!spin || icon.name === 'loading'), _classNames), className);
   var iconTabIndex = tabIndex;
-
   if (iconTabIndex === undefined && onClick) {
     iconTabIndex = -1;
   }
-
   var svgStyle = rotate ? {
     msTransform: "rotate(".concat(rotate, "deg)"),
     transform: "rotate(".concat(rotate, "deg)")
   } : undefined;
-
   var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
-      _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
-      primaryColor = _normalizeTwoToneColo2[0],
-      secondaryColor = _normalizeTwoToneColo2[1];
-
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
   return /*#__PURE__*/react.createElement("span", objectSpread2_objectSpread2(objectSpread2_objectSpread2({
     role: "img",
     "aria-label": icon.name
@@ -17084,14 +17038,12 @@ Icon.setTwoToneColor = setTwoToneColor;
 
 
 
-
 var BarsOutlined_BarsOutlined = function BarsOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_BarsOutlined
   }));
 };
-
 BarsOutlined_BarsOutlined.displayName = 'BarsOutlined';
 /* harmony default export */ const icons_BarsOutlined = (/*#__PURE__*/react.forwardRef(BarsOutlined_BarsOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/LeftOutlined.js
@@ -17106,14 +17058,12 @@ var LeftOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 
-
 var LeftOutlined_LeftOutlined = function LeftOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_LeftOutlined
   }));
 };
-
 LeftOutlined_LeftOutlined.displayName = 'LeftOutlined';
 /* harmony default export */ const icons_LeftOutlined = (/*#__PURE__*/react.forwardRef(LeftOutlined_LeftOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/RightOutlined.js
@@ -17128,14 +17078,12 @@ var RightOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 8
 
 
 
-
 var RightOutlined_RightOutlined = function RightOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_RightOutlined
   }));
 };
-
 RightOutlined_RightOutlined.displayName = 'RightOutlined';
 /* harmony default export */ const icons_RightOutlined = (/*#__PURE__*/react.forwardRef(RightOutlined_RightOutlined));
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/omit.js
@@ -17455,20 +17403,6 @@ var responsiveObserve = {
   }
 };
 /* harmony default export */ const _util_responsiveObserve = (responsiveObserve);
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/type.js
-// https://stackoverflow.com/questions/46176165/ways-to-get-string-literal-type-of-array-values-without-enum-overhead
-var tuple = function tuple() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  return args;
-};
-var tupleNum = function tupleNum() {
-  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    args[_key2] = arguments[_key2];
-  }
-  return args;
-};
 ;// CONCATENATED MODULE: ./node_modules/antd/es/grid/RowContext.js
 
 var RowContext = /*#__PURE__*/(0,react.createContext)({});
@@ -17630,9 +17564,8 @@ var row_rest = undefined && undefined.__rest || function (s, e) {
 
 
 
-
-var RowAligns = tuple('top', 'middle', 'bottom', 'stretch');
-var RowJustify = tuple('start', 'end', 'center', 'space-around', 'space-between', 'space-evenly');
+var RowAligns = (/* unused pure expression or super */ null && (['top', 'middle', 'bottom', 'stretch']));
+var RowJustify = (/* unused pure expression or super */ null && (['start', 'end', 'center', 'space-around', 'space-between', 'space-evenly']));
 function useMergePropByScreen(oriProp, screen) {
   var _React$useState = react.useState(typeof oriProp === 'string' ? oriProp : ''),
     _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
@@ -17894,14 +17827,12 @@ var CloseOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 8
 
 
 
-
 var CloseOutlined_CloseOutlined = function CloseOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_CloseOutlined
   }));
 };
-
 CloseOutlined_CloseOutlined.displayName = 'CloseOutlined';
 /* harmony default export */ const icons_CloseOutlined = (/*#__PURE__*/react.forwardRef(CloseOutlined_CloseOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EllipsisOutlined.js
@@ -17916,14 +17847,12 @@ var EllipsisOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 89
 
 
 
-
 var EllipsisOutlined_EllipsisOutlined = function EllipsisOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_EllipsisOutlined
   }));
 };
-
 EllipsisOutlined_EllipsisOutlined.displayName = 'EllipsisOutlined';
 /* harmony default export */ const icons_EllipsisOutlined = (/*#__PURE__*/react.forwardRef(EllipsisOutlined_EllipsisOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/PlusOutlined.js
@@ -17938,14 +17867,12 @@ var PlusOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 
-
 var PlusOutlined_PlusOutlined = function PlusOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_PlusOutlined
   }));
 };
-
 PlusOutlined_PlusOutlined.displayName = 'PlusOutlined';
 /* harmony default export */ const icons_PlusOutlined = (/*#__PURE__*/react.forwardRef(PlusOutlined_PlusOutlined));
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/isMobile.js
@@ -18095,16 +18022,6 @@ function findDOMNode(node) {
 }
 // EXTERNAL MODULE: ./node_modules/react-is/index.js
 var react_is = __webpack_require__(9864);
-;// CONCATENATED MODULE: ./node_modules/rc-util/es/hooks/useMemo.js
-
-function useMemo(getValue, condition, shouldUpdate) {
-  var cacheRef = react.useRef({});
-  if (!('value' in cacheRef.current) || shouldUpdate(cacheRef.current.condition, condition)) {
-    cacheRef.current.value = getValue();
-    cacheRef.current.condition = condition;
-  }
-  return cacheRef.current.value;
-}
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/ref.js
 
 
@@ -18139,7 +18056,7 @@ function useComposeRef() {
   for (var _len2 = arguments.length, refs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
     refs[_key2] = arguments[_key2];
   }
-  return useMemo(function () {
+  return useMemo_useMemo(function () {
     return composeRef.apply(void 0, refs);
   }, refs, function (prev, next) {
     return prev.length === next.length && prev.every(function (ref, i) {
@@ -19127,7 +19044,7 @@ function genCSSMotionList(transitionSupport) {
             children = _this$props.children,
             _onVisibleChanged = _this$props.onVisibleChanged,
             onAllRemoved = _this$props.onAllRemoved,
-            restProps = _objectWithoutProperties(_this$props, CSSMotionList_excluded);
+            restProps = objectWithoutProperties_objectWithoutProperties(_this$props, CSSMotionList_excluded);
 
         var Component = component || react.Fragment;
         var motionProps = {};
@@ -19138,7 +19055,7 @@ function genCSSMotionList(transitionSupport) {
         delete restProps.keys;
         return /*#__PURE__*/react.createElement(Component, restProps, keyEntities.map(function (_ref2) {
           var status = _ref2.status,
-              eventProps = _objectWithoutProperties(_ref2, _excluded2);
+              eventProps = objectWithoutProperties_objectWithoutProperties(_ref2, _excluded2);
 
           var visible = status === STATUS_ADD || status === STATUS_KEEP;
           return /*#__PURE__*/react.createElement(CSSMotion, extends_extends({}, motionProps, {
@@ -19258,7 +19175,7 @@ function TabPanelList(_ref) {
       forceRender = _ref2.forceRender,
       paneStyle = _ref2.style,
       paneClassName = _ref2.className,
-      restTabProps = _objectWithoutProperties(_ref2, TabPanelList_excluded);
+      restTabProps = objectWithoutProperties_objectWithoutProperties(_ref2, TabPanelList_excluded);
     var active = key === activeKey;
     return /*#__PURE__*/react.createElement(es, extends_extends({
       key: key,
@@ -21191,9 +21108,6 @@ function useVisibleRange(tabOffsets, visibleTabContentValue, transform, tabConte
     return tab.key;
   }).join('_'), rtl]);
 }
-// EXTERNAL MODULE: ./node_modules/shallowequal/index.js
-var shallowequal = __webpack_require__(6774);
-var shallowequal_default = /*#__PURE__*/__webpack_require__.n(shallowequal);
 ;// CONCATENATED MODULE: ./node_modules/rc-overflow/es/Item.js
 
 
@@ -21221,7 +21135,7 @@ function InternalItem(props, ref) {
       order = props.order,
       _props$component = props.component,
       Component = _props$component === void 0 ? 'div' : _props$component,
-      restProps = _objectWithoutProperties(props, Item_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(props, Item_excluded);
 
   var mergedHidden = responsive && !display; // ================================ Effect ================================
 
@@ -21339,7 +21253,7 @@ var InternalRawItem = function InternalRawItem(props, ref) {
   if (!context) {
     var _props$component = props.component,
         Component = _props$component === void 0 ? 'div' : _props$component,
-        _restProps = _objectWithoutProperties(props, RawItem_excluded);
+        _restProps = objectWithoutProperties_objectWithoutProperties(props, RawItem_excluded);
 
     return /*#__PURE__*/react.createElement(Component, extends_extends({}, _restProps, {
       ref: ref
@@ -21347,10 +21261,10 @@ var InternalRawItem = function InternalRawItem(props, ref) {
   }
 
   var contextClassName = context.className,
-      restContext = _objectWithoutProperties(context, RawItem_excluded2);
+      restContext = objectWithoutProperties_objectWithoutProperties(context, RawItem_excluded2);
 
   var className = props.className,
-      restProps = _objectWithoutProperties(props, _excluded3); // Do not pass context to sub item to avoid multiple measure
+      restProps = objectWithoutProperties_objectWithoutProperties(props, _excluded3); // Do not pass context to sub item to avoid multiple measure
 
 
   return /*#__PURE__*/react.createElement(OverflowContext.Provider, {
@@ -21407,7 +21321,7 @@ function Overflow(props, ref) {
       Component = _props$component === void 0 ? 'div' : _props$component,
       itemComponent = props.itemComponent,
       onVisibleChange = props.onVisibleChange,
-      restProps = _objectWithoutProperties(props, Overflow_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(props, Overflow_excluded);
 
   var createUseState = useBatchFrameState();
   var fullySSR = ssr === 'full';
@@ -21703,6 +21617,24 @@ ForwardOverflow.INVALIDATE = INVALIDATE; // Convert to generic type
 ;// CONCATENATED MODULE: ./node_modules/rc-overflow/es/index.js
 
 /* harmony default export */ const rc_overflow_es = (es_Overflow);
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/IdContext.js
+
+var IdContext = /*#__PURE__*/react.createContext(null);
+function getMenuId(uuid, eventKey) {
+  if (uuid === undefined) {
+    return null;
+  }
+
+  return "".concat(uuid, "-").concat(eventKey);
+}
+/**
+ * Get `data-menu-id`
+ */
+
+function useMenuId(eventKey) {
+  var id = react.useContext(IdContext);
+  return getMenuId(id, eventKey);
+}
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/MenuContext.js
 
 
@@ -21728,10 +21660,10 @@ function mergeProps(origin, target) {
 function InheritableContextProvider(_ref) {
   var children = _ref.children,
       locked = _ref.locked,
-      restProps = _objectWithoutProperties(_ref, MenuContext_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuContext_excluded);
 
   var context = react.useContext(MenuContext);
-  var inheritableContext = useMemo(function () {
+  var inheritableContext = useMemo_useMemo(function () {
     return mergeProps(context, restProps);
   }, [context, restProps], function (prev, next) {
     return !locked && (prev[0] !== next[0] || !shallowequal_default()(prev[1], next[1]));
@@ -21739,6 +21671,593 @@ function InheritableContextProvider(_ref) {
   return /*#__PURE__*/react.createElement(MenuContext.Provider, {
     value: inheritableContext
   }, children);
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PathContext.js
+
+
+var EmptyList = []; // ========================= Path Register =========================
+
+var PathRegisterContext = /*#__PURE__*/react.createContext(null);
+function useMeasure() {
+  return react.useContext(PathRegisterContext);
+} // ========================= Path Tracker ==========================
+
+var PathTrackerContext = /*#__PURE__*/react.createContext(EmptyList);
+function useFullPath(eventKey) {
+  var parentKeyPath = react.useContext(PathTrackerContext);
+  return react.useMemo(function () {
+    return eventKey !== undefined ? [].concat(_toConsumableArray(parentKeyPath), [eventKey]) : parentKeyPath;
+  }, [parentKeyPath, eventKey]);
+} // =========================== Path User ===========================
+
+var PathUserContext = /*#__PURE__*/react.createContext(null);
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PrivateContext.js
+
+var PrivateContext = /*#__PURE__*/react.createContext({});
+/* harmony default export */ const context_PrivateContext = (PrivateContext);
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/isVisible.js
+/* harmony default export */ const isVisible = (function (element) {
+  if (!element) {
+    return false;
+  }
+  if (element instanceof HTMLElement && element.offsetParent) {
+    return true;
+  }
+  if (element instanceof SVGGraphicsElement && element.getBBox) {
+    var _element$getBBox = element.getBBox(),
+      width = _element$getBBox.width,
+      height = _element$getBBox.height;
+    if (width || height) {
+      return true;
+    }
+  }
+  if (element instanceof HTMLElement && element.getBoundingClientRect) {
+    var _element$getBoundingC = element.getBoundingClientRect(),
+      _width = _element$getBoundingC.width,
+      _height = _element$getBoundingC.height;
+    if (_width || _height) {
+      return true;
+    }
+  }
+  return false;
+});
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/focus.js
+
+
+function focusable(node) {
+  var includePositive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  if (isVisible(node)) {
+    var nodeName = node.nodeName.toLowerCase();
+    var isFocusableElement =
+    // Focusable element
+    ['input', 'select', 'textarea', 'button'].includes(nodeName) ||
+    // Editable element
+    node.isContentEditable ||
+    // Anchor with href element
+    nodeName === 'a' && !!node.getAttribute('href');
+    // Get tabIndex
+    var tabIndexAttr = node.getAttribute('tabindex');
+    var tabIndexNum = Number(tabIndexAttr);
+    // Parse as number if validate
+    var tabIndex = null;
+    if (tabIndexAttr && !Number.isNaN(tabIndexNum)) {
+      tabIndex = tabIndexNum;
+    } else if (isFocusableElement && tabIndex === null) {
+      tabIndex = 0;
+    }
+    // Block focusable if disabled
+    if (isFocusableElement && node.disabled) {
+      tabIndex = null;
+    }
+    return tabIndex !== null && (tabIndex >= 0 || includePositive && tabIndex < 0);
+  }
+  return false;
+}
+function getFocusNodeList(node) {
+  var includePositive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  var res = _toConsumableArray(node.querySelectorAll('*')).filter(function (child) {
+    return focusable(child, includePositive);
+  });
+  if (focusable(node, includePositive)) {
+    res.unshift(node);
+  }
+  return res;
+}
+var lastFocusElement = null;
+/** @deprecated Do not use since this may failed when used in async */
+function saveLastFocusNode() {
+  lastFocusElement = document.activeElement;
+}
+/** @deprecated Do not use since this may failed when used in async */
+function clearLastFocusNode() {
+  lastFocusElement = null;
+}
+/** @deprecated Do not use since this may failed when used in async */
+function backLastFocusNode() {
+  if (lastFocusElement) {
+    try {
+      // 元素可能已经被移动了
+      lastFocusElement.focus();
+      /* eslint-disable no-empty */
+    } catch (e) {
+      // empty
+    }
+    /* eslint-enable no-empty */
+  }
+}
+
+function limitTabRange(node, e) {
+  if (e.keyCode === 9) {
+    var tabNodeList = getFocusNodeList(node);
+    var lastTabNode = tabNodeList[e.shiftKey ? 0 : tabNodeList.length - 1];
+    var leavingTab = lastTabNode === document.activeElement || node === document.activeElement;
+    if (leavingTab) {
+      var target = tabNodeList[e.shiftKey ? tabNodeList.length - 1 : 0];
+      target.focus();
+      e.preventDefault();
+    }
+  }
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useAccessibility.js
+
+
+
+
+
+ // destruct to reduce minify size
+
+var LEFT = es_KeyCode.LEFT,
+    RIGHT = es_KeyCode.RIGHT,
+    UP = es_KeyCode.UP,
+    DOWN = es_KeyCode.DOWN,
+    ENTER = es_KeyCode.ENTER,
+    ESC = es_KeyCode.ESC,
+    HOME = es_KeyCode.HOME,
+    END = es_KeyCode.END;
+var ArrowKeys = [UP, DOWN, LEFT, RIGHT];
+
+function getOffset(mode, isRootLevel, isRtl, which) {
+  var _inline, _horizontal, _vertical, _offsets;
+
+  var prev = 'prev';
+  var next = 'next';
+  var children = 'children';
+  var parent = 'parent'; // Inline enter is special that we use unique operation
+
+  if (mode === 'inline' && which === ENTER) {
+    return {
+      inlineTrigger: true
+    };
+  }
+
+  var inline = (_inline = {}, defineProperty_defineProperty(_inline, UP, prev), defineProperty_defineProperty(_inline, DOWN, next), _inline);
+  var horizontal = (_horizontal = {}, defineProperty_defineProperty(_horizontal, LEFT, isRtl ? next : prev), defineProperty_defineProperty(_horizontal, RIGHT, isRtl ? prev : next), defineProperty_defineProperty(_horizontal, DOWN, children), defineProperty_defineProperty(_horizontal, ENTER, children), _horizontal);
+  var vertical = (_vertical = {}, defineProperty_defineProperty(_vertical, UP, prev), defineProperty_defineProperty(_vertical, DOWN, next), defineProperty_defineProperty(_vertical, ENTER, children), defineProperty_defineProperty(_vertical, ESC, parent), defineProperty_defineProperty(_vertical, LEFT, isRtl ? children : parent), defineProperty_defineProperty(_vertical, RIGHT, isRtl ? parent : children), _vertical);
+  var offsets = {
+    inline: inline,
+    horizontal: horizontal,
+    vertical: vertical,
+    inlineSub: inline,
+    horizontalSub: vertical,
+    verticalSub: vertical
+  };
+  var type = (_offsets = offsets["".concat(mode).concat(isRootLevel ? '' : 'Sub')]) === null || _offsets === void 0 ? void 0 : _offsets[which];
+
+  switch (type) {
+    case prev:
+      return {
+        offset: -1,
+        sibling: true
+      };
+
+    case next:
+      return {
+        offset: 1,
+        sibling: true
+      };
+
+    case parent:
+      return {
+        offset: -1,
+        sibling: false
+      };
+
+    case children:
+      return {
+        offset: 1,
+        sibling: false
+      };
+
+    default:
+      return null;
+  }
+}
+
+function findContainerUL(element) {
+  var current = element;
+
+  while (current) {
+    if (current.getAttribute('data-menu-list')) {
+      return current;
+    }
+
+    current = current.parentElement;
+  } // Normally should not reach this line
+
+  /* istanbul ignore next */
+
+
+  return null;
+}
+/**
+ * Find focused element within element set provided
+ */
+
+
+function getFocusElement(activeElement, elements) {
+  var current = activeElement || document.activeElement;
+
+  while (current) {
+    if (elements.has(current)) {
+      return current;
+    }
+
+    current = current.parentElement;
+  }
+
+  return null;
+}
+/**
+ * Get focusable elements from the element set under provided container
+ */
+
+
+function getFocusableElements(container, elements) {
+  var list = getFocusNodeList(container, true);
+  return list.filter(function (ele) {
+    return elements.has(ele);
+  });
+}
+
+function getNextFocusElement(parentQueryContainer, elements, focusMenuElement) {
+  var offset = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
+
+  // Key on the menu item will not get validate parent container
+  if (!parentQueryContainer) {
+    return null;
+  } // List current level menu item elements
+
+
+  var sameLevelFocusableMenuElementList = getFocusableElements(parentQueryContainer, elements); // Find next focus index
+
+  var count = sameLevelFocusableMenuElementList.length;
+  var focusIndex = sameLevelFocusableMenuElementList.findIndex(function (ele) {
+    return focusMenuElement === ele;
+  });
+
+  if (offset < 0) {
+    if (focusIndex === -1) {
+      focusIndex = count - 1;
+    } else {
+      focusIndex -= 1;
+    }
+  } else if (offset > 0) {
+    focusIndex += 1;
+  }
+
+  focusIndex = (focusIndex + count) % count; // Focus menu item
+
+  return sameLevelFocusableMenuElementList[focusIndex];
+}
+
+function useAccessibility(mode, activeKey, isRtl, id, containerRef, getKeys, getKeyPath, triggerActiveKey, triggerAccessibilityOpen, originOnKeyDown) {
+  var rafRef = react.useRef();
+  var activeRef = react.useRef();
+  activeRef.current = activeKey;
+
+  var cleanRaf = function cleanRaf() {
+    es_raf.cancel(rafRef.current);
+  };
+
+  react.useEffect(function () {
+    return function () {
+      cleanRaf();
+    };
+  }, []);
+  return function (e) {
+    var which = e.which;
+
+    if ([].concat(ArrowKeys, [ENTER, ESC, HOME, END]).includes(which)) {
+      // Convert key to elements
+      var elements;
+      var key2element;
+      var element2key; // >>> Wrap as function since we use raf for some case
+
+      var refreshElements = function refreshElements() {
+        elements = new Set();
+        key2element = new Map();
+        element2key = new Map();
+        var keys = getKeys();
+        keys.forEach(function (key) {
+          var element = document.querySelector("[data-menu-id='".concat(getMenuId(id, key), "']"));
+
+          if (element) {
+            elements.add(element);
+            element2key.set(element, key);
+            key2element.set(key, element);
+          }
+        });
+        return elements;
+      };
+
+      refreshElements(); // First we should find current focused MenuItem/SubMenu element
+
+      var activeElement = key2element.get(activeKey);
+      var focusMenuElement = getFocusElement(activeElement, elements);
+      var focusMenuKey = element2key.get(focusMenuElement);
+      var offsetObj = getOffset(mode, getKeyPath(focusMenuKey, true).length === 1, isRtl, which); // Some mode do not have fully arrow operation like inline
+
+      if (!offsetObj && which !== HOME && which !== END) {
+        return;
+      } // Arrow prevent default to avoid page scroll
+
+
+      if (ArrowKeys.includes(which) || [HOME, END].includes(which)) {
+        e.preventDefault();
+      }
+
+      var tryFocus = function tryFocus(menuElement) {
+        if (menuElement) {
+          var focusTargetElement = menuElement; // Focus to link instead of menu item if possible
+
+          var link = menuElement.querySelector('a');
+
+          if (link !== null && link !== void 0 && link.getAttribute('href')) {
+            focusTargetElement = link;
+          }
+
+          var targetKey = element2key.get(menuElement);
+          triggerActiveKey(targetKey);
+          /**
+           * Do not `useEffect` here since `tryFocus` may trigger async
+           * which makes React sync update the `activeKey`
+           * that force render before `useRef` set the next activeKey
+           */
+
+          cleanRaf();
+          rafRef.current = es_raf(function () {
+            if (activeRef.current === targetKey) {
+              focusTargetElement.focus();
+            }
+          });
+        }
+      };
+
+      if ([HOME, END].includes(which) || offsetObj.sibling || !focusMenuElement) {
+        // ========================== Sibling ==========================
+        // Find walkable focus menu element container
+        var parentQueryContainer;
+
+        if (!focusMenuElement || mode === 'inline') {
+          parentQueryContainer = containerRef.current;
+        } else {
+          parentQueryContainer = findContainerUL(focusMenuElement);
+        } // Get next focus element
+
+
+        var targetElement;
+        var focusableElements = getFocusableElements(parentQueryContainer, elements);
+
+        if (which === HOME) {
+          targetElement = focusableElements[0];
+        } else if (which === END) {
+          targetElement = focusableElements[focusableElements.length - 1];
+        } else {
+          targetElement = getNextFocusElement(parentQueryContainer, elements, focusMenuElement, offsetObj.offset);
+        } // Focus menu item
+
+
+        tryFocus(targetElement); // ======================= InlineTrigger =======================
+      } else if (offsetObj.inlineTrigger) {
+        // Inline trigger no need switch to sub menu item
+        triggerAccessibilityOpen(focusMenuKey); // =========================== Level ===========================
+      } else if (offsetObj.offset > 0) {
+        triggerAccessibilityOpen(focusMenuKey, true);
+        cleanRaf();
+        rafRef.current = es_raf(function () {
+          // Async should resync elements
+          refreshElements();
+          var controlId = focusMenuElement.getAttribute('aria-controls');
+          var subQueryContainer = document.getElementById(controlId); // Get sub focusable menu item
+
+          var targetElement = getNextFocusElement(subQueryContainer, elements); // Focus menu item
+
+          tryFocus(targetElement);
+        }, 5);
+      } else if (offsetObj.offset < 0) {
+        var keyPath = getKeyPath(focusMenuKey, true);
+        var parentKey = keyPath[keyPath.length - 2];
+        var parentMenuElement = key2element.get(parentKey); // Focus menu item
+
+        triggerAccessibilityOpen(parentKey, false);
+        tryFocus(parentMenuElement);
+      }
+    } // Pass origin key down event
+
+
+    originOnKeyDown === null || originOnKeyDown === void 0 ? void 0 : originOnKeyDown(e);
+  };
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/utils/timeUtil.js
+function nextSlice(callback) {
+  /* istanbul ignore next */
+  Promise.resolve().then(callback);
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useKeyRecords.js
+
+
+
+
+
+
+var PATH_SPLIT = '__RC_UTIL_PATH_SPLIT__';
+
+var getPathStr = function getPathStr(keyPath) {
+  return keyPath.join(PATH_SPLIT);
+};
+
+var getPathKeys = function getPathKeys(keyPathStr) {
+  return keyPathStr.split(PATH_SPLIT);
+};
+
+var OVERFLOW_KEY = 'rc-menu-more';
+function useKeyRecords() {
+  var _React$useState = react.useState({}),
+      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+      internalForceUpdate = _React$useState2[1];
+
+  var key2pathRef = (0,react.useRef)(new Map());
+  var path2keyRef = (0,react.useRef)(new Map());
+
+  var _React$useState3 = react.useState([]),
+      _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
+      overflowKeys = _React$useState4[0],
+      setOverflowKeys = _React$useState4[1];
+
+  var updateRef = (0,react.useRef)(0);
+  var destroyRef = (0,react.useRef)(false);
+
+  var forceUpdate = function forceUpdate() {
+    if (!destroyRef.current) {
+      internalForceUpdate({});
+    }
+  };
+
+  var registerPath = (0,react.useCallback)(function (key, keyPath) {
+    // Warning for invalidate or duplicated `key`
+    if (false) {} // Fill map
+
+
+    var connectedPath = getPathStr(keyPath);
+    path2keyRef.current.set(connectedPath, key);
+    key2pathRef.current.set(key, connectedPath);
+    updateRef.current += 1;
+    var id = updateRef.current;
+    nextSlice(function () {
+      if (id === updateRef.current) {
+        forceUpdate();
+      }
+    });
+  }, []);
+  var unregisterPath = (0,react.useCallback)(function (key, keyPath) {
+    var connectedPath = getPathStr(keyPath);
+    path2keyRef.current.delete(connectedPath);
+    key2pathRef.current.delete(key);
+  }, []);
+  var refreshOverflowKeys = (0,react.useCallback)(function (keys) {
+    setOverflowKeys(keys);
+  }, []);
+  var getKeyPath = (0,react.useCallback)(function (eventKey, includeOverflow) {
+    var fullPath = key2pathRef.current.get(eventKey) || '';
+    var keys = getPathKeys(fullPath);
+
+    if (includeOverflow && overflowKeys.includes(keys[0])) {
+      keys.unshift(OVERFLOW_KEY);
+    }
+
+    return keys;
+  }, [overflowKeys]);
+  var isSubPathKey = (0,react.useCallback)(function (pathKeys, eventKey) {
+    return pathKeys.some(function (pathKey) {
+      var pathKeyList = getKeyPath(pathKey, true);
+      return pathKeyList.includes(eventKey);
+    });
+  }, [getKeyPath]);
+
+  var getKeys = function getKeys() {
+    var keys = _toConsumableArray(key2pathRef.current.keys());
+
+    if (overflowKeys.length) {
+      keys.push(OVERFLOW_KEY);
+    }
+
+    return keys;
+  };
+  /**
+   * Find current key related child path keys
+   */
+
+
+  var getSubPathKeys = (0,react.useCallback)(function (key) {
+    var connectedPath = "".concat(key2pathRef.current.get(key)).concat(PATH_SPLIT);
+    var pathKeys = new Set();
+
+    _toConsumableArray(path2keyRef.current.keys()).forEach(function (pathKey) {
+      if (pathKey.startsWith(connectedPath)) {
+        pathKeys.add(path2keyRef.current.get(pathKey));
+      }
+    });
+
+    return pathKeys;
+  }, []);
+  react.useEffect(function () {
+    return function () {
+      destroyRef.current = true;
+    };
+  }, []);
+  return {
+    // Register
+    registerPath: registerPath,
+    unregisterPath: unregisterPath,
+    refreshOverflowKeys: refreshOverflowKeys,
+    // Util
+    isSubPathKey: isSubPathKey,
+    getKeyPath: getKeyPath,
+    getKeys: getKeys,
+    getSubPathKeys: getSubPathKeys
+  };
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useMemoCallback.js
+
+/**
+ * Cache callback function that always return same ref instead.
+ * This is used for context optimization.
+ */
+
+function useMemoCallback(func) {
+  var funRef = react.useRef(func);
+  funRef.current = func;
+  var callback = react.useCallback(function () {
+    var _funRef$current;
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return (_funRef$current = funRef.current) === null || _funRef$current === void 0 ? void 0 : _funRef$current.call.apply(_funRef$current, [funRef].concat(args));
+  }, []);
+  return func ? callback : undefined;
+}
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useUUID.js
+
+
+
+var uniquePrefix = Math.random().toFixed(5).toString().slice(2);
+var internalId = 0;
+function useUUID(id) {
+  var _useMergedState = useMergedState(id, {
+    value: id
+  }),
+      _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
+      uuid = _useMergedState2[0],
+      setUUID = _useMergedState2[1];
+
+  react.useEffect(function () {
+    internalId += 1;
+    var newId =  false ? 0 : "".concat(uniquePrefix, "-").concat(internalId);
+    setUUID("rc-menu-uuid-".concat(newId));
+  }, []);
+  return uuid;
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useActive.js
 
@@ -21784,7 +22303,7 @@ var warnUtil_excluded = ["item"];
 
 function warnItemProp(_ref) {
   var item = _ref.item,
-      restInfo = _objectWithoutProperties(_ref, warnUtil_excluded);
+      restInfo = objectWithoutProperties_objectWithoutProperties(_ref, warnUtil_excluded);
 
   Object.defineProperty(restInfo, 'item', {
     get: function get() {
@@ -21832,47 +22351,6 @@ function useDirectionStyle(level) {
     paddingLeft: len * inlineIndent
   };
 }
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PathContext.js
-
-
-var EmptyList = []; // ========================= Path Register =========================
-
-var PathRegisterContext = /*#__PURE__*/react.createContext(null);
-function useMeasure() {
-  return react.useContext(PathRegisterContext);
-} // ========================= Path Tracker ==========================
-
-var PathTrackerContext = /*#__PURE__*/react.createContext(EmptyList);
-function useFullPath(eventKey) {
-  var parentKeyPath = react.useContext(PathTrackerContext);
-  return react.useMemo(function () {
-    return eventKey !== undefined ? [].concat(_toConsumableArray(parentKeyPath), [eventKey]) : parentKeyPath;
-  }, [parentKeyPath, eventKey]);
-} // =========================== Path User ===========================
-
-var PathUserContext = /*#__PURE__*/react.createContext(null);
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/IdContext.js
-
-var IdContext = /*#__PURE__*/react.createContext(null);
-function getMenuId(uuid, eventKey) {
-  if (uuid === undefined) {
-    return null;
-  }
-
-  return "".concat(uuid, "-").concat(eventKey);
-}
-/**
- * Get `data-menu-id`
- */
-
-function useMenuId(eventKey) {
-  var id = react.useContext(IdContext);
-  return getMenuId(id, eventKey);
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PrivateContext.js
-
-var PrivateContext = /*#__PURE__*/react.createContext({});
-/* harmony default export */ const context_PrivateContext = (PrivateContext);
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/MenuItem.js
 
 
@@ -21922,7 +22400,7 @@ var LegacyMenuItem = /*#__PURE__*/function (_React$Component) {
           title = _this$props.title,
           attribute = _this$props.attribute,
           elementRef = _this$props.elementRef,
-          restProps = _objectWithoutProperties(_this$props, MenuItem_excluded);
+          restProps = objectWithoutProperties_objectWithoutProperties(_this$props, MenuItem_excluded);
 
       var passedProps = omit_omit(restProps, ['eventKey']);
       es_warning(!attribute, '`attribute` of Menu.Item is deprecated. Please pass attribute directly.');
@@ -21957,7 +22435,7 @@ var InternalMenuItem = function InternalMenuItem(props) {
       onClick = props.onClick,
       onKeyDown = props.onKeyDown,
       onFocus = props.onFocus,
-      restProps = _objectWithoutProperties(props, MenuItem_excluded2);
+      restProps = objectWithoutProperties_objectWithoutProperties(props, MenuItem_excluded2);
 
   var domDataId = useMenuId(eventKey);
 
@@ -21997,7 +22475,7 @@ var InternalMenuItem = function InternalMenuItem(props) {
 
   var _useActive = useActive(eventKey, mergedDisabled, onMouseEnter, onMouseLeave),
       active = _useActive.active,
-      activeProps = _objectWithoutProperties(_useActive, MenuItem_excluded3); // ============================ Select ============================
+      activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, MenuItem_excluded3); // ============================ Select ============================
 
 
   var selected = selectedKeys.includes(eventKey); // ======================== DirectionStyle ========================
@@ -22096,6 +22574,35 @@ function MenuItem(props) {
 }
 
 /* harmony default export */ const es_MenuItem = (MenuItem);
+;// CONCATENATED MODULE: ./node_modules/rc-menu/es/SubMenu/SubMenuList.js
+
+
+var SubMenuList_excluded = ["className", "children"];
+
+
+
+
+var InternalSubMenuList = function InternalSubMenuList(_ref, ref) {
+  var className = _ref.className,
+      children = _ref.children,
+      restProps = objectWithoutProperties_objectWithoutProperties(_ref, SubMenuList_excluded);
+
+  var _React$useContext = react.useContext(MenuContext),
+      prefixCls = _React$useContext.prefixCls,
+      mode = _React$useContext.mode,
+      rtl = _React$useContext.rtl;
+
+  return /*#__PURE__*/react.createElement("ul", extends_extends({
+    className: classnames_default()(prefixCls, rtl && "".concat(prefixCls, "-rtl"), "".concat(prefixCls, "-sub"), "".concat(prefixCls, "-").concat(mode === 'inline' ? 'inline' : 'vertical'), className)
+  }, restProps, {
+    "data-menu-list": true,
+    ref: ref
+  }), children);
+};
+
+var SubMenuList = /*#__PURE__*/react.forwardRef(InternalSubMenuList);
+SubMenuList.displayName = 'SubMenuList';
+/* harmony default export */ const SubMenu_SubMenuList = (SubMenuList);
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/utils/nodeUtil.js
 
 
@@ -22140,7 +22647,7 @@ function convertItemsToNodes(list) {
           children = _ref.children,
           key = _ref.key,
           type = _ref.type,
-          restProps = _objectWithoutProperties(_ref, nodeUtil_excluded);
+          restProps = objectWithoutProperties_objectWithoutProperties(_ref, nodeUtil_excluded);
 
       var mergedKey = key !== null && key !== void 0 ? key : "tmp-".concat(index); // MenuItemGroup & SubMenuItem
 
@@ -22189,56 +22696,6 @@ function parseItems(children, items, keyPath) {
 
   return parseChildren(childNodes, keyPath);
 }
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useMemoCallback.js
-
-/**
- * Cache callback function that always return same ref instead.
- * This is used for context optimization.
- */
-
-function useMemoCallback(func) {
-  var funRef = react.useRef(func);
-  funRef.current = func;
-  var callback = react.useCallback(function () {
-    var _funRef$current;
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return (_funRef$current = funRef.current) === null || _funRef$current === void 0 ? void 0 : _funRef$current.call.apply(_funRef$current, [funRef].concat(args));
-  }, []);
-  return func ? callback : undefined;
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/SubMenu/SubMenuList.js
-
-
-var SubMenuList_excluded = ["className", "children"];
-
-
-
-
-var InternalSubMenuList = function InternalSubMenuList(_ref, ref) {
-  var className = _ref.className,
-      children = _ref.children,
-      restProps = _objectWithoutProperties(_ref, SubMenuList_excluded);
-
-  var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls,
-      mode = _React$useContext.mode,
-      rtl = _React$useContext.rtl;
-
-  return /*#__PURE__*/react.createElement("ul", extends_extends({
-    className: classnames_default()(prefixCls, rtl && "".concat(prefixCls, "-rtl"), "".concat(prefixCls, "-sub"), "".concat(prefixCls, "-").concat(mode === 'inline' ? 'inline' : 'vertical'), className)
-  }, restProps, {
-    "data-menu-list": true,
-    ref: ref
-  }), children);
-};
-
-var SubMenuList = /*#__PURE__*/react.forwardRef(InternalSubMenuList);
-SubMenuList.displayName = 'SubMenuList';
-/* harmony default export */ const SubMenu_SubMenuList = (SubMenuList);
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/addEventListener.js
 
 function addEventListenerWrap(target, eventType, cb, option) {
@@ -22399,87 +22856,37 @@ function Mask(props) {
     });
   });
 }
-;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/isVisible.js
-/* harmony default export */ const isVisible = (function (element) {
-  if (!element) {
-    return false;
-  }
-  if (element instanceof HTMLElement && element.offsetParent) {
-    return true;
-  }
-  if (element instanceof SVGGraphicsElement && element.getBBox) {
-    var _element$getBBox = element.getBBox(),
-      width = _element$getBBox.width,
-      height = _element$getBBox.height;
-    if (width || height) {
-      return true;
-    }
-  }
-  if (element instanceof HTMLElement && element.getBoundingClientRect) {
-    var _element$getBoundingC = element.getBoundingClientRect(),
-      _width = _element$getBoundingC.width,
-      _height = _element$getBoundingC.height;
-    if (_width || _height) {
-      return true;
-    }
-  }
-  return false;
-});
 ;// CONCATENATED MODULE: ./node_modules/dom-align/dist-web/index.js
 function dist_web_ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
-
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-
-    if (enumerableOnly) {
-      symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      });
-    }
-
-    keys.push.apply(keys, symbols);
+    enumerableOnly && (symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    })), keys.push.apply(keys, symbols);
   }
-
   return keys;
 }
-
 function _objectSpread2(target) {
   for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      dist_web_ownKeys(Object(source), true).forEach(function (key) {
-        dist_web_defineProperty(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      dist_web_ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
+    var source = null != arguments[i] ? arguments[i] : {};
+    i % 2 ? dist_web_ownKeys(Object(source), !0).forEach(function (key) {
+      dist_web_defineProperty(target, key, source[key]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : dist_web_ownKeys(Object(source)).forEach(function (key) {
+      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+    });
   }
-
   return target;
 }
-
 function dist_web_typeof(obj) {
   "@babel/helpers - typeof";
 
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    dist_web_typeof = function (obj) {
-      return typeof obj;
-    };
-  } else {
-    dist_web_typeof = function (obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return dist_web_typeof(obj);
+  return dist_web_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  }, dist_web_typeof(obj);
 }
-
 function dist_web_defineProperty(obj, key, value) {
   if (key in obj) {
     Object.defineProperty(obj, key, {
@@ -22491,7 +22898,6 @@ function dist_web_defineProperty(obj, key, value) {
   } else {
     obj[key] = value;
   }
-
   return obj;
 }
 
@@ -22503,63 +22909,50 @@ var jsCssMap = {
   ms: '-ms-',
   O: '-o-'
 };
-
 function getVendorPrefix() {
   if (vendorPrefix !== undefined) {
     return vendorPrefix;
   }
-
   vendorPrefix = '';
   var style = document.createElement('p').style;
   var testProp = 'Transform';
-
   for (var key in jsCssMap) {
     if (key + testProp in style) {
       vendorPrefix = key;
     }
   }
-
   return vendorPrefix;
 }
-
 function dist_web_getTransitionName() {
   return getVendorPrefix() ? "".concat(getVendorPrefix(), "TransitionProperty") : 'transitionProperty';
 }
-
 function getTransformName() {
   return getVendorPrefix() ? "".concat(getVendorPrefix(), "Transform") : 'transform';
 }
 function setTransitionProperty(node, value) {
   var name = dist_web_getTransitionName();
-
   if (name) {
     node.style[name] = value;
-
     if (name !== 'transitionProperty') {
       node.style.transitionProperty = value;
     }
   }
 }
-
 function setTransform(node, value) {
   var name = getTransformName();
-
   if (name) {
     node.style[name] = value;
-
     if (name !== 'transform') {
       node.style.transform = value;
     }
   }
 }
-
 function getTransitionProperty(node) {
   return node.style.transitionProperty || node.style[dist_web_getTransitionName()];
 }
 function getTransformXY(node) {
   var style = window.getComputedStyle(node, null);
   var transform = style.getPropertyValue('transform') || style.getPropertyValue(getTransformName());
-
   if (transform && transform !== 'none') {
     var matrix = transform.replace(/[^0-9\-.,]/g, '').split(',');
     return {
@@ -22567,7 +22960,6 @@ function getTransformXY(node) {
       y: parseFloat(matrix[13] || matrix[5], 0)
     };
   }
-
   return {
     x: 0,
     y: 0
@@ -22578,11 +22970,9 @@ var matrix3d = /matrix3d\((.*)\)/;
 function setTransformXY(node, xy) {
   var style = window.getComputedStyle(node, null);
   var transform = style.getPropertyValue('transform') || style.getPropertyValue(getTransformName());
-
   if (transform && transform !== 'none') {
     var arr;
     var match2d = transform.match(matrix2d);
-
     if (match2d) {
       match2d = match2d[1];
       arr = match2d.split(',').map(function (item) {
@@ -22606,64 +22996,63 @@ function setTransformXY(node, xy) {
 }
 
 var RE_NUM = /[\-+]?(?:\d*\.|)\d+(?:[eE][\-+]?\d+|)/.source;
-var getComputedStyleX; // https://stackoverflow.com/a/3485654/3040605
+var getComputedStyleX;
 
+// https://stackoverflow.com/a/3485654/3040605
 function forceRelayout(elem) {
   var originalStyle = elem.style.display;
   elem.style.display = 'none';
   elem.offsetHeight; // eslint-disable-line
-
   elem.style.display = originalStyle;
 }
-
 function css(el, name, v) {
   var value = v;
-
   if (dist_web_typeof(name) === 'object') {
     for (var i in name) {
       if (name.hasOwnProperty(i)) {
         css(el, i, name[i]);
       }
     }
-
     return undefined;
   }
-
   if (typeof value !== 'undefined') {
     if (typeof value === 'number') {
       value = "".concat(value, "px");
     }
-
     el.style[name] = value;
     return undefined;
   }
-
   return getComputedStyleX(el, name);
 }
-
 function getClientPosition(elem) {
   var box;
   var x;
   var y;
   var doc = elem.ownerDocument;
   var body = doc.body;
-  var docElem = doc && doc.documentElement; // 根据 GBS 最新数据，A-Grade Browsers 都已支持 getBoundingClientRect 方法，不用再考虑传统的实现方式
+  var docElem = doc && doc.documentElement;
+  // 根据 GBS 最新数据，A-Grade Browsers 都已支持 getBoundingClientRect 方法，不用再考虑传统的实现方式
+  box = elem.getBoundingClientRect();
 
-  box = elem.getBoundingClientRect(); // 注：jQuery 还考虑减去 docElem.clientLeft/clientTop
+  // 注：jQuery 还考虑减去 docElem.clientLeft/clientTop
   // 但测试发现，这样反而会导致当 html 和 body 有边距/边框样式时，获取的值不正确
   // 此外，ie6 会忽略 html 的 margin 值，幸运地是没有谁会去设置 html 的 margin
 
   x = Math.floor(box.left);
-  y = Math.floor(box.top); // In IE, most of the time, 2 extra pixels are added to the top and left
+  y = Math.floor(box.top);
+
+  // In IE, most of the time, 2 extra pixels are added to the top and left
   // due to the implicit 2-pixel inset border.  In IE6/7 quirks mode and
   // IE6 standards mode, this border can be overridden by setting the
   // document element's border to zero -- thus, we cannot rely on the
   // offset always being 2 pixels.
+
   // In quirks mode, the offset can be determined by querying the body's
   // clientLeft/clientTop, but in standards mode, it is found by querying
   // the document element's clientLeft/clientTop.  Since we already called
   // getClientBoundingRect we have already forced a reflow, so it is not
   // too expensive just to query them all.
+
   // ie 下应该减去窗口的边框吧，毕竟默认 absolute 都是相对窗口定位的
   // 窗口边框标准是设 documentElement ,quirks 时设置 body
   // 最好禁止在 body 和 html 上边框 ，但 ie < 9 html 默认有 2px ，减去
@@ -22679,34 +23068,27 @@ function getClientPosition(elem) {
     top: y
   };
 }
-
 function getScroll(w, top) {
   var ret = w["page".concat(top ? 'Y' : 'X', "Offset")];
   var method = "scroll".concat(top ? 'Top' : 'Left');
-
   if (typeof ret !== 'number') {
-    var d = w.document; // ie6,7,8 standard mode
-
+    var d = w.document;
+    // ie6,7,8 standard mode
     ret = d.documentElement[method];
-
     if (typeof ret !== 'number') {
       // quirks mode
       ret = d.body[method];
     }
   }
-
   return ret;
 }
-
 function getScrollLeft(w) {
   return getScroll(w);
 }
-
 function getScrollTop(w) {
   return getScroll(w, true);
 }
-
-function getOffset(el) {
+function dist_web_getOffset(el) {
   var pos = getClientPosition(el);
   var doc = el.ownerDocument;
   var w = doc.defaultView || doc.parentWindow;
@@ -22714,95 +23096,86 @@ function getOffset(el) {
   pos.top += getScrollTop(w);
   return pos;
 }
+
 /**
  * A crude way of determining if an object is a window
  * @member util
  */
-
-
 function isWindow(obj) {
   // must use == for ie8
-
   /* eslint eqeqeq:0 */
   return obj !== null && obj !== undefined && obj == obj.window;
 }
-
 function getDocument(node) {
   if (isWindow(node)) {
     return node.document;
   }
-
   if (node.nodeType === 9) {
     return node;
   }
-
   return node.ownerDocument;
 }
-
 function _getComputedStyle(elem, name, cs) {
   var computedStyle = cs;
   var val = '';
   var d = getDocument(elem);
-  computedStyle = computedStyle || d.defaultView.getComputedStyle(elem, null); // https://github.com/kissyteam/kissy/issues/61
+  computedStyle = computedStyle || d.defaultView.getComputedStyle(elem, null);
 
+  // https://github.com/kissyteam/kissy/issues/61
   if (computedStyle) {
     val = computedStyle.getPropertyValue(name) || computedStyle[name];
   }
-
   return val;
 }
-
 var _RE_NUM_NO_PX = new RegExp("^(".concat(RE_NUM, ")(?!px)[a-z%]+$"), 'i');
-
 var RE_POS = /^(top|right|bottom|left)$/;
 var CURRENT_STYLE = 'currentStyle';
 var RUNTIME_STYLE = 'runtimeStyle';
-var LEFT = 'left';
+var dist_web_LEFT = 'left';
 var PX = 'px';
-
 function _getComputedStyleIE(elem, name) {
   // currentStyle maybe null
   // http://msdn.microsoft.com/en-us/library/ms535231.aspx
-  var ret = elem[CURRENT_STYLE] && elem[CURRENT_STYLE][name]; // 当 width/height 设置为百分比时，通过 pixelLeft 方式转换的 width/height 值
+  var ret = elem[CURRENT_STYLE] && elem[CURRENT_STYLE][name];
+
+  // 当 width/height 设置为百分比时，通过 pixelLeft 方式转换的 width/height 值
   // 一开始就处理了! CUSTOM_STYLE.height,CUSTOM_STYLE.width ,cssHook 解决@2011-08-19
   // 在 ie 下不对，需要直接用 offset 方式
   // borderWidth 等值也有问题，但考虑到 borderWidth 设为百分比的概率很小，这里就不考虑了
+
   // From the awesome hack by Dean Edwards
   // http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291
   // If we're not dealing with a regular pixel number
   // but a number that has a weird ending, we need to convert it to pixels
   // exclude left right for relativity
-
   if (_RE_NUM_NO_PX.test(ret) && !RE_POS.test(name)) {
     // Remember the original values
     var style = elem.style;
-    var left = style[LEFT];
-    var rsLeft = elem[RUNTIME_STYLE][LEFT]; // prevent flashing of content
+    var left = style[dist_web_LEFT];
+    var rsLeft = elem[RUNTIME_STYLE][dist_web_LEFT];
 
-    elem[RUNTIME_STYLE][LEFT] = elem[CURRENT_STYLE][LEFT]; // Put in the new values to get a computed value out
+    // prevent flashing of content
+    elem[RUNTIME_STYLE][dist_web_LEFT] = elem[CURRENT_STYLE][dist_web_LEFT];
 
-    style[LEFT] = name === 'fontSize' ? '1em' : ret || 0;
-    ret = style.pixelLeft + PX; // Revert the changed values
+    // Put in the new values to get a computed value out
+    style[dist_web_LEFT] = name === 'fontSize' ? '1em' : ret || 0;
+    ret = style.pixelLeft + PX;
 
-    style[LEFT] = left;
-    elem[RUNTIME_STYLE][LEFT] = rsLeft;
+    // Revert the changed values
+    style[dist_web_LEFT] = left;
+    elem[RUNTIME_STYLE][dist_web_LEFT] = rsLeft;
   }
-
   return ret === '' ? 'auto' : ret;
 }
-
 if (typeof window !== 'undefined') {
   getComputedStyleX = window.getComputedStyle ? _getComputedStyle : _getComputedStyleIE;
 }
-
 function getOffsetDirection(dir, option) {
   if (dir === 'left') {
     return option.useCssRight ? 'right' : dir;
   }
-
   return option.useCssBottom ? 'bottom' : dir;
 }
-
 function oppositeOffsetDirection(dir) {
   if (dir === 'left') {
     return 'right';
@@ -22813,59 +23186,49 @@ function oppositeOffsetDirection(dir) {
   } else if (dir === 'bottom') {
     return 'top';
   }
-} // 设置 elem 相对 elem.ownerDocument 的坐标
+}
 
-
+// 设置 elem 相对 elem.ownerDocument 的坐标
 function setLeftTop(elem, offset, option) {
   // set position first, in-case top/left are set even on static elem
   if (css(elem, 'position') === 'static') {
     elem.style.position = 'relative';
   }
-
   var presetH = -999;
   var presetV = -999;
   var horizontalProperty = getOffsetDirection('left', option);
   var verticalProperty = getOffsetDirection('top', option);
   var oppositeHorizontalProperty = oppositeOffsetDirection(horizontalProperty);
   var oppositeVerticalProperty = oppositeOffsetDirection(verticalProperty);
-
   if (horizontalProperty !== 'left') {
     presetH = 999;
   }
-
   if (verticalProperty !== 'top') {
     presetV = 999;
   }
-
   var originalTransition = '';
-  var originalOffset = getOffset(elem);
-
+  var originalOffset = dist_web_getOffset(elem);
   if ('left' in offset || 'top' in offset) {
     originalTransition = getTransitionProperty(elem) || '';
     setTransitionProperty(elem, 'none');
   }
-
   if ('left' in offset) {
     elem.style[oppositeHorizontalProperty] = '';
     elem.style[horizontalProperty] = "".concat(presetH, "px");
   }
-
   if ('top' in offset) {
     elem.style[oppositeVerticalProperty] = '';
     elem.style[verticalProperty] = "".concat(presetV, "px");
-  } // force relayout
-
-
+  }
+  // force relayout
   forceRelayout(elem);
-  var old = getOffset(elem);
+  var old = dist_web_getOffset(elem);
   var originalStyle = {};
-
   for (var key in offset) {
     if (offset.hasOwnProperty(key)) {
       var dir = getOffsetDirection(key, option);
       var preset = key === 'left' ? presetH : presetV;
       var off = originalOffset[key] - old[key];
-
       if (dir === key) {
         originalStyle[dir] = preset + off;
       } else {
@@ -22873,23 +23236,17 @@ function setLeftTop(elem, offset, option) {
       }
     }
   }
-
-  css(elem, originalStyle); // force relayout
-
+  css(elem, originalStyle);
+  // force relayout
   forceRelayout(elem);
-
   if ('left' in offset || 'top' in offset) {
     setTransitionProperty(elem, originalTransition);
   }
-
   var ret = {};
-
   for (var _key in offset) {
     if (offset.hasOwnProperty(_key)) {
       var _dir = getOffsetDirection(_key, option);
-
       var _off = offset[_key] - originalOffset[_key];
-
       if (_key === _dir) {
         ret[_dir] = originalStyle[_dir] + _off;
       } else {
@@ -22897,42 +23254,34 @@ function setLeftTop(elem, offset, option) {
       }
     }
   }
-
   css(elem, ret);
 }
-
 function setTransform$1(elem, offset) {
-  var originalOffset = getOffset(elem);
+  var originalOffset = dist_web_getOffset(elem);
   var originalXY = getTransformXY(elem);
   var resultXY = {
     x: originalXY.x,
     y: originalXY.y
   };
-
   if ('left' in offset) {
     resultXY.x = originalXY.x + offset.left - originalOffset.left;
   }
-
   if ('top' in offset) {
     resultXY.y = originalXY.y + offset.top - originalOffset.top;
   }
-
   setTransformXY(elem, resultXY);
 }
-
 function setOffset(elem, offset, option) {
   if (option.ignoreShake) {
-    var oriOffset = getOffset(elem);
+    var oriOffset = dist_web_getOffset(elem);
     var oLeft = oriOffset.left.toFixed(0);
     var oTop = oriOffset.top.toFixed(0);
     var tLeft = offset.left.toFixed(0);
     var tTop = offset.top.toFixed(0);
-
     if (oLeft === tLeft && oTop === tTop) {
       return;
     }
   }
-
   if (option.useCssRight || option.useCssBottom) {
     setLeftTop(elem, offset, option);
   } else if (option.useCssTransform && getTransformName() in document.body.style) {
@@ -22941,75 +23290,64 @@ function setOffset(elem, offset, option) {
     setLeftTop(elem, offset, option);
   }
 }
-
 function each(arr, fn) {
   for (var i = 0; i < arr.length; i++) {
     fn(arr[i]);
   }
 }
-
 function isBorderBoxFn(elem) {
   return getComputedStyleX(elem, 'boxSizing') === 'border-box';
 }
-
 var BOX_MODELS = ['margin', 'border', 'padding'];
 var CONTENT_INDEX = -1;
 var PADDING_INDEX = 2;
 var BORDER_INDEX = 1;
 var MARGIN_INDEX = 0;
-
 function swap(elem, options, callback) {
   var old = {};
   var style = elem.style;
-  var name; // Remember the old values, and insert the new ones
+  var name;
 
+  // Remember the old values, and insert the new ones
   for (name in options) {
     if (options.hasOwnProperty(name)) {
       old[name] = style[name];
       style[name] = options[name];
     }
   }
+  callback.call(elem);
 
-  callback.call(elem); // Revert the old values
-
+  // Revert the old values
   for (name in options) {
     if (options.hasOwnProperty(name)) {
       style[name] = old[name];
     }
   }
 }
-
 function getPBMWidth(elem, props, which) {
   var value = 0;
   var prop;
   var j;
   var i;
-
   for (j = 0; j < props.length; j++) {
     prop = props[j];
-
     if (prop) {
       for (i = 0; i < which.length; i++) {
         var cssProp = void 0;
-
         if (prop === 'border') {
           cssProp = "".concat(prop).concat(which[i], "Width");
         } else {
           cssProp = prop + which[i];
         }
-
         value += parseFloat(getComputedStyleX(elem, cssProp)) || 0;
       }
     }
   }
-
   return value;
 }
-
 var domUtils = {
   getParent: function getParent(element) {
     var parent = element;
-
     do {
       if (parent.nodeType === 11 && parent.host) {
         parent = parent.host;
@@ -23017,31 +23355,32 @@ var domUtils = {
         parent = parent.parentNode;
       }
     } while (parent && parent.nodeType !== 1 && parent.nodeType !== 9);
-
     return parent;
   }
 };
 each(['Width', 'Height'], function (name) {
   domUtils["doc".concat(name)] = function (refWin) {
     var d = refWin.document;
-    return Math.max( // firefox chrome documentElement.scrollHeight< body.scrollHeight
+    return Math.max(
+    // firefox chrome documentElement.scrollHeight< body.scrollHeight
     // ie standard mode : documentElement.scrollHeight> body.scrollHeight
-    d.documentElement["scroll".concat(name)], // quirks : documentElement.scrollHeight 最大等于可视窗口多一点？
+    d.documentElement["scroll".concat(name)],
+    // quirks : documentElement.scrollHeight 最大等于可视窗口多一点？
     d.body["scroll".concat(name)], domUtils["viewport".concat(name)](d));
   };
-
   domUtils["viewport".concat(name)] = function (win) {
     // pc browser includes scrollbar in window.innerWidth
     var prop = "client".concat(name);
     var doc = win.document;
     var body = doc.body;
     var documentElement = doc.documentElement;
-    var documentElementProp = documentElement[prop]; // 标准模式取 documentElement
+    var documentElementProp = documentElement[prop];
+    // 标准模式取 documentElement
     // backcompat 取 body
-
     return doc.compatMode === 'CSS1Compat' && documentElementProp || body && body[prop] || documentElementProp;
   };
 });
+
 /*
  得到元素的大小信息
  @param elem
@@ -23050,73 +23389,60 @@ each(['Width', 'Height'], function (name) {
  'border' : (css width) + padding + border
  'margin' : (css width) + padding + border + margin
  */
-
 function getWH(elem, name, ex) {
   var extra = ex;
-
   if (isWindow(elem)) {
     return name === 'width' ? domUtils.viewportWidth(elem) : domUtils.viewportHeight(elem);
   } else if (elem.nodeType === 9) {
     return name === 'width' ? domUtils.docWidth(elem) : domUtils.docHeight(elem);
   }
-
   var which = name === 'width' ? ['Left', 'Right'] : ['Top', 'Bottom'];
   var borderBoxValue = name === 'width' ? Math.floor(elem.getBoundingClientRect().width) : Math.floor(elem.getBoundingClientRect().height);
   var isBorderBox = isBorderBoxFn(elem);
   var cssBoxValue = 0;
-
   if (borderBoxValue === null || borderBoxValue === undefined || borderBoxValue <= 0) {
-    borderBoxValue = undefined; // Fall back to computed then un computed css if necessary
-
+    borderBoxValue = undefined;
+    // Fall back to computed then un computed css if necessary
     cssBoxValue = getComputedStyleX(elem, name);
-
     if (cssBoxValue === null || cssBoxValue === undefined || Number(cssBoxValue) < 0) {
       cssBoxValue = elem.style[name] || 0;
-    } // Normalize '', auto, and prepare for extra
-
-
-    cssBoxValue = parseFloat(cssBoxValue) || 0;
+    }
+    // Normalize '', auto, and prepare for extra
+    cssBoxValue = Math.floor(parseFloat(cssBoxValue)) || 0;
   }
-
   if (extra === undefined) {
     extra = isBorderBox ? BORDER_INDEX : CONTENT_INDEX;
   }
-
   var borderBoxValueOrIsBorderBox = borderBoxValue !== undefined || isBorderBox;
   var val = borderBoxValue || cssBoxValue;
-
   if (extra === CONTENT_INDEX) {
     if (borderBoxValueOrIsBorderBox) {
       return val - getPBMWidth(elem, ['border', 'padding'], which);
     }
-
     return cssBoxValue;
   } else if (borderBoxValueOrIsBorderBox) {
     if (extra === BORDER_INDEX) {
       return val;
     }
-
     return val + (extra === PADDING_INDEX ? -getPBMWidth(elem, ['border'], which) : getPBMWidth(elem, ['margin'], which));
   }
-
   return cssBoxValue + getPBMWidth(elem, BOX_MODELS.slice(extra), which);
 }
-
 var cssShow = {
   position: 'absolute',
   visibility: 'hidden',
   display: 'block'
-}; // fix #119 : https://github.com/kissyteam/kissy/issues/119
+};
 
+// fix #119 : https://github.com/kissyteam/kissy/issues/119
 function getWHIgnoreDisplay() {
   for (var _len = arguments.length, args = new Array(_len), _key2 = 0; _key2 < _len; _key2++) {
     args[_key2] = arguments[_key2];
   }
-
   var val;
-  var elem = args[0]; // in case elem is window
+  var elem = args[0];
+  // in case elem is window
   // elem.offsetWidth === undefined
-
   if (elem.offsetWidth !== 0) {
     val = getWH.apply(undefined, args);
   } else {
@@ -23124,56 +23450,42 @@ function getWHIgnoreDisplay() {
       val = getWH.apply(undefined, args);
     });
   }
-
   return val;
 }
-
 each(['width', 'height'], function (name) {
   var first = name.charAt(0).toUpperCase() + name.slice(1);
-
   domUtils["outer".concat(first)] = function (el, includeMargin) {
     return el && getWHIgnoreDisplay(el, name, includeMargin ? MARGIN_INDEX : BORDER_INDEX);
   };
-
   var which = name === 'width' ? ['Left', 'Right'] : ['Top', 'Bottom'];
-
   domUtils[name] = function (elem, v) {
     var val = v;
-
     if (val !== undefined) {
       if (elem) {
         var isBorderBox = isBorderBoxFn(elem);
-
         if (isBorderBox) {
           val += getPBMWidth(elem, ['padding', 'border'], which);
         }
-
         return css(elem, name, val);
       }
-
       return undefined;
     }
-
     return elem && getWHIgnoreDisplay(elem, name, CONTENT_INDEX);
   };
 });
-
 function dist_web_mix(to, from) {
   for (var i in from) {
     if (from.hasOwnProperty(i)) {
       to[i] = from[i];
     }
   }
-
   return to;
 }
-
 var utils = {
   getWindow: function getWindow(node) {
     if (node && node.document && node.setTimeout) {
       return node;
     }
-
     var doc = node.ownerDocument || node;
     return doc.defaultView || doc.parentWindow;
   },
@@ -23182,7 +23494,7 @@ var utils = {
     if (typeof value !== 'undefined') {
       setOffset(el, value, option || {});
     } else {
-      return getOffset(el);
+      return dist_web_getOffset(el);
     }
   },
   isWindow: isWindow,
@@ -23191,15 +23503,12 @@ var utils = {
   clone: function clone(obj) {
     var i;
     var ret = {};
-
     for (i in obj) {
       if (obj.hasOwnProperty(i)) {
         ret[i] = obj[i];
       }
     }
-
     var overflow = obj.overflow;
-
     if (overflow) {
       for (i in obj) {
         if (obj.hasOwnProperty(i)) {
@@ -23207,7 +23516,6 @@ var utils = {
         }
       }
     }
-
     return ret;
   },
   mix: dist_web_mix,
@@ -23219,11 +23527,9 @@ var utils = {
   },
   merge: function merge() {
     var ret = {};
-
     for (var i = 0; i < arguments.length; i++) {
       utils.mix(ret, i < 0 || arguments.length <= i ? undefined : arguments[i]);
     }
-
     return ret;
   },
   viewportWidth: 0,
@@ -23234,14 +23540,12 @@ dist_web_mix(utils, domUtils);
 /**
  * 得到会导致元素显示不全的祖先元素
  */
-
 var getParent = utils.getParent;
-
 function getOffsetParent(element) {
   if (utils.isWindow(element) || element.nodeType === 9) {
     return null;
-  } // ie 这个也不是完全可行
-
+  }
+  // ie 这个也不是完全可行
   /*
    <div style="width: 50px;height: 100px;overflow: hidden">
    <div style="width: 50px;height: 100px;position: relative;" id="d6">
@@ -23256,26 +23560,20 @@ function getOffsetParent(element) {
   //            return element.offsetParent;
   //        }
   // 统一的 offsetParent 方法
-
-
   var doc = utils.getDocument(element);
   var body = doc.body;
   var parent;
   var positionStyle = utils.css(element, 'position');
   var skipStatic = positionStyle === 'fixed' || positionStyle === 'absolute';
-
   if (!skipStatic) {
     return element.nodeName.toLowerCase() === 'html' ? null : getParent(element);
   }
-
   for (parent = getParent(element); parent && parent !== body && parent.nodeType !== 9; parent = getParent(parent)) {
     positionStyle = utils.css(parent, 'position');
-
     if (positionStyle !== 'static') {
       return parent;
     }
   }
-
   return null;
 }
 
@@ -23284,27 +23582,23 @@ function isAncestorFixed(element) {
   if (utils.isWindow(element) || element.nodeType === 9) {
     return false;
   }
-
   var doc = utils.getDocument(element);
   var body = doc.body;
   var parent = null;
-
-  for (parent = getParent$1(element); // 修复元素位于 document.documentElement 下导致崩溃问题
+  for (parent = getParent$1(element);
+  // 修复元素位于 document.documentElement 下导致崩溃问题
   parent && parent !== body && parent !== doc; parent = getParent$1(parent)) {
     var positionStyle = utils.css(parent, 'position');
-
     if (positionStyle === 'fixed') {
       return true;
     }
   }
-
   return false;
 }
 
 /**
  * 获得元素的显示部分的区域
  */
-
 function getVisibleRectForElement(element, alwaysByViewport) {
   var visibleRect = {
     left: 0,
@@ -23316,68 +23610,65 @@ function getVisibleRectForElement(element, alwaysByViewport) {
   var doc = utils.getDocument(element);
   var win = doc.defaultView || doc.parentWindow;
   var body = doc.body;
-  var documentElement = doc.documentElement; // Determine the size of the visible rect by climbing the dom accounting for
-  // all scrollable containers.
+  var documentElement = doc.documentElement;
 
+  // Determine the size of the visible rect by climbing the dom accounting for
+  // all scrollable containers.
   while (el) {
     // clientWidth is zero for inline block elements in ie.
-    if ((navigator.userAgent.indexOf('MSIE') === -1 || el.clientWidth !== 0) && // body may have overflow set on it, yet we still get the entire
+    if ((navigator.userAgent.indexOf('MSIE') === -1 || el.clientWidth !== 0) &&
+    // body may have overflow set on it, yet we still get the entire
     // viewport. In some browsers, el.offsetParent may be
     // document.documentElement, so check for that too.
     el !== body && el !== documentElement && utils.css(el, 'overflow') !== 'visible') {
-      var pos = utils.offset(el); // add border
-
+      var pos = utils.offset(el);
+      // add border
       pos.left += el.clientLeft;
       pos.top += el.clientTop;
       visibleRect.top = Math.max(visibleRect.top, pos.top);
-      visibleRect.right = Math.min(visibleRect.right, // consider area without scrollBar
+      visibleRect.right = Math.min(visibleRect.right,
+      // consider area without scrollBar
       pos.left + el.clientWidth);
       visibleRect.bottom = Math.min(visibleRect.bottom, pos.top + el.clientHeight);
       visibleRect.left = Math.max(visibleRect.left, pos.left);
     } else if (el === body || el === documentElement) {
       break;
     }
-
     el = getOffsetParent(el);
-  } // Set element position to fixed
+  }
+
+  // Set element position to fixed
   // make sure absolute element itself don't affect it's visible area
   // https://github.com/ant-design/ant-design/issues/7601
-
-
   var originalPosition = null;
-
   if (!utils.isWindow(element) && element.nodeType !== 9) {
     originalPosition = element.style.position;
     var position = utils.css(element, 'position');
-
     if (position === 'absolute') {
       element.style.position = 'fixed';
     }
   }
-
   var scrollX = utils.getWindowScrollLeft(win);
   var scrollY = utils.getWindowScrollTop(win);
   var viewportWidth = utils.viewportWidth(win);
   var viewportHeight = utils.viewportHeight(win);
   var documentWidth = documentElement.scrollWidth;
-  var documentHeight = documentElement.scrollHeight; // scrollXXX on html is sync with body which means overflow: hidden on body gets wrong scrollXXX.
+  var documentHeight = documentElement.scrollHeight;
+
+  // scrollXXX on html is sync with body which means overflow: hidden on body gets wrong scrollXXX.
   // We should cut this ourself.
-
   var bodyStyle = window.getComputedStyle(body);
-
   if (bodyStyle.overflowX === 'hidden') {
     documentWidth = win.innerWidth;
   }
-
   if (bodyStyle.overflowY === 'hidden') {
     documentHeight = win.innerHeight;
-  } // Reset element position after calculate the visible area
+  }
 
-
+  // Reset element position after calculate the visible area
   if (element.style) {
     element.style.position = originalPosition;
   }
-
   if (alwaysByViewport || isAncestorFixed(element)) {
     // Clip by viewport's size.
     visibleRect.left = Math.max(visibleRect.left, scrollX);
@@ -23391,7 +23682,6 @@ function getVisibleRectForElement(element, alwaysByViewport) {
     var maxVisibleHeight = Math.max(documentHeight, scrollY + viewportHeight);
     visibleRect.bottom = Math.min(visibleRect.bottom, maxVisibleHeight);
   }
-
   return visibleRect.top >= 0 && visibleRect.left >= 0 && visibleRect.bottom > visibleRect.top && visibleRect.right > visibleRect.left ? visibleRect : null;
 }
 
@@ -23401,38 +23691,36 @@ function adjustForViewport(elFuturePos, elRegion, visibleRect, overflow) {
     width: elRegion.width,
     height: elRegion.height
   };
-
   if (overflow.adjustX && pos.left < visibleRect.left) {
     pos.left = visibleRect.left;
-  } // Left edge inside and right edge outside viewport, try to resize it.
+  }
 
-
+  // Left edge inside and right edge outside viewport, try to resize it.
   if (overflow.resizeWidth && pos.left >= visibleRect.left && pos.left + size.width > visibleRect.right) {
     size.width -= pos.left + size.width - visibleRect.right;
-  } // Right edge outside viewport, try to move it.
+  }
 
-
+  // Right edge outside viewport, try to move it.
   if (overflow.adjustX && pos.left + size.width > visibleRect.right) {
     // 保证左边界和可视区域左边界对齐
     pos.left = Math.max(visibleRect.right - size.width, visibleRect.left);
-  } // Top edge outside viewport, try to move it.
+  }
 
-
+  // Top edge outside viewport, try to move it.
   if (overflow.adjustY && pos.top < visibleRect.top) {
     pos.top = visibleRect.top;
-  } // Top edge inside and bottom edge outside viewport, try to resize it.
+  }
 
-
+  // Top edge inside and bottom edge outside viewport, try to resize it.
   if (overflow.resizeHeight && pos.top >= visibleRect.top && pos.top + size.height > visibleRect.bottom) {
     size.height -= pos.top + size.height - visibleRect.bottom;
-  } // Bottom edge outside viewport, try to move it.
+  }
 
-
+  // Bottom edge outside viewport, try to move it.
   if (overflow.adjustY && pos.top + size.height > visibleRect.bottom) {
     // 保证上边界和可视区域上边界对齐
     pos.top = Math.max(visibleRect.bottom - size.height, visibleRect.top);
   }
-
   return utils.mix(pos, size);
 }
 
@@ -23440,7 +23728,6 @@ function getRegion(node) {
   var offset;
   var w;
   var h;
-
   if (!utils.isWindow(node) && node.nodeType !== 9) {
     offset = utils.offset(node);
     w = utils.outerWidth(node);
@@ -23454,7 +23741,6 @@ function getRegion(node) {
     w = utils.viewportWidth(win);
     h = utils.viewportHeight(win);
   }
-
   offset.width = w;
   offset.height = h;
   return offset;
@@ -23463,6 +23749,7 @@ function getRegion(node) {
 /**
  * 获取 node 上的 align 对齐点 相对于页面的坐标
  */
+
 function getAlignOffset(region, align) {
   var V = align.charAt(0);
   var H = align.charAt(1);
@@ -23470,19 +23757,16 @@ function getAlignOffset(region, align) {
   var h = region.height;
   var x = region.left;
   var y = region.top;
-
   if (V === 'c') {
     y += h / 2;
   } else if (V === 'b') {
     y += h;
   }
-
   if (H === 'c') {
     x += w / 2;
   } else if (H === 'r') {
     x += w;
   }
-
   return {
     left: x,
     top: y
@@ -23504,22 +23788,20 @@ function getElFuturePos(elRegion, refNodeRegion, points, offset, targetOffset) {
  * @author yiminghe@gmail.com
  */
 
+// http://yiminghe.iteye.com/blog/1124720
+
 function isFailX(elFuturePos, elRegion, visibleRect) {
   return elFuturePos.left < visibleRect.left || elFuturePos.left + elRegion.width > visibleRect.right;
 }
-
 function isFailY(elFuturePos, elRegion, visibleRect) {
   return elFuturePos.top < visibleRect.top || elFuturePos.top + elRegion.height > visibleRect.bottom;
 }
-
 function isCompleteFailX(elFuturePos, elRegion, visibleRect) {
   return elFuturePos.left > visibleRect.right || elFuturePos.left + elRegion.width < visibleRect.left;
 }
-
 function isCompleteFailY(elFuturePos, elRegion, visibleRect) {
   return elFuturePos.top > visibleRect.bottom || elFuturePos.top + elRegion.height < visibleRect.top;
 }
-
 function flip(points, reg, map) {
   var ret = [];
   utils.each(points, function (p) {
@@ -23529,35 +23811,29 @@ function flip(points, reg, map) {
   });
   return ret;
 }
-
 function flipOffset(offset, index) {
   offset[index] = -offset[index];
   return offset;
 }
-
 function convertOffset(str, offsetLen) {
   var n;
-
   if (/%$/.test(str)) {
     n = parseInt(str.substring(0, str.length - 1), 10) / 100 * offsetLen;
   } else {
     n = parseInt(str, 10);
   }
-
   return n || 0;
 }
-
 function normalizeOffset(offset, el) {
   offset[0] = convertOffset(offset[0], el.width);
   offset[1] = convertOffset(offset[1], el.height);
 }
+
 /**
  * @param el
  * @param tgtRegion 参照节点所占的区域: { left, top, width, height }
  * @param align
  */
-
-
 function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
   var points = align.points;
   var offset = align.offset || [0, 0];
@@ -23569,19 +23845,20 @@ function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
   overflow = overflow || {};
   var newOverflowCfg = {};
   var fail = 0;
-  var alwaysByViewport = !!(overflow && overflow.alwaysByViewport); // 当前节点可以被放置的显示区域
-
-  var visibleRect = getVisibleRectForElement(source, alwaysByViewport); // 当前节点所占的区域, left/top/width/height
-
-  var elRegion = getRegion(source); // 将 offset 转换成数值，支持百分比
-
+  var alwaysByViewport = !!(overflow && overflow.alwaysByViewport);
+  // 当前节点可以被放置的显示区域
+  var visibleRect = getVisibleRectForElement(source, alwaysByViewport);
+  // 当前节点所占的区域, left/top/width/height
+  var elRegion = getRegion(source);
+  // 将 offset 转换成数值，支持百分比
   normalizeOffset(offset, elRegion);
-  normalizeOffset(targetOffset, tgtRegion); // 当前节点将要被放置的位置
+  normalizeOffset(targetOffset, tgtRegion);
+  // 当前节点将要被放置的位置
+  var elFuturePos = getElFuturePos(elRegion, tgtRegion, points, offset, targetOffset);
+  // 当前节点将要所处的区域
+  var newElRegion = utils.merge(elRegion, elFuturePos);
 
-  var elFuturePos = getElFuturePos(elRegion, tgtRegion, points, offset, targetOffset); // 当前节点将要所处的区域
-
-  var newElRegion = utils.merge(elRegion, elFuturePos); // 如果可视区域不能完全放置当前节点时允许调整
-
+  // 如果可视区域不能完全放置当前节点时允许调整
   if (visibleRect && (overflow.adjustX || overflow.adjustY) && isTgtRegionVisible) {
     if (overflow.adjustX) {
       // 如果横向不能放下
@@ -23590,12 +23867,11 @@ function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
         var newPoints = flip(points, /[lr]/gi, {
           l: 'r',
           r: 'l'
-        }); // 偏移量也反下
-
+        });
+        // 偏移量也反下
         var newOffset = flipOffset(offset, 0);
         var newTargetOffset = flipOffset(targetOffset, 0);
         var newElFuturePos = getElFuturePos(elRegion, tgtRegion, newPoints, newOffset, newTargetOffset);
-
         if (!isCompleteFailX(newElFuturePos, elRegion, visibleRect)) {
           fail = 1;
           points = newPoints;
@@ -23604,7 +23880,6 @@ function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
         }
       }
     }
-
     if (overflow.adjustY) {
       // 如果纵向不能放下
       if (isFailY(elFuturePos, elRegion, visibleRect)) {
@@ -23612,15 +23887,11 @@ function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
         var _newPoints = flip(points, /[tb]/gi, {
           t: 'b',
           b: 't'
-        }); // 偏移量也反下
-
-
+        });
+        // 偏移量也反下
         var _newOffset = flipOffset(offset, 1);
-
         var _newTargetOffset = flipOffset(targetOffset, 1);
-
         var _newElFuturePos = getElFuturePos(elRegion, tgtRegion, _newPoints, _newOffset, _newTargetOffset);
-
         if (!isCompleteFailY(_newElFuturePos, elRegion, visibleRect)) {
           fail = 1;
           points = _newPoints;
@@ -23628,61 +23899,58 @@ function doAlign(el, tgtRegion, align, isTgtRegionVisible) {
           targetOffset = _newTargetOffset;
         }
       }
-    } // 如果失败，重新计算当前节点将要被放置的位置
+    }
 
-
+    // 如果失败，重新计算当前节点将要被放置的位置
     if (fail) {
       elFuturePos = getElFuturePos(elRegion, tgtRegion, points, offset, targetOffset);
       utils.mix(newElRegion, elFuturePos);
     }
-
     var isStillFailX = isFailX(elFuturePos, elRegion, visibleRect);
-    var isStillFailY = isFailY(elFuturePos, elRegion, visibleRect); // 检查反下后的位置是否可以放下了，如果仍然放不下：
+    var isStillFailY = isFailY(elFuturePos, elRegion, visibleRect);
+    // 检查反下后的位置是否可以放下了，如果仍然放不下：
     // 1. 复原修改过的定位参数
-
     if (isStillFailX || isStillFailY) {
-      var _newPoints2 = points; // 重置对应部分的翻转逻辑
+      var _newPoints2 = points;
 
+      // 重置对应部分的翻转逻辑
       if (isStillFailX) {
         _newPoints2 = flip(points, /[lr]/gi, {
           l: 'r',
           r: 'l'
         });
       }
-
       if (isStillFailY) {
         _newPoints2 = flip(points, /[tb]/gi, {
           t: 'b',
           b: 't'
         });
       }
-
       points = _newPoints2;
       offset = align.offset || [0, 0];
       targetOffset = align.targetOffset || [0, 0];
-    } // 2. 只有指定了可以调整当前方向才调整
-
-
+    }
+    // 2. 只有指定了可以调整当前方向才调整
     newOverflowCfg.adjustX = overflow.adjustX && isStillFailX;
-    newOverflowCfg.adjustY = overflow.adjustY && isStillFailY; // 确实要调整，甚至可能会调整高度宽度
+    newOverflowCfg.adjustY = overflow.adjustY && isStillFailY;
 
+    // 确实要调整，甚至可能会调整高度宽度
     if (newOverflowCfg.adjustX || newOverflowCfg.adjustY) {
       newElRegion = adjustForViewport(elFuturePos, elRegion, visibleRect, newOverflowCfg);
     }
-  } // need judge to in case set fixed with in css on height auto element
+  }
 
-
+  // need judge to in case set fixed with in css on height auto element
   if (newElRegion.width !== elRegion.width) {
     utils.css(source, 'width', utils.width(source) + newElRegion.width - elRegion.width);
   }
-
   if (newElRegion.height !== elRegion.height) {
     utils.css(source, 'height', utils.height(source) + newElRegion.height - elRegion.height);
-  } // https://github.com/kissyteam/kissy/issues/190
+  }
+
+  // https://github.com/kissyteam/kissy/issues/190
   // 相对于屏幕位置没变，而 left/top 变了
   // 例如 <div 'relative'><el absolute></div>
-
-
   utils.offset(source, {
     left: newElRegion.left,
     top: newElRegion.top
@@ -23713,14 +23981,12 @@ function isOutOfVisibleRect(target, alwaysByViewport) {
   var targetRegion = getRegion(target);
   return !visibleRect || targetRegion.left + targetRegion.width <= visibleRect.left || targetRegion.top + targetRegion.height <= visibleRect.top || targetRegion.left >= visibleRect.right || targetRegion.top >= visibleRect.bottom;
 }
-
 function alignElement(el, refNode, align) {
   var target = align.target || refNode;
   var refNodeRegion = getRegion(target);
   var isTargetNotOutOfVisible = !isOutOfVisibleRect(target, align.overflow && align.overflow.alwaysByViewport);
   return doAlign(el, refNodeRegion, align, isTargetNotOutOfVisible);
 }
-
 alignElement.__getOffsetParent = getOffsetParent;
 alignElement.__getVisibleRectForElement = getVisibleRectForElement;
 
@@ -23738,27 +24004,25 @@ function alignPoint(el, tgtPoint, align) {
   var scrollY = utils.getWindowScrollTop(win);
   var viewportWidth = utils.viewportWidth(win);
   var viewportHeight = utils.viewportHeight(win);
-
   if ('pageX' in tgtPoint) {
     pageX = tgtPoint.pageX;
   } else {
     pageX = scrollX + tgtPoint.clientX;
   }
-
   if ('pageY' in tgtPoint) {
     pageY = tgtPoint.pageY;
   } else {
     pageY = scrollY + tgtPoint.clientY;
   }
-
   var tgtRegion = {
     left: pageX,
     top: pageY,
     width: 0,
     height: 0
   };
-  var pointInView = pageX >= 0 && pageX <= scrollX + viewportWidth && pageY >= 0 && pageY <= scrollY + viewportHeight; // Provide default target point
+  var pointInView = pageX >= 0 && pageX <= scrollX + viewportWidth && pageY >= 0 && pageY <= scrollY + viewportHeight;
 
+  // Provide default target point
   var points = [align.points[0], 'cc'];
   return doAlign(el, tgtRegion, _objectSpread2(_objectSpread2({}, align), {}, {
     points: points
@@ -23772,6 +24036,42 @@ function alignPoint(el, tgtPoint, align) {
 // EXTERNAL MODULE: ./node_modules/lodash/isEqual.js
 var isEqual = __webpack_require__(8446);
 var isEqual_default = /*#__PURE__*/__webpack_require__.n(isEqual);
+;// CONCATENATED MODULE: ./node_modules/rc-align/es/hooks/useBuffer.js
+
+/* harmony default export */ const useBuffer = (function (callback, buffer) {
+  var calledRef = react.useRef(false);
+  var timeoutRef = react.useRef(null);
+
+  function cancelTrigger() {
+    window.clearTimeout(timeoutRef.current);
+  }
+
+  function trigger(force) {
+    cancelTrigger();
+
+    if (!calledRef.current || force === true) {
+      if (callback(force) === false) {
+        // Not delay since callback cancelled self
+        return;
+      }
+
+      calledRef.current = true;
+      timeoutRef.current = window.setTimeout(function () {
+        calledRef.current = false;
+      }, buffer);
+    } else {
+      timeoutRef.current = window.setTimeout(function () {
+        calledRef.current = false;
+        trigger();
+      }, buffer);
+    }
+  }
+
+  return [trigger, function () {
+    calledRef.current = false;
+    cancelTrigger();
+  }];
+});
 ;// CONCATENATED MODULE: ./node_modules/rc-align/es/util.js
 
 
@@ -23837,42 +24137,6 @@ function monitorResize(element, callback) {
     resizeObserver.disconnect();
   };
 }
-;// CONCATENATED MODULE: ./node_modules/rc-align/es/hooks/useBuffer.js
-
-/* harmony default export */ const useBuffer = (function (callback, buffer) {
-  var calledRef = react.useRef(false);
-  var timeoutRef = react.useRef(null);
-
-  function cancelTrigger() {
-    window.clearTimeout(timeoutRef.current);
-  }
-
-  function trigger(force) {
-    cancelTrigger();
-
-    if (!calledRef.current || force === true) {
-      if (callback() === false) {
-        // Not delay since callback cancelled self
-        return;
-      }
-
-      calledRef.current = true;
-      timeoutRef.current = window.setTimeout(function () {
-        calledRef.current = false;
-      }, buffer);
-    } else {
-      timeoutRef.current = window.setTimeout(function () {
-        calledRef.current = false;
-        trigger();
-      }, buffer);
-    }
-  }
-
-  return [trigger, function () {
-    calledRef.current = false;
-    cancelTrigger();
-  }];
-});
 ;// CONCATENATED MODULE: ./node_modules/rc-align/es/Align.js
 
 
@@ -23881,6 +24145,7 @@ function monitorResize(element, callback) {
  * Removed props:
  *  - childrenProps
  */
+
 
 
 
@@ -23910,6 +24175,8 @@ var Align = function Align(_ref, ref) {
       _ref$monitorBufferTim = _ref.monitorBufferTime,
       monitorBufferTime = _ref$monitorBufferTim === void 0 ? 0 : _ref$monitorBufferTim;
   var cacheRef = react.useRef({});
+  /** Popup node ref */
+
   var nodeRef = react.useRef();
   var childNode = react.Children.only(children); // ===================== Align ======================
   // We save the props here to avoid closure makes props ood
@@ -23926,33 +24193,33 @@ var Align = function Align(_ref, ref) {
         latestTarget = _forceAlignPropsRef$c.target,
         latestAlign = _forceAlignPropsRef$c.align,
         latestOnAlign = _forceAlignPropsRef$c.onAlign;
+    var source = nodeRef.current;
 
-    if (!latestDisabled && latestTarget) {
-      var source = nodeRef.current;
-      var result;
-      var element = getElement(latestTarget);
-      var point = getPoint(latestTarget);
-      cacheRef.current.element = element;
-      cacheRef.current.point = point;
+    if (!latestDisabled && latestTarget && source) {
+      var _result;
+
+      var _element = getElement(latestTarget);
+
+      var _point = getPoint(latestTarget);
+
+      cacheRef.current.element = _element;
+      cacheRef.current.point = _point;
       cacheRef.current.align = latestAlign; // IE lose focus after element realign
       // We should record activeElement and restore later
 
-      // IE lose focus after element realign
-      // We should record activeElement and restore later
       var _document = document,
           activeElement = _document.activeElement; // We only align when element is visible
 
-      // We only align when element is visible
-      if (element && isVisible(element)) {
-        result = alignElement(source, element, latestAlign);
-      } else if (point) {
-        result = alignPoint(source, point, latestAlign);
+      if (_element && isVisible(_element)) {
+        _result = alignElement(source, _element, latestAlign);
+      } else if (_point) {
+        _result = alignPoint(source, _point, latestAlign);
       }
 
       restoreFocus(activeElement, source);
 
-      if (latestOnAlign && result) {
-        latestOnAlign(source, result);
+      if (latestOnAlign && _result) {
+        latestOnAlign(source, _result);
       }
 
       return true;
@@ -23963,37 +24230,38 @@ var Align = function Align(_ref, ref) {
       _useBuffer2 = slicedToArray_slicedToArray(_useBuffer, 2),
       _forceAlign = _useBuffer2[0],
       cancelForceAlign = _useBuffer2[1]; // ===================== Effect =====================
-  // Listen for target updated
+  // Handle props change
 
 
-  var resizeMonitor = react.useRef({
-    cancel: function cancel() {}
-  }); // Listen for source updated
+  var _React$useState = react.useState(),
+      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+      element = _React$useState2[0],
+      setElement = _React$useState2[1];
 
-  var sourceResizeMonitor = react.useRef({
-    cancel: function cancel() {}
+  var _React$useState3 = react.useState(),
+      _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
+      point = _React$useState4[0],
+      setPoint = _React$useState4[1];
+
+  hooks_useLayoutEffect(function () {
+    setElement(getElement(target));
+    setPoint(getPoint(target));
   });
   react.useEffect(function () {
-    var element = getElement(target);
-    var point = getPoint(target);
-
-    if (nodeRef.current !== sourceResizeMonitor.current.element) {
-      sourceResizeMonitor.current.cancel();
-      sourceResizeMonitor.current.element = nodeRef.current;
-      sourceResizeMonitor.current.cancel = monitorResize(nodeRef.current, _forceAlign);
-    }
-
     if (cacheRef.current.element !== element || !isSamePoint(cacheRef.current.point, point) || !isEqual_default()(cacheRef.current.align, align)) {
-      _forceAlign(); // Add resize observer
-
-
-      if (resizeMonitor.current.element !== element) {
-        resizeMonitor.current.cancel();
-        resizeMonitor.current.element = element;
-        resizeMonitor.current.cancel = monitorResize(element, _forceAlign);
-      }
+      _forceAlign();
     }
-  }); // Listen for disabled change
+  }); // Watch popup element resize
+
+  react.useEffect(function () {
+    var cancelFn = monitorResize(nodeRef.current, _forceAlign);
+    return cancelFn;
+  }, [nodeRef.current]); // Watch target element resize
+
+  react.useEffect(function () {
+    var cancelFn = monitorResize(element, _forceAlign);
+    return cancelFn;
+  }, [element]); // Listen for disabled change
 
   react.useEffect(function () {
     if (!disabled) {
@@ -24003,23 +24271,15 @@ var Align = function Align(_ref, ref) {
     }
   }, [disabled]); // Listen for window resize
 
-  var winResizeRef = react.useRef(null);
   react.useEffect(function () {
     if (monitorWindowResize) {
-      if (!winResizeRef.current) {
-        winResizeRef.current = addEventListenerWrap(window, 'resize', _forceAlign);
-      }
-    } else if (winResizeRef.current) {
-      winResizeRef.current.remove();
-      winResizeRef.current = null;
+      var cancelFn = addEventListenerWrap(window, 'resize', _forceAlign);
+      return cancelFn.remove;
     }
   }, [monitorWindowResize]); // Clear all if unmount
 
   react.useEffect(function () {
     return function () {
-      resizeMonitor.current.cancel();
-      sourceResizeMonitor.current.cancel();
-      if (winResizeRef.current) winResizeRef.current.remove();
       cancelForceAlign();
     };
   }, []); // ====================== Ref =======================
@@ -24396,6 +24656,17 @@ function _asyncToGenerator(fn) {
 
 
 
+/**
+ * Popup should follow the steps for each component work correctly:
+ * measure - check for the current stretch size
+ * align - let component align the position
+ * aligned - re-align again in case additional className changed the size
+ * afterAlign - choice next step is trigger motion or finished
+ * beforeMotion - should reset motion to invisible so that CSSMotion can do normal motion
+ * motion - play the motion
+ * stable - everything is done
+ */
+
 var StatusQueue = ['measure', 'alignPre', 'align', null, 'motion'];
 /* harmony default export */ const useVisibleStatus = (function (visible, doMeasure) {
   var _useState = useSafeState(null),
@@ -24491,9 +24762,22 @@ var StatusQueue = ['measure', 'alignPre', 'align', null, 'motion'];
       setTargetSize = _React$useState2[1];
 
   function measureStretch(element) {
+    var tgtWidth = element.offsetWidth,
+        tgtHeight = element.offsetHeight;
+
+    var _element$getBoundingC = element.getBoundingClientRect(),
+        width = _element$getBoundingC.width,
+        height = _element$getBoundingC.height; // Rect is more accurate than offset, use if near
+
+
+    if (Math.abs(tgtWidth - width) < 1 && Math.abs(tgtHeight - height) < 1) {
+      tgtWidth = width;
+      tgtHeight = height;
+    }
+
     setTargetSize({
-      width: element.offsetWidth,
-      height: element.offsetHeight
+      width: tgtWidth,
+      height: tgtHeight
     });
   } // Merge stretch style
 
@@ -24588,6 +24872,11 @@ var PopupInner = /*#__PURE__*/react.forwardRef(function (props, ref) {
    * We will reset `alignTimes` for each status switch to `alignPre`
    * and let `rc-align` to align for multiple times to ensure get final stable place.
    * Currently we mark `alignTimes < 2` repeat align, it will increase if user report for align issue.
+   * 
+   * Update:
+   * In React 18. `rc-align` effect of align may faster than ref called trigger `forceAlign`.
+   * We adjust this to `alignTimes < 2`.
+   * We need refactor `rc-align` to support mark of `forceAlign` call if this still happen.
    */
 
 
@@ -24639,7 +24928,7 @@ var PopupInner = /*#__PURE__*/react.forwardRef(function (props, ref) {
   hooks_useLayoutEffect(function () {
     if (status === 'align') {
       // Repeat until not more align needed
-      if (alignTimes < 2) {
+      if (alignTimes < 3) {
         forceAlign();
       } else {
         goNextStatus(function () {
@@ -24695,7 +24984,7 @@ var PopupInner = /*#__PURE__*/react.forwardRef(function (props, ref) {
 
   var alignDisabled = true;
 
-  if ((align === null || align === void 0 ? void 0 : align.points) && (status === 'align' || status === 'stable')) {
+  if (align !== null && align !== void 0 && align.points && (status === 'align' || status === 'stable')) {
     alignDisabled = false;
   }
 
@@ -24822,7 +25111,7 @@ var Popup_excluded = ["visible", "mobile"];
 var Popup = /*#__PURE__*/react.forwardRef(function (_ref, ref) {
   var visible = _ref.visible,
       mobile = _ref.mobile,
-      props = _objectWithoutProperties(_ref, Popup_excluded);
+      props = objectWithoutProperties_objectWithoutProperties(_ref, Popup_excluded);
 
   var _useState = (0,react.useState)(visible),
       _useState2 = slicedToArray_slicedToArray(_useState, 2),
@@ -24883,6 +25172,7 @@ var TriggerContext = /*#__PURE__*/react.createContext(null);
 
 
 
+
 function es_noop() {}
 
 function returnEmptyString() {
@@ -24898,10 +25188,10 @@ function returnDocument(element) {
 }
 
 var ALL_HANDLERS = ['onClick', 'onMouseDown', 'onTouchStart', 'onMouseEnter', 'onMouseLeave', 'onFocus', 'onBlur', 'onContextMenu'];
+
 /**
  * Internal usage. Do not use in your code since this will be removed.
  */
-
 function generateTrigger(PortalComponent) {
   var Trigger = /*#__PURE__*/function (_React$Component) {
     _inherits(Trigger, _React$Component);
@@ -24915,46 +25205,60 @@ function generateTrigger(PortalComponent) {
       _classCallCheck(this, Trigger);
 
       _this = _super.call(this, props);
-      _this.popupRef = /*#__PURE__*/react.createRef();
-      _this.triggerRef = /*#__PURE__*/react.createRef();
-      _this.portalContainer = void 0;
-      _this.attachId = void 0;
-      _this.clickOutsideHandler = void 0;
-      _this.touchOutsideHandler = void 0;
-      _this.contextMenuOutsideHandler1 = void 0;
-      _this.contextMenuOutsideHandler2 = void 0;
-      _this.mouseDownTimeout = void 0;
-      _this.focusTime = void 0;
-      _this.preClickTime = void 0;
-      _this.preTouchTime = void 0;
-      _this.delayTimer = void 0;
-      _this.hasPopupMouseDown = void 0;
 
-      _this.onMouseEnter = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "popupRef", /*#__PURE__*/react.createRef());
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "triggerRef", /*#__PURE__*/react.createRef());
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "portalContainer", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "attachId", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "clickOutsideHandler", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "touchOutsideHandler", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "contextMenuOutsideHandler1", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "contextMenuOutsideHandler2", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "mouseDownTimeout", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "focusTime", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "preClickTime", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "preTouchTime", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "delayTimer", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "hasPopupMouseDown", void 0);
+
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onMouseEnter", function (e) {
         var mouseEnterDelay = _this.props.mouseEnterDelay;
 
         _this.fireEvents('onMouseEnter', e);
 
         _this.delaySetPopupVisible(true, mouseEnterDelay, mouseEnterDelay ? null : e);
-      };
+      });
 
-      _this.onMouseMove = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onMouseMove", function (e) {
         _this.fireEvents('onMouseMove', e);
 
         _this.setPoint(e);
-      };
+      });
 
-      _this.onMouseLeave = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onMouseLeave", function (e) {
         _this.fireEvents('onMouseLeave', e);
 
         _this.delaySetPopupVisible(false, _this.props.mouseLeaveDelay);
-      };
+      });
 
-      _this.onPopupMouseEnter = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onPopupMouseEnter", function () {
         _this.clearDelayTimer();
-      };
+      });
 
-      _this.onPopupMouseLeave = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onPopupMouseLeave", function (e) {
         var _this$popupRef$curren;
 
         // https://github.com/react-component/trigger/pull/13
@@ -24964,9 +25268,9 @@ function generateTrigger(PortalComponent) {
         }
 
         _this.delaySetPopupVisible(false, _this.props.mouseLeaveDelay);
-      };
+      });
 
-      _this.onFocus = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onFocus", function (e) {
         _this.fireEvents('onFocus', e); // incase focusin and focusout
 
 
@@ -24977,21 +25281,21 @@ function generateTrigger(PortalComponent) {
 
           _this.delaySetPopupVisible(true, _this.props.focusDelay);
         }
-      };
+      });
 
-      _this.onMouseDown = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onMouseDown", function (e) {
         _this.fireEvents('onMouseDown', e);
 
         _this.preClickTime = Date.now();
-      };
+      });
 
-      _this.onTouchStart = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onTouchStart", function (e) {
         _this.fireEvents('onTouchStart', e);
 
         _this.preTouchTime = Date.now();
-      };
+      });
 
-      _this.onBlur = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onBlur", function (e) {
         _this.fireEvents('onBlur', e);
 
         _this.clearDelayTimer();
@@ -24999,23 +25303,23 @@ function generateTrigger(PortalComponent) {
         if (_this.isBlurToHide()) {
           _this.delaySetPopupVisible(false, _this.props.blurDelay);
         }
-      };
+      });
 
-      _this.onContextMenu = function (e) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onContextMenu", function (e) {
         e.preventDefault();
 
         _this.fireEvents('onContextMenu', e);
 
         _this.setPopupVisible(true, e);
-      };
+      });
 
-      _this.onContextMenuClose = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onContextMenuClose", function () {
         if (_this.isContextMenuToShow()) {
           _this.close();
         }
-      };
+      });
 
-      _this.onClick = function (event) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onClick", function (event) {
         _this.fireEvents('onClick', event); // focus will trigger click
 
 
@@ -25051,9 +25355,9 @@ function generateTrigger(PortalComponent) {
         if (_this.isClickToHide() && !nextVisible || nextVisible && _this.isClickToShow()) {
           _this.setPopupVisible(!_this.state.popupVisible, event);
         }
-      };
+      });
 
-      _this.onPopupMouseDown = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onPopupMouseDown", function () {
         _this.hasPopupMouseDown = true;
         clearTimeout(_this.mouseDownTimeout);
         _this.mouseDownTimeout = window.setTimeout(function () {
@@ -25065,9 +25369,9 @@ function generateTrigger(PortalComponent) {
 
           (_this$context = _this.context).onPopupMouseDown.apply(_this$context, arguments);
         }
-      };
+      });
 
-      _this.onDocumentClick = function (event) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "onDocumentClick", function (event) {
         if (_this.props.mask && !_this.props.maskClosable) {
           return;
         }
@@ -25083,9 +25387,9 @@ function generateTrigger(PortalComponent) {
         (!contains(root, target) || _this.isContextMenuOnly()) && !contains(popupNode, target) && !_this.hasPopupMouseDown) {
           _this.close();
         }
-      };
+      });
 
-      _this.getRootDomNode = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "getRootDomNode", function () {
         var getTriggerDOMNode = _this.props.getTriggerDOMNode;
 
         if (getTriggerDOMNode) {
@@ -25102,9 +25406,9 @@ function generateTrigger(PortalComponent) {
         }
 
         return react_dom.findDOMNode(_assertThisInitialized(_this));
-      };
+      });
 
-      _this.getPopupClassNameFromAlign = function (align) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "getPopupClassNameFromAlign", function (align) {
         var className = [];
         var _this$props = _this.props,
             popupPlacement = _this$props.popupPlacement,
@@ -25122,9 +25426,9 @@ function generateTrigger(PortalComponent) {
         }
 
         return className.join(' ');
-      };
+      });
 
-      _this.getComponent = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "getComponent", function () {
         var _this$props2 = _this.props,
             prefixCls = _this$props2.prefixCls,
             destroyPopupOnHide = _this$props2.destroyPopupOnHide,
@@ -25189,9 +25493,9 @@ function generateTrigger(PortalComponent) {
           forceRender: forceRender,
           onClick: onPopupClick
         }), typeof popup === 'function' ? popup() : popup);
-      };
+      });
 
-      _this.attachParent = function (popupContainer) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "attachParent", function (popupContainer) {
         es_raf.cancel(_this.attachId);
         var _this$props3 = _this.props,
             getPopupContainer = _this$props3.getPopupContainer,
@@ -25218,9 +25522,9 @@ function generateTrigger(PortalComponent) {
             _this.attachParent(popupContainer);
           });
         }
-      };
+      });
 
-      _this.getContainer = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "getContainer", function () {
         if (!_this.portalContainer) {
           // In React.StrictMode component will call render multiple time in first mount.
           // When you want to refactor with FC, useRef will also init multiple time and
@@ -25241,9 +25545,9 @@ function generateTrigger(PortalComponent) {
         _this.attachParent(_this.portalContainer);
 
         return _this.portalContainer;
-      };
+      });
 
-      _this.setPoint = function (point) {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "setPoint", function (point) {
         var alignPoint = _this.props.alignPoint;
         if (!alignPoint || !point) return;
 
@@ -25253,17 +25557,17 @@ function generateTrigger(PortalComponent) {
             pageY: point.pageY
           }
         });
-      };
+      });
 
-      _this.handlePortalUpdate = function () {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "handlePortalUpdate", function () {
         if (_this.state.prevPopupVisible !== _this.state.popupVisible) {
           _this.props.afterPopupVisibleChange(_this.state.popupVisible);
         }
-      };
+      });
 
-      _this.triggerContextValue = {
+      defineProperty_defineProperty(_assertThisInitialized(_this), "triggerContextValue", {
         onPopupMouseDown: _this.onPopupMouseDown
-      };
+      });
 
       var _popupVisible;
 
@@ -25653,8 +25957,9 @@ function generateTrigger(PortalComponent) {
     return Trigger;
   }(react.Component);
 
-  Trigger.contextType = context;
-  Trigger.defaultProps = {
+  defineProperty_defineProperty(Trigger, "contextType", context);
+
+  defineProperty_defineProperty(Trigger, "defaultProps", {
     prefixCls: 'rc-trigger-popup',
     getPopupClassNameFromAlign: returnEmptyString,
     getDocument: returnDocument,
@@ -25676,7 +25981,8 @@ function generateTrigger(PortalComponent) {
     showAction: [],
     hideAction: [],
     autoDestroy: false
-  };
+  });
+
   return Trigger;
 }
 /* harmony default export */ const rc_trigger_es = (generateTrigger(es_Portal));
@@ -25957,7 +26263,7 @@ var InternalSubMenu = function InternalSubMenu(props) {
       onTitleClick = props.onTitleClick,
       onTitleMouseEnter = props.onTitleMouseEnter,
       onTitleMouseLeave = props.onTitleMouseLeave,
-      restProps = _objectWithoutProperties(props, SubMenu_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(props, SubMenu_excluded);
 
   var domDataId = useMenuId(eventKey);
 
@@ -26000,7 +26306,7 @@ var InternalSubMenu = function InternalSubMenu(props) {
 
   var _useActive = useActive(eventKey, mergedDisabled, onTitleMouseEnter, onTitleMouseLeave),
       active = _useActive.active,
-      activeProps = _objectWithoutProperties(_useActive, SubMenu_excluded2); // Fallback of active check to avoid hover on menu title or disabled item
+      activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, SubMenu_excluded2); // Fallback of active check to avoid hover on menu title or disabled item
 
 
   var _React$useState = react.useState(false),
@@ -26201,523 +26507,6 @@ function SubMenu(props) {
     value: connectedKeyPath
   }, renderNode);
 }
-;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/focus.js
-
-
-function focusable(node) {
-  var includePositive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  if (isVisible(node)) {
-    var nodeName = node.nodeName.toLowerCase();
-    var isFocusableElement =
-    // Focusable element
-    ['input', 'select', 'textarea', 'button'].includes(nodeName) ||
-    // Editable element
-    node.isContentEditable ||
-    // Anchor with href element
-    nodeName === 'a' && !!node.getAttribute('href');
-    // Get tabIndex
-    var tabIndexAttr = node.getAttribute('tabindex');
-    var tabIndexNum = Number(tabIndexAttr);
-    // Parse as number if validate
-    var tabIndex = null;
-    if (tabIndexAttr && !Number.isNaN(tabIndexNum)) {
-      tabIndex = tabIndexNum;
-    } else if (isFocusableElement && tabIndex === null) {
-      tabIndex = 0;
-    }
-    // Block focusable if disabled
-    if (isFocusableElement && node.disabled) {
-      tabIndex = null;
-    }
-    return tabIndex !== null && (tabIndex >= 0 || includePositive && tabIndex < 0);
-  }
-  return false;
-}
-function getFocusNodeList(node) {
-  var includePositive = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  var res = _toConsumableArray(node.querySelectorAll('*')).filter(function (child) {
-    return focusable(child, includePositive);
-  });
-  if (focusable(node, includePositive)) {
-    res.unshift(node);
-  }
-  return res;
-}
-var lastFocusElement = null;
-/** @deprecated Do not use since this may failed when used in async */
-function saveLastFocusNode() {
-  lastFocusElement = document.activeElement;
-}
-/** @deprecated Do not use since this may failed when used in async */
-function clearLastFocusNode() {
-  lastFocusElement = null;
-}
-/** @deprecated Do not use since this may failed when used in async */
-function backLastFocusNode() {
-  if (lastFocusElement) {
-    try {
-      // 元素可能已经被移动了
-      lastFocusElement.focus();
-      /* eslint-disable no-empty */
-    } catch (e) {
-      // empty
-    }
-    /* eslint-enable no-empty */
-  }
-}
-
-function limitTabRange(node, e) {
-  if (e.keyCode === 9) {
-    var tabNodeList = getFocusNodeList(node);
-    var lastTabNode = tabNodeList[e.shiftKey ? 0 : tabNodeList.length - 1];
-    var leavingTab = lastTabNode === document.activeElement || node === document.activeElement;
-    if (leavingTab) {
-      var target = tabNodeList[e.shiftKey ? tabNodeList.length - 1 : 0];
-      target.focus();
-      e.preventDefault();
-    }
-  }
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useAccessibility.js
-
-
-
-
-
- // destruct to reduce minify size
-
-var useAccessibility_LEFT = es_KeyCode.LEFT,
-    RIGHT = es_KeyCode.RIGHT,
-    UP = es_KeyCode.UP,
-    DOWN = es_KeyCode.DOWN,
-    ENTER = es_KeyCode.ENTER,
-    ESC = es_KeyCode.ESC,
-    HOME = es_KeyCode.HOME,
-    END = es_KeyCode.END;
-var ArrowKeys = [UP, DOWN, useAccessibility_LEFT, RIGHT];
-
-function useAccessibility_getOffset(mode, isRootLevel, isRtl, which) {
-  var _inline, _horizontal, _vertical, _offsets;
-
-  var prev = 'prev';
-  var next = 'next';
-  var children = 'children';
-  var parent = 'parent'; // Inline enter is special that we use unique operation
-
-  if (mode === 'inline' && which === ENTER) {
-    return {
-      inlineTrigger: true
-    };
-  }
-
-  var inline = (_inline = {}, defineProperty_defineProperty(_inline, UP, prev), defineProperty_defineProperty(_inline, DOWN, next), _inline);
-  var horizontal = (_horizontal = {}, defineProperty_defineProperty(_horizontal, useAccessibility_LEFT, isRtl ? next : prev), defineProperty_defineProperty(_horizontal, RIGHT, isRtl ? prev : next), defineProperty_defineProperty(_horizontal, DOWN, children), defineProperty_defineProperty(_horizontal, ENTER, children), _horizontal);
-  var vertical = (_vertical = {}, defineProperty_defineProperty(_vertical, UP, prev), defineProperty_defineProperty(_vertical, DOWN, next), defineProperty_defineProperty(_vertical, ENTER, children), defineProperty_defineProperty(_vertical, ESC, parent), defineProperty_defineProperty(_vertical, useAccessibility_LEFT, isRtl ? children : parent), defineProperty_defineProperty(_vertical, RIGHT, isRtl ? parent : children), _vertical);
-  var offsets = {
-    inline: inline,
-    horizontal: horizontal,
-    vertical: vertical,
-    inlineSub: inline,
-    horizontalSub: vertical,
-    verticalSub: vertical
-  };
-  var type = (_offsets = offsets["".concat(mode).concat(isRootLevel ? '' : 'Sub')]) === null || _offsets === void 0 ? void 0 : _offsets[which];
-
-  switch (type) {
-    case prev:
-      return {
-        offset: -1,
-        sibling: true
-      };
-
-    case next:
-      return {
-        offset: 1,
-        sibling: true
-      };
-
-    case parent:
-      return {
-        offset: -1,
-        sibling: false
-      };
-
-    case children:
-      return {
-        offset: 1,
-        sibling: false
-      };
-
-    default:
-      return null;
-  }
-}
-
-function findContainerUL(element) {
-  var current = element;
-
-  while (current) {
-    if (current.getAttribute('data-menu-list')) {
-      return current;
-    }
-
-    current = current.parentElement;
-  } // Normally should not reach this line
-
-  /* istanbul ignore next */
-
-
-  return null;
-}
-/**
- * Find focused element within element set provided
- */
-
-
-function getFocusElement(activeElement, elements) {
-  var current = activeElement || document.activeElement;
-
-  while (current) {
-    if (elements.has(current)) {
-      return current;
-    }
-
-    current = current.parentElement;
-  }
-
-  return null;
-}
-/**
- * Get focusable elements from the element set under provided container
- */
-
-
-function getFocusableElements(container, elements) {
-  var list = getFocusNodeList(container, true);
-  return list.filter(function (ele) {
-    return elements.has(ele);
-  });
-}
-
-function getNextFocusElement(parentQueryContainer, elements, focusMenuElement) {
-  var offset = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
-
-  // Key on the menu item will not get validate parent container
-  if (!parentQueryContainer) {
-    return null;
-  } // List current level menu item elements
-
-
-  var sameLevelFocusableMenuElementList = getFocusableElements(parentQueryContainer, elements); // Find next focus index
-
-  var count = sameLevelFocusableMenuElementList.length;
-  var focusIndex = sameLevelFocusableMenuElementList.findIndex(function (ele) {
-    return focusMenuElement === ele;
-  });
-
-  if (offset < 0) {
-    if (focusIndex === -1) {
-      focusIndex = count - 1;
-    } else {
-      focusIndex -= 1;
-    }
-  } else if (offset > 0) {
-    focusIndex += 1;
-  }
-
-  focusIndex = (focusIndex + count) % count; // Focus menu item
-
-  return sameLevelFocusableMenuElementList[focusIndex];
-}
-
-function useAccessibility(mode, activeKey, isRtl, id, containerRef, getKeys, getKeyPath, triggerActiveKey, triggerAccessibilityOpen, originOnKeyDown) {
-  var rafRef = react.useRef();
-  var activeRef = react.useRef();
-  activeRef.current = activeKey;
-
-  var cleanRaf = function cleanRaf() {
-    es_raf.cancel(rafRef.current);
-  };
-
-  react.useEffect(function () {
-    return function () {
-      cleanRaf();
-    };
-  }, []);
-  return function (e) {
-    var which = e.which;
-
-    if ([].concat(ArrowKeys, [ENTER, ESC, HOME, END]).includes(which)) {
-      // Convert key to elements
-      var elements;
-      var key2element;
-      var element2key; // >>> Wrap as function since we use raf for some case
-
-      var refreshElements = function refreshElements() {
-        elements = new Set();
-        key2element = new Map();
-        element2key = new Map();
-        var keys = getKeys();
-        keys.forEach(function (key) {
-          var element = document.querySelector("[data-menu-id='".concat(getMenuId(id, key), "']"));
-
-          if (element) {
-            elements.add(element);
-            element2key.set(element, key);
-            key2element.set(key, element);
-          }
-        });
-        return elements;
-      };
-
-      refreshElements(); // First we should find current focused MenuItem/SubMenu element
-
-      var activeElement = key2element.get(activeKey);
-      var focusMenuElement = getFocusElement(activeElement, elements);
-      var focusMenuKey = element2key.get(focusMenuElement);
-      var offsetObj = useAccessibility_getOffset(mode, getKeyPath(focusMenuKey, true).length === 1, isRtl, which); // Some mode do not have fully arrow operation like inline
-
-      if (!offsetObj && which !== HOME && which !== END) {
-        return;
-      } // Arrow prevent default to avoid page scroll
-
-
-      if (ArrowKeys.includes(which) || [HOME, END].includes(which)) {
-        e.preventDefault();
-      }
-
-      var tryFocus = function tryFocus(menuElement) {
-        if (menuElement) {
-          var focusTargetElement = menuElement; // Focus to link instead of menu item if possible
-
-          var link = menuElement.querySelector('a');
-
-          if (link !== null && link !== void 0 && link.getAttribute('href')) {
-            focusTargetElement = link;
-          }
-
-          var targetKey = element2key.get(menuElement);
-          triggerActiveKey(targetKey);
-          /**
-           * Do not `useEffect` here since `tryFocus` may trigger async
-           * which makes React sync update the `activeKey`
-           * that force render before `useRef` set the next activeKey
-           */
-
-          cleanRaf();
-          rafRef.current = es_raf(function () {
-            if (activeRef.current === targetKey) {
-              focusTargetElement.focus();
-            }
-          });
-        }
-      };
-
-      if ([HOME, END].includes(which) || offsetObj.sibling || !focusMenuElement) {
-        // ========================== Sibling ==========================
-        // Find walkable focus menu element container
-        var parentQueryContainer;
-
-        if (!focusMenuElement || mode === 'inline') {
-          parentQueryContainer = containerRef.current;
-        } else {
-          parentQueryContainer = findContainerUL(focusMenuElement);
-        } // Get next focus element
-
-
-        var targetElement;
-        var focusableElements = getFocusableElements(parentQueryContainer, elements);
-
-        if (which === HOME) {
-          targetElement = focusableElements[0];
-        } else if (which === END) {
-          targetElement = focusableElements[focusableElements.length - 1];
-        } else {
-          targetElement = getNextFocusElement(parentQueryContainer, elements, focusMenuElement, offsetObj.offset);
-        } // Focus menu item
-
-
-        tryFocus(targetElement); // ======================= InlineTrigger =======================
-      } else if (offsetObj.inlineTrigger) {
-        // Inline trigger no need switch to sub menu item
-        triggerAccessibilityOpen(focusMenuKey); // =========================== Level ===========================
-      } else if (offsetObj.offset > 0) {
-        triggerAccessibilityOpen(focusMenuKey, true);
-        cleanRaf();
-        rafRef.current = es_raf(function () {
-          // Async should resync elements
-          refreshElements();
-          var controlId = focusMenuElement.getAttribute('aria-controls');
-          var subQueryContainer = document.getElementById(controlId); // Get sub focusable menu item
-
-          var targetElement = getNextFocusElement(subQueryContainer, elements); // Focus menu item
-
-          tryFocus(targetElement);
-        }, 5);
-      } else if (offsetObj.offset < 0) {
-        var keyPath = getKeyPath(focusMenuKey, true);
-        var parentKey = keyPath[keyPath.length - 2];
-        var parentMenuElement = key2element.get(parentKey); // Focus menu item
-
-        triggerAccessibilityOpen(parentKey, false);
-        tryFocus(parentMenuElement);
-      }
-    } // Pass origin key down event
-
-
-    originOnKeyDown === null || originOnKeyDown === void 0 ? void 0 : originOnKeyDown(e);
-  };
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useUUID.js
-
-
-
-var uniquePrefix = Math.random().toFixed(5).toString().slice(2);
-var internalId = 0;
-function useUUID(id) {
-  var _useMergedState = useMergedState(id, {
-    value: id
-  }),
-      _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
-      uuid = _useMergedState2[0],
-      setUUID = _useMergedState2[1];
-
-  react.useEffect(function () {
-    internalId += 1;
-    var newId =  false ? 0 : "".concat(uniquePrefix, "-").concat(internalId);
-    setUUID("rc-menu-uuid-".concat(newId));
-  }, []);
-  return uuid;
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/utils/timeUtil.js
-function nextSlice(callback) {
-  /* istanbul ignore next */
-  Promise.resolve().then(callback);
-}
-;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useKeyRecords.js
-
-
-
-
-
-
-var PATH_SPLIT = '__RC_UTIL_PATH_SPLIT__';
-
-var getPathStr = function getPathStr(keyPath) {
-  return keyPath.join(PATH_SPLIT);
-};
-
-var getPathKeys = function getPathKeys(keyPathStr) {
-  return keyPathStr.split(PATH_SPLIT);
-};
-
-var OVERFLOW_KEY = 'rc-menu-more';
-function useKeyRecords() {
-  var _React$useState = react.useState({}),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      internalForceUpdate = _React$useState2[1];
-
-  var key2pathRef = (0,react.useRef)(new Map());
-  var path2keyRef = (0,react.useRef)(new Map());
-
-  var _React$useState3 = react.useState([]),
-      _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
-      overflowKeys = _React$useState4[0],
-      setOverflowKeys = _React$useState4[1];
-
-  var updateRef = (0,react.useRef)(0);
-  var destroyRef = (0,react.useRef)(false);
-
-  var forceUpdate = function forceUpdate() {
-    if (!destroyRef.current) {
-      internalForceUpdate({});
-    }
-  };
-
-  var registerPath = (0,react.useCallback)(function (key, keyPath) {
-    // Warning for invalidate or duplicated `key`
-    if (false) {} // Fill map
-
-
-    var connectedPath = getPathStr(keyPath);
-    path2keyRef.current.set(connectedPath, key);
-    key2pathRef.current.set(key, connectedPath);
-    updateRef.current += 1;
-    var id = updateRef.current;
-    nextSlice(function () {
-      if (id === updateRef.current) {
-        forceUpdate();
-      }
-    });
-  }, []);
-  var unregisterPath = (0,react.useCallback)(function (key, keyPath) {
-    var connectedPath = getPathStr(keyPath);
-    path2keyRef.current.delete(connectedPath);
-    key2pathRef.current.delete(key);
-  }, []);
-  var refreshOverflowKeys = (0,react.useCallback)(function (keys) {
-    setOverflowKeys(keys);
-  }, []);
-  var getKeyPath = (0,react.useCallback)(function (eventKey, includeOverflow) {
-    var fullPath = key2pathRef.current.get(eventKey) || '';
-    var keys = getPathKeys(fullPath);
-
-    if (includeOverflow && overflowKeys.includes(keys[0])) {
-      keys.unshift(OVERFLOW_KEY);
-    }
-
-    return keys;
-  }, [overflowKeys]);
-  var isSubPathKey = (0,react.useCallback)(function (pathKeys, eventKey) {
-    return pathKeys.some(function (pathKey) {
-      var pathKeyList = getKeyPath(pathKey, true);
-      return pathKeyList.includes(eventKey);
-    });
-  }, [getKeyPath]);
-
-  var getKeys = function getKeys() {
-    var keys = _toConsumableArray(key2pathRef.current.keys());
-
-    if (overflowKeys.length) {
-      keys.push(OVERFLOW_KEY);
-    }
-
-    return keys;
-  };
-  /**
-   * Find current key related child path keys
-   */
-
-
-  var getSubPathKeys = (0,react.useCallback)(function (key) {
-    var connectedPath = "".concat(key2pathRef.current.get(key)).concat(PATH_SPLIT);
-    var pathKeys = new Set();
-
-    _toConsumableArray(path2keyRef.current.keys()).forEach(function (pathKey) {
-      if (pathKey.startsWith(connectedPath)) {
-        pathKeys.add(path2keyRef.current.get(pathKey));
-      }
-    });
-
-    return pathKeys;
-  }, []);
-  react.useEffect(function () {
-    return function () {
-      destroyRef.current = true;
-    };
-  }, []);
-  return {
-    // Register
-    registerPath: registerPath,
-    unregisterPath: unregisterPath,
-    refreshOverflowKeys: refreshOverflowKeys,
-    // Util
-    isSubPathKey: isSubPathKey,
-    getKeyPath: getKeyPath,
-    getKeys: getKeys,
-    getSubPathKeys: getSubPathKeys
-  };
-}
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/Menu.js
 
 
@@ -26726,6 +26515,7 @@ function useKeyRecords() {
 
 
 var Menu_excluded = ["prefixCls", "rootClassName", "style", "className", "tabIndex", "items", "children", "direction", "id", "mode", "inlineCollapsed", "disabled", "disabledOverflow", "subMenuOpenDelay", "subMenuCloseDelay", "forceSubMenuRender", "defaultOpenKeys", "openKeys", "activeKey", "defaultActiveFirst", "selectable", "multiple", "defaultSelectedKeys", "selectedKeys", "onSelect", "onDeselect", "inlineIndent", "motion", "defaultMotions", "triggerSubMenuAction", "builtinPlacements", "itemIcon", "expandIcon", "overflowedIndicator", "overflowedIndicatorPopupClassName", "getPopupContainer", "onClick", "onOpenChange", "onKeyDown", "openAnimation", "openTransitionName", "_internalRenderMenuItem", "_internalRenderSubMenuItem"];
+
 
 
 
@@ -26817,7 +26607,7 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
       openTransitionName = _ref.openTransitionName,
       _internalRenderMenuItem = _ref._internalRenderMenuItem,
       _internalRenderSubMenuItem = _ref._internalRenderSubMenuItem,
-      restProps = _objectWithoutProperties(_ref, Menu_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(_ref, Menu_excluded);
 
   var childList = react.useMemo(function () {
     return parseItems(children, items, EMPTY_LIST);
@@ -26843,11 +26633,23 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
   }),
       _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
       mergedOpenKeys = _useMergedState2[0],
-      setMergedOpenKeys = _useMergedState2[1];
+      setMergedOpenKeys = _useMergedState2[1]; // React 18 will merge mouse event which means we open key will not sync
+  // ref: https://github.com/ant-design/ant-design/issues/38818
+
 
   var triggerOpenKeys = function triggerOpenKeys(keys) {
-    setMergedOpenKeys(keys);
-    onOpenChange === null || onOpenChange === void 0 ? void 0 : onOpenChange(keys);
+    var forceFlush = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+    function doUpdate() {
+      setMergedOpenKeys(keys);
+      onOpenChange === null || onOpenChange === void 0 ? void 0 : onOpenChange(keys);
+    }
+
+    if (forceFlush) {
+      (0,react_dom.flushSync)(doUpdate);
+    } else {
+      doUpdate();
+    }
   }; // >>>>> Cache & Reset open keys when inlineCollapsed changed
 
 
@@ -27059,7 +26861,7 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
     }
 
     if (!shallowequal_default()(mergedOpenKeys, newOpenKeys)) {
-      triggerOpenKeys(newOpenKeys);
+      triggerOpenKeys(newOpenKeys, true);
     }
   });
   var getInternalPopupContainer = useMemoCallback(getPopupContainer); // ==================== Accessibility =====================
@@ -27196,7 +26998,7 @@ var InternalMenuItemGroup = function InternalMenuItemGroup(_ref) {
       title = _ref.title,
       eventKey = _ref.eventKey,
       children = _ref.children,
-      restProps = _objectWithoutProperties(_ref, MenuItemGroup_excluded);
+      restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuItemGroup_excluded);
 
   var _React$useContext = react.useContext(MenuContext),
       prefixCls = _React$useContext.prefixCls;
@@ -27217,7 +27019,7 @@ var InternalMenuItemGroup = function InternalMenuItemGroup(_ref) {
 
 function MenuItemGroup(_ref2) {
   var children = _ref2.children,
-      props = _objectWithoutProperties(_ref2, MenuItemGroup_excluded2);
+      props = objectWithoutProperties_objectWithoutProperties(_ref2, MenuItemGroup_excluded2);
 
   var connectedKeyPath = useFullPath(props.eventKey);
   var childList = parseChildren(children, connectedKeyPath);
@@ -27432,7 +27234,7 @@ function Dropdown(props, ref) {
       _props$trigger = props.trigger,
       trigger = _props$trigger === void 0 ? ['hover'] : _props$trigger,
       autoFocus = props.autoFocus,
-      otherProps = _objectWithoutProperties(props, Dropdown_excluded);
+      otherProps = objectWithoutProperties_objectWithoutProperties(props, Dropdown_excluded);
 
   var _React$useState = react.useState(),
       _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
@@ -28280,21 +28082,9 @@ function TabNavList(props, ref) {
       }
     });
   });
-  var onListHolderResize = useRaf(function () {
-    // Update wrapper records
-    var containerSize = getSize(containerRef);
-    var extraLeftSize = getSize(extraLeftRef);
-    var extraRightSize = getSize(extraRightRef);
-    setContainerExcludeExtraSize([containerSize[0] - extraLeftSize[0] - extraRightSize[0], containerSize[1] - extraLeftSize[1] - extraRightSize[1]]);
-    var newAddSize = getSize(innerAddButtonRef);
-    setAddSize(newAddSize);
-    var newOperationSize = getSize(operationsRef);
-    setOperationSize(newOperationSize);
-    // Which includes add button size
-    var tabContentFullSize = getSize(tabListRef);
-    setTabContentSize([tabContentFullSize[0] - newAddSize[0], tabContentFullSize[1] - newAddSize[1]]);
-    // Update buttons records
-    setTabSizes(function () {
+  // Update buttons records
+  var updateTabSizes = function updateTabSizes() {
+    return setTabSizes(function () {
       var newSizes = new Map();
       tabs.forEach(function (_ref2) {
         var key = _ref2.key;
@@ -28310,6 +28100,25 @@ function TabNavList(props, ref) {
       });
       return newSizes;
     });
+  };
+  (0,react.useEffect)(function () {
+    updateTabSizes();
+  }, [tabs.map(function (tab) {
+    return tab.key;
+  }).join('_')]);
+  var onListHolderResize = useRaf(function () {
+    // Update wrapper records
+    var containerSize = getSize(containerRef);
+    var extraLeftSize = getSize(extraLeftRef);
+    var extraRightSize = getSize(extraRightRef);
+    setContainerExcludeExtraSize([containerSize[0] - extraLeftSize[0] - extraRightSize[0], containerSize[1] - extraLeftSize[1] - extraRightSize[1]]);
+    var newAddSize = getSize(innerAddButtonRef);
+    setAddSize(newAddSize);
+    var newOperationSize = getSize(operationsRef);
+    setOperationSize(newOperationSize);
+    // Which includes add button size
+    var tabContentFullSize = getSize(tabListRef);
+    setTabContentSize([tabContentFullSize[0] - newAddSize[0], tabContentFullSize[1] - newAddSize[1]]);
   });
   // ======================== Dropdown =======================
   var startHiddenTabs = tabs.slice(0, visibleStart);
@@ -28447,7 +28256,7 @@ var Wrapper_excluded = ["renderTabBar"],
 // We have to create a TabNavList components.
 function TabNavListWrapper(_ref) {
   var renderTabBar = _ref.renderTabBar,
-    restProps = _objectWithoutProperties(_ref, Wrapper_excluded);
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, Wrapper_excluded);
   var _useContext = (0,react.useContext)(TabContext),
     tabs = _useContext.tabs;
   if (renderTabBar) {
@@ -28456,7 +28265,7 @@ function TabNavListWrapper(_ref) {
       panes: tabs.map(function (_ref2) {
         var label = _ref2.label,
           key = _ref2.key,
-          restTabProps = _objectWithoutProperties(_ref2, Wrapper_excluded2);
+          restTabProps = objectWithoutProperties_objectWithoutProperties(_ref2, Wrapper_excluded2);
         return /*#__PURE__*/react.createElement(TabPanelList_TabPane, extends_extends({
           tab: label,
           key: key,
@@ -28559,7 +28368,7 @@ function Tabs(_ref, ref) {
     onTabScroll = _ref.onTabScroll,
     getPopupContainer = _ref.getPopupContainer,
     popupClassName = _ref.popupClassName,
-    restProps = _objectWithoutProperties(_ref, Tabs_excluded);
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, Tabs_excluded);
   var tabs = react.useMemo(function () {
     return (items || []).filter(function (item) {
       return item && _typeof(item) === 'object' && 'key' in item;
@@ -28693,7 +28502,6 @@ var SizeContextProvider = function SizeContextProvider(_ref) {
 };
 /* harmony default export */ const config_provider_SizeContext = (SizeContext);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/_util/motion.js
-
 // ================== Collapse Motion ==================
 var getCollapsedHeight = function getCollapsedHeight() {
   return {
@@ -28732,7 +28540,7 @@ var initCollapseMotion = function initCollapseMotion() {
     motionDeadline: 500
   };
 };
-var SelectPlacements = tuple('bottomLeft', 'bottomRight', 'topLeft', 'topRight');
+var SelectPlacements = (/* unused pure expression or super */ null && (['bottomLeft', 'bottomRight', 'topLeft', 'topRight']));
 var getTransitionDirection = function getTransitionDirection(placement) {
   if (placement !== undefined && (placement === 'topLeft' || placement === 'topRight')) {
     return "slide-down";
@@ -30221,14 +30029,12 @@ var LoadingOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "0 0 1024 
 
 
 
-
 var LoadingOutlined_LoadingOutlined = function LoadingOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_LoadingOutlined
   }));
 };
-
 LoadingOutlined_LoadingOutlined.displayName = 'LoadingOutlined';
 /* harmony default export */ const icons_LoadingOutlined = (/*#__PURE__*/react.forwardRef(LoadingOutlined_LoadingOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/button/LoadingIcon.js
@@ -30338,15 +30144,18 @@ var genGroupStyle = function genGroupStyle(token) {
 
 
 // handle border collapse
-function compactItemBorder(token, borderedItemCls, popoverFocusedCls) {
-  var childCombinator = borderedItemCls ? '> *' : '';
+function compactItemBorder(token, options) {
+  var childCombinator = options.borderElCls ? '> *' : '';
+  var hoverEffects = ['hover', options.focus ? 'focus' : null, 'active'].filter(Boolean).map(function (n) {
+    return "&:" + n + " " + childCombinator;
+  }).join(',');
   return {
     '&-item:not(&-last-item)': {
       marginInlineEnd: -token.lineWidth
     },
-    '&-item': extends_extends(extends_extends(defineProperty_defineProperty({}, "&:hover " + childCombinator + ", &:focus " + childCombinator + ", &:active " + childCombinator, {
+    '&-item': extends_extends(extends_extends(defineProperty_defineProperty({}, hoverEffects, {
       zIndex: 2
-    }), popoverFocusedCls ? defineProperty_defineProperty({}, "&" + popoverFocusedCls, {
+    }), options.focusElCls ? defineProperty_defineProperty({}, "&" + options.focusElCls, {
       zIndex: 2
     }) : {}), defineProperty_defineProperty({}, "&[disabled] " + childCombinator, {
       zIndex: 0
@@ -30354,9 +30163,9 @@ function compactItemBorder(token, borderedItemCls, popoverFocusedCls) {
   };
 }
 // handle border-radius
-function compactItemBorderRadius(prefixCls, borderedElementCls) {
+function compactItemBorderRadius(prefixCls, options) {
   var _ref2;
-  var childCombinator = borderedElementCls ? "> " + borderedElementCls : '';
+  var childCombinator = options.borderElCls ? "> " + options.borderElCls : '';
   return _ref2 = {}, defineProperty_defineProperty(_ref2, "&-item:not(&-first-item):not(&-last-item) " + childCombinator, {
     borderRadius: 0
   }), defineProperty_defineProperty(_ref2, '&-item:not(&-last-item)&-first-item', defineProperty_defineProperty({}, "& " + childCombinator + ", &" + prefixCls + "-sm " + childCombinator + ", &" + prefixCls + "-lg " + childCombinator, {
@@ -30367,16 +30176,11 @@ function compactItemBorderRadius(prefixCls, borderedElementCls) {
     borderEndStartRadius: 0
   })), _ref2;
 }
-function genCompactItemStyle(token, prefixCls, /** Some component borders are implemented on child elements like `Select` */
-borderedElementCls,
-/**
- * Some components have special `focus` className especially with popovers like `Select` and
- * `DatePicker`
- */
-popoverFocusedCls) {
-  return {
-    '&-compact': extends_extends(extends_extends({}, compactItemBorder(token, borderedElementCls, popoverFocusedCls)), compactItemBorderRadius(prefixCls, borderedElementCls))
+function genCompactItemStyle(token) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+    focus: true
   };
+  return defineProperty_defineProperty({}, token.componentCls + "-compact", extends_extends(extends_extends({}, compactItemBorder(token, options)), compactItemBorderRadius(token.componentCls, options)));
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/style/compact-item-vertical.js
 
@@ -30412,10 +30216,8 @@ function compactItemBorderVerticalRadius(prefixCls) {
     })
   };
 }
-function genCompactItemVerticalStyle(token, prefixCls) {
-  return {
-    '&-compact-vertical': extends_extends(extends_extends({}, compactItemVerticalBorder(token)), compactItemBorderVerticalRadius(prefixCls))
-  };
+function genCompactItemVerticalStyle(token) {
+  return defineProperty_defineProperty({}, token.componentCls + "-compact-vertical", extends_extends(extends_extends({}, compactItemVerticalBorder(token)), compactItemBorderVerticalRadius(token.componentCls)));
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/button/style/index.js
 
@@ -30427,10 +30229,10 @@ function genCompactItemVerticalStyle(token, prefixCls) {
 
 // ============================== Shared ==============================
 var genSharedButtonStyle = function genSharedButtonStyle(token) {
-  var _extends2, _extends3;
+  var _componentCls;
   var componentCls = token.componentCls,
     iconCls = token.iconCls;
-  return defineProperty_defineProperty({}, componentCls, extends_extends(extends_extends(extends_extends((_extends2 = {
+  return defineProperty_defineProperty({}, componentCls, (_componentCls = {
     outline: 'none',
     position: 'relative',
     display: 'inline-block',
@@ -30449,42 +30251,39 @@ var genSharedButtonStyle = function genSharedButtonStyle(token) {
     '> span': {
       display: 'inline-block'
     }
-  }, defineProperty_defineProperty(_extends2, "> " + iconCls + " + span, > span + " + iconCls, {
+  }, defineProperty_defineProperty(_componentCls, "> " + iconCls + " + span, > span + " + iconCls, {
     marginInlineStart: token.marginXS
-  }), defineProperty_defineProperty(_extends2, '&:not(:disabled)', extends_extends({}, genFocusStyle(token))), _extends2), genCompactItemStyle(token, componentCls)), genCompactItemVerticalStyle(token, componentCls)), (_extends3 = {
-    // make `btn-icon-only` not too narrow
-    '&-icon-only&-compact-item': {
-      flex: 'none'
-    }
-  }, defineProperty_defineProperty(_extends3, "&-compact-item" + componentCls + "-primary", {
+  }), defineProperty_defineProperty(_componentCls, '&:not(:disabled)', extends_extends({}, genFocusStyle(token))), defineProperty_defineProperty(_componentCls, '&-icon-only&-compact-item', {
+    flex: 'none'
+  }), defineProperty_defineProperty(_componentCls, "&-compact-item" + componentCls + "-primary", {
     '&:not([disabled]) + &:not([disabled])': {
       position: 'relative',
-      '&:after': {
+      '&:before': {
         position: 'absolute',
         top: -token.lineWidth,
         insetInlineStart: -token.lineWidth,
         display: 'inline-block',
         width: token.lineWidth,
         height: "calc(100% + " + token.lineWidth * 2 + "px)",
-        backgroundColor: token.colorPrimaryBorder,
+        backgroundColor: token.colorPrimaryHover,
         content: '""'
       }
     }
-  }), defineProperty_defineProperty(_extends3, '&-compact-vertical-item', defineProperty_defineProperty({}, "&" + componentCls + "-primary", {
+  }), defineProperty_defineProperty(_componentCls, '&-compact-vertical-item', defineProperty_defineProperty({}, "&" + componentCls + "-primary", {
     '&:not([disabled]) + &:not([disabled])': {
       position: 'relative',
-      '&:after': {
+      '&:before': {
         position: 'absolute',
         top: -token.lineWidth,
         insetInlineStart: -token.lineWidth,
         display: 'inline-block',
         width: "calc(100% + " + token.lineWidth * 2 + "px)",
         height: token.lineWidth,
-        backgroundColor: token.colorPrimaryBorder,
+        backgroundColor: token.colorPrimaryHover,
         content: '""'
       }
     }
-  })), _extends3)));
+  })), _componentCls));
 };
 var genHoverActiveButtonStyle = function genHoverActiveButtonStyle(hoverStyle, activeStyle) {
   return {
@@ -30729,7 +30528,11 @@ var genBlockButtonStyle = function genBlockButtonStyle(token) {
   // Group (type, ghost, danger, disabled, loading)
   genTypeButtonStyle(buttonToken),
   // Button Group
-  group(buttonToken)];
+  group(buttonToken),
+  // Space Compact
+  genCompactItemStyle(token, {
+    focus: false
+  }), genCompactItemVerticalStyle(token)];
 }));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/button/button.js
 
@@ -30747,7 +30550,6 @@ var button_rest = undefined && undefined.__rest || function (s, e) {
   return t;
 };
 /* eslint-disable react/button-has-type */
-
 
 
 
@@ -30811,9 +30613,9 @@ function spaceChildren(children, needInserted) {
     return insertSpace(child, needInserted);
   });
 }
-var ButtonTypes = tuple('default', 'primary', 'ghost', 'dashed', 'link', 'text');
-var ButtonShapes = tuple('default', 'circle', 'round');
-var ButtonHTMLTypes = tuple('submit', 'button', 'reset');
+var ButtonTypes = (/* unused pure expression or super */ null && (['default', 'primary', 'ghost', 'dashed', 'link', 'text']));
+var ButtonShapes = (/* unused pure expression or super */ null && (['default', 'circle', 'round']));
+var ButtonHTMLTypes = (/* unused pure expression or super */ null && (['submit', 'button', 'reset']));
 function convertLegacyProps(type) {
   if (type === 'danger') {
     return {
@@ -31331,14 +31133,12 @@ var DotChartOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 89
 
 
 
-
 var DotChartOutlined_DotChartOutlined = function DotChartOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_DotChartOutlined
   }));
 };
-
 DotChartOutlined_DotChartOutlined.displayName = 'DotChartOutlined';
 /* harmony default export */ const icons_DotChartOutlined = (/*#__PURE__*/react.forwardRef(DotChartOutlined_DotChartOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/skeleton/Node.js
@@ -32161,14 +31961,12 @@ var CheckOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 8
 
 
 
-
 var CheckOutlined_CheckOutlined = function CheckOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_CheckOutlined
   }));
 };
-
 CheckOutlined_CheckOutlined.displayName = 'CheckOutlined';
 /* harmony default export */ const icons_CheckOutlined = (/*#__PURE__*/react.forwardRef(CheckOutlined_CheckOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/CopyOutlined.js
@@ -32183,14 +31981,12 @@ var CopyOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 
-
 var CopyOutlined_CopyOutlined = function CopyOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_CopyOutlined
   }));
 };
-
 CopyOutlined_CopyOutlined.displayName = 'CopyOutlined';
 /* harmony default export */ const icons_CopyOutlined = (/*#__PURE__*/react.forwardRef(CopyOutlined_CopyOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EditOutlined.js
@@ -32205,14 +32001,12 @@ var EditOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 
-
 var EditOutlined_EditOutlined = function EditOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_EditOutlined
   }));
 };
-
 EditOutlined_EditOutlined.displayName = 'EditOutlined';
 /* harmony default export */ const icons_EditOutlined = (/*#__PURE__*/react.forwardRef(EditOutlined_EditOutlined));
 // EXTERNAL MODULE: ./node_modules/copy-to-clipboard/index.js
@@ -32714,7 +32508,7 @@ var Tooltip = function Tooltip(props, ref) {
       overlay = props.overlay,
       id = props.id,
       showArrow = props.showArrow,
-      restProps = _objectWithoutProperties(props, ["overlayClassName", "trigger", "mouseEnterDelay", "mouseLeaveDelay", "overlayStyle", "prefixCls", "children", "onVisibleChange", "afterVisibleChange", "transitionName", "animation", "motion", "placement", "align", "destroyTooltipOnHide", "defaultVisible", "getTooltipContainer", "overlayInnerStyle", "arrowContent", "overlay", "id", "showArrow"]);
+      restProps = objectWithoutProperties_objectWithoutProperties(props, ["overlayClassName", "trigger", "mouseEnterDelay", "mouseLeaveDelay", "overlayStyle", "prefixCls", "children", "onVisibleChange", "afterVisibleChange", "transitionName", "animation", "motion", "placement", "align", "destroyTooltipOnHide", "defaultVisible", "getTooltipContainer", "overlayInnerStyle", "arrowContent", "overlay", "id", "showArrow"]);
 
   var domRef = (0,react.useRef)(null);
   (0,react.useImperativeHandle)(ref, function () {
@@ -33034,7 +32828,7 @@ var initZoomMotion = function initZoomMotion(token, motionName) {
   var _zoomMotion$motionNam = zoomMotion[motionName],
     inKeyframes = _zoomMotion$motionNam.inKeyframes,
     outKeyframes = _zoomMotion$motionNam.outKeyframes;
-  return [initMotion(motionCls, inKeyframes, outKeyframes, motionName === 'zoom-big-fast' ? token.motionDurationMid : token.motionDurationMid), (_ref = {}, defineProperty_defineProperty(_ref, "\n        " + motionCls + "-enter,\n        " + motionCls + "-appear\n      ", {
+  return [initMotion(motionCls, inKeyframes, outKeyframes, motionName === 'zoom-big-fast' ? token.motionDurationFast : token.motionDurationMid), (_ref = {}, defineProperty_defineProperty(_ref, "\n        " + motionCls + "-enter,\n        " + motionCls + "-appear\n      ", {
     transform: 'scale(0)',
     opacity: 0,
     animationTimingFunction: token.motionEaseOutCirc,
@@ -33343,7 +33137,7 @@ var genTooltipStyle = function genTooltipStyle(token) {
       tooltipBg: colorBgDefault,
       tooltipRadiusOuter: borderRadiusOuter > 4 ? 4 : borderRadiusOuter
     });
-    return [genTooltipStyle(TooltipToken), initZoomMotion(token, 'zoom-big-fast')];
+    return [genTooltipStyle(TooltipToken), initZoomMotion(token, 'zoom-big-fast'), initZoomMotion(token, 'zoom-down')];
   }, function (_ref3) {
     var zIndexPopupBase = _ref3.zIndexPopupBase,
       colorBgSpotlight = _ref3.colorBgSpotlight;
@@ -33355,10 +33149,8 @@ var genTooltipStyle = function genTooltipStyle(token) {
   return useOriginHook(prefixCls);
 });
 ;// CONCATENATED MODULE: ./node_modules/antd/es/_util/colors.js
-
-var PresetStatusColorTypes = tuple('success', 'processing', 'error', 'default', 'warning');
-// eslint-disable-next-line import/prefer-default-export
-var PresetColorTypes = tuple('pink', 'red', 'yellow', 'orange', 'cyan', 'green', 'blue', 'purple', 'geekblue', 'magenta', 'volcano', 'gold', 'lime');
+var PresetStatusColorTypes = ['success', 'processing', 'error', 'default', 'warning'];
+var PresetColorTypes = ['pink', 'red', 'yellow', 'orange', 'cyan', 'green', 'blue', 'purple', 'geekblue', 'magenta', 'volcano', 'gold', 'lime'];
 ;// CONCATENATED MODULE: ./node_modules/antd/es/tooltip/util.js
 
 /* eslint-disable import/prefer-default-export */
@@ -33646,14 +33438,12 @@ var EnterOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 8
 
 
 
-
 var EnterOutlined_EnterOutlined = function EnterOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_EnterOutlined
   }));
 };
-
 EnterOutlined_EnterOutlined.displayName = 'EnterOutlined';
 /* harmony default export */ const icons_EnterOutlined = (/*#__PURE__*/react.forwardRef(EnterOutlined_EnterOutlined));
 ;// CONCATENATED MODULE: ./node_modules/rc-textarea/es/calculateNodeHeight.js
@@ -33793,7 +33583,7 @@ var ResizableTextArea = /*#__PURE__*/react.forwardRef(function (props, ref) {
     disabled = props.disabled,
     onChange = props.onChange,
     onInternalAutoSize = props.onInternalAutoSize,
-    restProps = _objectWithoutProperties(props, ResizableTextArea_excluded);
+    restProps = objectWithoutProperties_objectWithoutProperties(props, ResizableTextArea_excluded);
   // =============================== Value ================================
   var _useMergedState = useMergedState(defaultValue, {
       value: value,
@@ -34017,12 +33807,11 @@ var TextArea = /*#__PURE__*/function (_React$Component) {
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/FieldContext.js
 
 
-var HOOK_MARK = 'RC_FORM_INTERNAL_HOOKS'; // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
+var HOOK_MARK = 'RC_FORM_INTERNAL_HOOKS';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 var warningFunc = function warningFunc() {
   es_warning(false, 'Can not find FormContext. Please make sure you wrap Field under Form.');
 };
-
 var FieldContext_Context = /*#__PURE__*/react.createContext({
   getFieldValue: warningFunc,
   getFieldsValue: warningFunc,
@@ -34063,7 +33852,6 @@ function typeUtil_toArray(value) {
   if (value === undefined || value === null) {
     return [];
   }
-
   return Array.isArray(value) ? value : [value];
 }
 ;// CONCATENATED MODULE: ./node_modules/async-validator/dist-web/index.js
@@ -35493,37 +35281,29 @@ function set_set(entity, paths, value) {
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/utils/cloneDeep.js
 
-
 function cloneDeep(val) {
   if (Array.isArray(val)) {
     return cloneArrayDeep(val);
   } else if (_typeof(val) === 'object' && val !== null) {
     return cloneObjectDeep(val);
   }
-
   return val;
 }
-
 function cloneObjectDeep(val) {
   if (Object.getPrototypeOf(val) === Object.prototype) {
     var res = {};
-
     for (var key in val) {
       res[key] = cloneDeep(val[key]);
     }
-
     return res;
   }
-
   return val;
 }
-
 function cloneArrayDeep(val) {
   return val.map(function (item) {
     return cloneDeep(item);
   });
 }
-
 /* harmony default export */ const utils_cloneDeep = (cloneDeep);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/utils/valueUtil.js
 
@@ -35540,7 +35320,6 @@ function cloneArrayDeep(val) {
  * 123 => [123]
  * ['a', 123] => ['a', 123]
  */
-
 function getNamePath(path) {
   return typeUtil_toArray(path);
 }
@@ -35566,7 +35345,6 @@ function containsNamePath(namePathList, namePath) {
     return matchNamePath(path, namePath);
   });
 }
-
 function isObject(obj) {
   return _typeof(obj) === 'object' && obj !== null && Object.getPrototypeOf(obj) === Object.prototype;
 }
@@ -35574,30 +35352,25 @@ function isObject(obj) {
  * Copy values into store and return a new values object
  * ({ a: 1, b: { c: 2 } }, { a: 4, b: { d: 5 } }) => { a: 4, b: { c: 2, d: 5 } }
  */
-
-
 function internalSetValues(store, values) {
   var newStore = Array.isArray(store) ? _toConsumableArray(store) : objectSpread2_objectSpread2({}, store);
-
   if (!values) {
     return newStore;
   }
-
   Object.keys(values).forEach(function (key) {
     var prevValue = newStore[key];
-    var value = values[key]; // If both are object (but target is not array), we use recursion to set deep value
-
+    var value = values[key];
+    // If both are object (but target is not array), we use recursion to set deep value
     var recursive = isObject(prevValue) && isObject(value);
     newStore[key] = recursive ? internalSetValues(prevValue, value || {}) : utils_cloneDeep(value); // Clone deep for arrays
   });
+
   return newStore;
 }
-
 function setValues(store) {
   for (var _len = arguments.length, restValues = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
     restValues[_key - 1] = arguments[_key];
   }
-
   return restValues.reduce(function (current, newStore) {
     return internalSetValues(current, newStore);
   }, store);
@@ -35606,7 +35379,6 @@ function matchNamePath(namePath, changedNamePath) {
   if (!namePath || !changedNamePath || namePath.length !== changedNamePath.length) {
     return false;
   }
-
   return namePath.every(function (nameUnit, i) {
     return changedNamePath[i] === nameUnit;
   });
@@ -35615,36 +35387,29 @@ function isSimilar(source, target) {
   if (source === target) {
     return true;
   }
-
   if (!source && target || source && !target) {
     return false;
   }
-
   if (!source || !target || _typeof(source) !== 'object' || _typeof(target) !== 'object') {
     return false;
   }
-
   var sourceKeys = Object.keys(source);
   var targetKeys = Object.keys(target);
   var keys = new Set([].concat(sourceKeys, targetKeys));
   return _toConsumableArray(keys).every(function (key) {
     var sourceValue = source[key];
     var targetValue = target[key];
-
     if (typeof sourceValue === 'function' && typeof targetValue === 'function') {
       return true;
     }
-
     return sourceValue === targetValue;
   });
 }
 function defaultGetValueFromEvent(valuePropName) {
   var event = arguments.length <= 1 ? undefined : arguments[1];
-
   if (event && event.target && _typeof(event.target) === 'object' && valuePropName in event.target) {
     return event.target[valuePropName];
   }
-
   return event;
 }
 /**
@@ -35657,27 +35422,21 @@ function defaultGetValueFromEvent(valuePropName) {
  * @param moveIndex     The index of the item to move.          (required)
  * @param toIndex       The index to move item at moveIndex to. (required)
  */
-
 function valueUtil_move(array, moveIndex, toIndex) {
   var length = array.length;
-
   if (moveIndex < 0 || moveIndex >= length || toIndex < 0 || toIndex >= length) {
     return array;
   }
-
   var item = array[moveIndex];
   var diff = moveIndex - toIndex;
-
   if (diff > 0) {
     // move left
     return [].concat(_toConsumableArray(array.slice(0, toIndex)), [item], _toConsumableArray(array.slice(toIndex, moveIndex)), _toConsumableArray(array.slice(moveIndex + 1, length)));
   }
-
   if (diff < 0) {
     // move right
     return [].concat(_toConsumableArray(array.slice(0, moveIndex)), _toConsumableArray(array.slice(moveIndex + 1, toIndex + 1)), [item], _toConsumableArray(array.slice(toIndex + 1, length)));
   }
-
   return array;
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/utils/validateUtil.js
@@ -35690,23 +35449,20 @@ function valueUtil_move(array, moveIndex, toIndex) {
 
 
 
- // Remove incorrect original ts define
 
+// Remove incorrect original ts define
 var AsyncValidator = dist_web_Schema;
 /**
  * Replace with template.
  *   `I'm ${name}` + { name: 'bamboo' } = I'm bamboo
  */
-
 function replaceMessage(template, kv) {
   return template.replace(/\$\{\w+\}/g, function (str) {
     var key = str.slice(2, -1);
     return kv[key];
   });
 }
-
 var CODE_LOGIC_ERROR = 'CODE_LOGIC_ERROR';
-
 function validateRule(_x, _x2, _x3, _x4, _x5) {
   return _validateRule.apply(this, arguments);
 }
@@ -35714,8 +35470,6 @@ function validateRule(_x, _x2, _x3, _x4, _x5) {
  * We use `async-validator` to validate the value.
  * But only check one value in a time to avoid namePath validate issue.
  */
-
-
 function _validateRule() {
   _validateRule = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(name, value, rule, options, messageVariables) {
     var cloneRule, originValidator, subRuleField, validator, messages, result, subResults, kv, fillVariableResult;
@@ -35726,12 +35480,9 @@ function _validateRule() {
             cloneRule = objectSpread2_objectSpread2({}, rule); // Bug of `async-validator`
             // https://github.com/react-component/field-form/issues/316
             // https://github.com/react-component/field-form/issues/313
-
             delete cloneRule.ruleIndex;
-
             if (cloneRule.validator) {
               originValidator = cloneRule.validator;
-
               cloneRule.validator = function () {
                 try {
                   return originValidator.apply(void 0, arguments);
@@ -35740,16 +35491,13 @@ function _validateRule() {
                   return Promise.reject(CODE_LOGIC_ERROR);
                 }
               };
-            } // We should special handle array validate
-
-
+            }
+            // We should special handle array validate
             subRuleField = null;
-
             if (cloneRule && cloneRule.type === 'array' && cloneRule.defaultField) {
               subRuleField = cloneRule.defaultField;
               delete cloneRule.defaultField;
             }
-
             validator = new AsyncValidator(defineProperty_defineProperty({}, name, [cloneRule]));
             messages = setValues({}, defaultValidateMessages, options.validateMessages);
             validator.messages(messages);
@@ -35757,15 +35505,12 @@ function _validateRule() {
             _context2.prev = 9;
             _context2.next = 12;
             return Promise.resolve(validator.validate(defineProperty_defineProperty({}, name, value), objectSpread2_objectSpread2({}, options)));
-
           case 12:
             _context2.next = 17;
             break;
-
           case 14:
             _context2.prev = 14;
             _context2.t0 = _context2["catch"](9);
-
             if (_context2.t0.errors) {
               result = _context2.t0.errors.map(function (_ref4, index) {
                 var message = _ref4.message;
@@ -35778,24 +35523,20 @@ function _validateRule() {
                 }) : mergedMessage;
               });
             }
-
           case 17:
             if (!(!result.length && subRuleField)) {
               _context2.next = 22;
               break;
             }
-
             _context2.next = 20;
             return Promise.all(value.map(function (subValue, i) {
               return validateRule("".concat(name, ".").concat(i), subValue, subRuleField, options, messageVariables);
             }));
-
           case 20:
             subResults = _context2.sent;
             return _context2.abrupt("return", subResults.reduce(function (prev, errors) {
               return [].concat(_toConsumableArray(prev), _toConsumableArray(errors));
             }, []));
-
           case 22:
             // Replace message with variables
             kv = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, rule), {}, {
@@ -35806,11 +35547,9 @@ function _validateRule() {
               if (typeof error === 'string') {
                 return replaceMessage(error, kv);
               }
-
               return error;
             });
             return _context2.abrupt("return", fillVariableResult);
-
           case 25:
           case "end":
             return _context2.stop();
@@ -35820,47 +35559,39 @@ function _validateRule() {
   }));
   return _validateRule.apply(this, arguments);
 }
-
 function validateRules(namePath, value, rules, options, validateFirst, messageVariables) {
-  var name = namePath.join('.'); // Fill rule with context
-
+  var name = namePath.join('.');
+  // Fill rule with context
   var filledRules = rules.map(function (currentRule, ruleIndex) {
     var originValidatorFunc = currentRule.validator;
-
     var cloneRule = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, currentRule), {}, {
       ruleIndex: ruleIndex
-    }); // Replace validator if needed
-
-
+    });
+    // Replace validator if needed
     if (originValidatorFunc) {
       cloneRule.validator = function (rule, val, callback) {
-        var hasPromise = false; // Wrap callback only accept when promise not provided
-
+        var hasPromise = false;
+        // Wrap callback only accept when promise not provided
         var wrappedCallback = function wrappedCallback() {
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
           }
-
           // Wait a tick to make sure return type is a promise
           Promise.resolve().then(function () {
             es_warning(!hasPromise, 'Your validator function has already return a promise. `callback` will be ignored.');
-
             if (!hasPromise) {
               callback.apply(void 0, args);
             }
           });
-        }; // Get promise
-
-
+        };
+        // Get promise
         var promise = originValidatorFunc(rule, val, wrappedCallback);
         hasPromise = promise && typeof promise.then === 'function' && typeof promise.catch === 'function';
         /**
          * 1. Use promise as the first priority.
          * 2. If promise not exist, use callback with warning instead
          */
-
         es_warning(hasPromise, '`callback` is deprecated. Please return a promise instead.');
-
         if (hasPromise) {
           promise.then(function () {
             callback();
@@ -35870,28 +35601,23 @@ function validateRules(namePath, value, rules, options, validateFirst, messageVa
         }
       };
     }
-
     return cloneRule;
   }).sort(function (_ref, _ref2) {
     var w1 = _ref.warningOnly,
-        i1 = _ref.ruleIndex;
+      i1 = _ref.ruleIndex;
     var w2 = _ref2.warningOnly,
-        i2 = _ref2.ruleIndex;
-
+      i2 = _ref2.ruleIndex;
     if (!!w1 === !!w2) {
       // Let keep origin order
       return i1 - i2;
     }
-
     if (w1) {
       return 1;
     }
-
     return -1;
-  }); // Do validate rules
-
+  });
+  // Do validate rules
   var summaryPromise;
-
   if (validateFirst === true) {
     // >>>>> Validate by serialization
     summaryPromise = new Promise( /*#__PURE__*/function () {
@@ -35902,40 +35628,32 @@ function validateRules(namePath, value, rules, options, validateFirst, messageVa
             switch (_context.prev = _context.next) {
               case 0:
                 i = 0;
-
               case 1:
                 if (!(i < filledRules.length)) {
                   _context.next = 12;
                   break;
                 }
-
                 rule = filledRules[i];
                 _context.next = 5;
                 return validateRule(name, value, rule, options, messageVariables);
-
               case 5:
                 errors = _context.sent;
-
                 if (!errors.length) {
                   _context.next = 9;
                   break;
                 }
-
                 reject([{
                   errors: errors,
                   rule: rule
                 }]);
                 return _context.abrupt("return");
-
               case 9:
                 i += 1;
                 _context.next = 1;
                 break;
-
               case 12:
                 /* eslint-enable */
                 resolve([]);
-
               case 13:
               case "end":
                 return _context.stop();
@@ -35943,7 +35661,6 @@ function validateRules(namePath, value, rules, options, validateFirst, messageVa
           }
         }, _callee);
       }));
-
       return function (_x6, _x7) {
         return _ref3.apply(this, arguments);
       };
@@ -35962,19 +35679,16 @@ function validateRules(namePath, value, rules, options, validateFirst, messageVa
       // Always change to rejection for Field to catch
       return Promise.reject(errors);
     });
-  } // Internal catch error to avoid console error log.
-
-
+  }
+  // Internal catch error to avoid console error log.
   summaryPromise.catch(function (e) {
     return e;
   });
   return summaryPromise;
 }
-
 function finishOnAllFailed(_x8) {
   return _finishOnAllFailed.apply(this, arguments);
 }
-
 function _finishOnAllFailed() {
   _finishOnAllFailed = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(rulePromises) {
     return _regeneratorRuntime().wrap(function _callee3$(_context3) {
@@ -35983,12 +35697,9 @@ function _finishOnAllFailed() {
           case 0:
             return _context3.abrupt("return", Promise.all(rulePromises).then(function (errorsList) {
               var _ref5;
-
               var errors = (_ref5 = []).concat.apply(_ref5, _toConsumableArray(errorsList));
-
               return errors;
             }));
-
           case 1:
           case "end":
             return _context3.stop();
@@ -35998,11 +35709,9 @@ function _finishOnAllFailed() {
   }));
   return _finishOnAllFailed.apply(this, arguments);
 }
-
 function finishOnFirstFailed(_x9) {
   return _finishOnFirstFailed.apply(this, arguments);
 }
-
 function _finishOnFirstFailed() {
   _finishOnFirstFailed = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(rulePromises) {
     var count;
@@ -36017,16 +35726,13 @@ function _finishOnFirstFailed() {
                   if (ruleError.errors.length) {
                     resolve([ruleError]);
                   }
-
                   count += 1;
-
                   if (count === rulePromises.length) {
                     resolve([]);
                   }
                 });
               });
             }));
-
           case 2:
           case "end":
             return _context4.stop();
@@ -36056,23 +35762,18 @@ var Field_excluded = ["name"];
 
 
 var EMPTY_ERRORS = [];
-
 function requireUpdate(shouldUpdate, prev, next, prevValue, nextValue, info) {
   if (typeof shouldUpdate === 'function') {
     return shouldUpdate(prev, next, 'source' in info ? {
       source: info.source
     } : {});
   }
-
   return prevValue !== nextValue;
-} // We use Class instead of Hooks here since it will cost much code by using Hooks.
-
-
+}
+// We use Class instead of Hooks here since it will cost much code by using Hooks.
 var Field = /*#__PURE__*/function (_React$Component) {
   _inherits(Field, _React$Component);
-
   var _super = _createSuper(Field);
-
   /**
    * Follow state should not management in State since it will async update by React.
    * This makes first render of form can not get correct state value.
@@ -36083,14 +35784,13 @@ var Field = /*#__PURE__*/function (_React$Component) {
    * Note that we do not think field with `initialValue` is dirty
    * but this will be by `isFieldDirty` func.
    */
+
   // ============================== Subscriptions ==============================
   function Field(props) {
     var _this;
-
     _classCallCheck(this, Field);
-
-    _this = _super.call(this, props); // Register on init
-
+    _this = _super.call(this, props);
+    // Register on init
     _this.state = {
       resetCount: 0
     };
@@ -36102,49 +35802,41 @@ var Field = /*#__PURE__*/function (_React$Component) {
     _this.prevValidating = void 0;
     _this.errors = EMPTY_ERRORS;
     _this.warnings = EMPTY_ERRORS;
-
     _this.cancelRegister = function () {
       var _this$props = _this.props,
-          preserve = _this$props.preserve,
-          isListField = _this$props.isListField,
-          name = _this$props.name;
-
+        preserve = _this$props.preserve,
+        isListField = _this$props.isListField,
+        name = _this$props.name;
       if (_this.cancelRegisterFunc) {
         _this.cancelRegisterFunc(isListField, preserve, getNamePath(name));
       }
-
       _this.cancelRegisterFunc = null;
     };
-
     _this.getNamePath = function () {
       var _this$props2 = _this.props,
-          name = _this$props2.name,
-          fieldContext = _this$props2.fieldContext;
+        name = _this$props2.name,
+        fieldContext = _this$props2.fieldContext;
       var _fieldContext$prefixN = fieldContext.prefixName,
-          prefixName = _fieldContext$prefixN === void 0 ? [] : _fieldContext$prefixN;
+        prefixName = _fieldContext$prefixN === void 0 ? [] : _fieldContext$prefixN;
       return name !== undefined ? [].concat(_toConsumableArray(prefixName), _toConsumableArray(name)) : [];
     };
-
     _this.getRules = function () {
       var _this$props3 = _this.props,
-          _this$props3$rules = _this$props3.rules,
-          rules = _this$props3$rules === void 0 ? [] : _this$props3$rules,
-          fieldContext = _this$props3.fieldContext;
+        _this$props3$rules = _this$props3.rules,
+        rules = _this$props3$rules === void 0 ? [] : _this$props3$rules,
+        fieldContext = _this$props3.fieldContext;
       return rules.map(function (rule) {
         if (typeof rule === 'function') {
           return rule(fieldContext);
         }
-
         return rule;
       });
     };
-
     _this.refresh = function () {
       if (!_this.mounted) return;
       /**
        * Clean up current node.
        */
-
       _this.setState(function (_ref) {
         var resetCount = _ref.resetCount;
         return {
@@ -36152,40 +35844,32 @@ var Field = /*#__PURE__*/function (_React$Component) {
         };
       });
     };
-
     _this.triggerMetaEvent = function (destroy) {
       var onMetaChange = _this.props.onMetaChange;
       onMetaChange === null || onMetaChange === void 0 ? void 0 : onMetaChange(objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, _this.getMeta()), {}, {
         destroy: destroy
       }));
     };
-
     _this.onStoreChange = function (prevStore, namePathList, info) {
       var _this$props4 = _this.props,
-          shouldUpdate = _this$props4.shouldUpdate,
-          _this$props4$dependen = _this$props4.dependencies,
-          dependencies = _this$props4$dependen === void 0 ? [] : _this$props4$dependen,
-          onReset = _this$props4.onReset;
+        shouldUpdate = _this$props4.shouldUpdate,
+        _this$props4$dependen = _this$props4.dependencies,
+        dependencies = _this$props4$dependen === void 0 ? [] : _this$props4$dependen,
+        onReset = _this$props4.onReset;
       var store = info.store;
-
       var namePath = _this.getNamePath();
-
       var prevValue = _this.getValue(prevStore);
-
       var curValue = _this.getValue(store);
-
-      var namePathMatch = namePathList && containsNamePath(namePathList, namePath); // `setFieldsValue` is a quick access to update related status
-
+      var namePathMatch = namePathList && containsNamePath(namePathList, namePath);
+      // `setFieldsValue` is a quick access to update related status
       if (info.type === 'valueUpdate' && info.source === 'external' && prevValue !== curValue) {
         _this.touched = true;
         _this.dirty = true;
         _this.validatePromise = null;
         _this.errors = EMPTY_ERRORS;
         _this.warnings = EMPTY_ERRORS;
-
         _this.triggerMetaEvent();
       }
-
       switch (info.type) {
         case 'reset':
           if (!namePathList || namePathMatch) {
@@ -36195,96 +35879,71 @@ var Field = /*#__PURE__*/function (_React$Component) {
             _this.validatePromise = null;
             _this.errors = EMPTY_ERRORS;
             _this.warnings = EMPTY_ERRORS;
-
             _this.triggerMetaEvent();
-
             onReset === null || onReset === void 0 ? void 0 : onReset();
-
             _this.refresh();
-
             return;
           }
-
           break;
-
         /**
          * In case field with `preserve = false` nest deps like:
          * - A = 1 => show B
          * - B = 1 => show C
          * - Reset A, need clean B, C
          */
-
         case 'remove':
           {
             if (shouldUpdate) {
               _this.reRender();
-
               return;
             }
-
             break;
           }
-
         case 'setField':
           {
             if (namePathMatch) {
               var data = info.data;
-
               if ('touched' in data) {
                 _this.touched = data.touched;
               }
-
               if ('validating' in data && !('originRCField' in data)) {
                 _this.validatePromise = data.validating ? Promise.resolve([]) : null;
               }
-
               if ('errors' in data) {
                 _this.errors = data.errors || EMPTY_ERRORS;
               }
-
               if ('warnings' in data) {
                 _this.warnings = data.warnings || EMPTY_ERRORS;
               }
-
               _this.dirty = true;
-
               _this.triggerMetaEvent();
-
               _this.reRender();
-
-              return;
-            } // Handle update by `setField` with `shouldUpdate`
-
-
-            if (shouldUpdate && !namePath.length && requireUpdate(shouldUpdate, prevStore, store, prevValue, curValue, info)) {
-              _this.reRender();
-
               return;
             }
-
+            // Handle update by `setField` with `shouldUpdate`
+            if (shouldUpdate && !namePath.length && requireUpdate(shouldUpdate, prevStore, store, prevValue, curValue, info)) {
+              _this.reRender();
+              return;
+            }
             break;
           }
-
         case 'dependenciesUpdate':
           {
             /**
              * Trigger when marked `dependencies` updated. Related fields will all update
              */
-            var dependencyList = dependencies.map(getNamePath); // No need for `namePathMath` check and `shouldUpdate` check, since `valueUpdate` will be
+            var dependencyList = dependencies.map(getNamePath);
+            // No need for `namePathMath` check and `shouldUpdate` check, since `valueUpdate` will be
             // emitted earlier and they will work there
             // If set it may cause unnecessary twice rerendering
-
             if (dependencyList.some(function (dependency) {
               return containsNamePath(info.relatedFields, dependency);
             })) {
               _this.reRender();
-
               return;
             }
-
             break;
           }
-
         default:
           // 1. If `namePath` exists in `namePathList`, means it's related value and should update
           //      For example <List name="list"><Field name={['list', 0]}></List>
@@ -36298,71 +35957,57 @@ var Field = /*#__PURE__*/function (_React$Component) {
           //       else to check if value changed
           if (namePathMatch || (!dependencies.length || namePath.length || shouldUpdate) && requireUpdate(shouldUpdate, prevStore, store, prevValue, curValue, info)) {
             _this.reRender();
-
             return;
           }
-
           break;
       }
-
       if (shouldUpdate === true) {
         _this.reRender();
       }
     };
-
     _this.validateRules = function (options) {
       // We should fixed namePath & value to avoid developer change then by form function
       var namePath = _this.getNamePath();
-
-      var currentValue = _this.getValue(); // Force change to async to avoid rule OOD under renderProps field
-
-
+      var currentValue = _this.getValue();
+      // Force change to async to avoid rule OOD under renderProps field
       var rootPromise = Promise.resolve().then(function () {
         if (!_this.mounted) {
           return [];
         }
-
         var _this$props5 = _this.props,
-            _this$props5$validate = _this$props5.validateFirst,
-            validateFirst = _this$props5$validate === void 0 ? false : _this$props5$validate,
-            messageVariables = _this$props5.messageVariables;
-
+          _this$props5$validate = _this$props5.validateFirst,
+          validateFirst = _this$props5$validate === void 0 ? false : _this$props5$validate,
+          messageVariables = _this$props5.messageVariables;
         var _ref2 = options || {},
-            triggerName = _ref2.triggerName;
-
+          triggerName = _ref2.triggerName;
         var filteredRules = _this.getRules();
-
         if (triggerName) {
           filteredRules = filteredRules.filter(function (rule) {
+            return rule;
+          }).filter(function (rule) {
             var validateTrigger = rule.validateTrigger;
-
             if (!validateTrigger) {
               return true;
             }
-
             var triggerList = typeUtil_toArray(validateTrigger);
             return triggerList.includes(triggerName);
           });
         }
-
         var promise = validateRules(namePath, currentValue, filteredRules, options, validateFirst, messageVariables);
         promise.catch(function (e) {
           return e;
         }).then(function () {
           var ruleErrors = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : EMPTY_ERRORS;
-
           if (_this.validatePromise === rootPromise) {
             var _ruleErrors$forEach;
-
-            _this.validatePromise = null; // Get errors & warnings
-
+            _this.validatePromise = null;
+            // Get errors & warnings
             var nextErrors = [];
             var nextWarnings = [];
             (_ruleErrors$forEach = ruleErrors.forEach) === null || _ruleErrors$forEach === void 0 ? void 0 : _ruleErrors$forEach.call(ruleErrors, function (_ref3) {
               var warningOnly = _ref3.rule.warningOnly,
-                  _ref3$errors = _ref3.errors,
-                  errors = _ref3$errors === void 0 ? EMPTY_ERRORS : _ref3$errors;
-
+                _ref3$errors = _ref3.errors,
+                errors = _ref3$errors === void 0 ? EMPTY_ERRORS : _ref3$errors;
               if (warningOnly) {
                 nextWarnings.push.apply(nextWarnings, _toConsumableArray(errors));
               } else {
@@ -36371,9 +36016,7 @@ var Field = /*#__PURE__*/function (_React$Component) {
             });
             _this.errors = nextErrors;
             _this.warnings = nextWarnings;
-
             _this.triggerMetaEvent();
-
             _this.reRender();
           }
         });
@@ -36383,62 +36026,46 @@ var Field = /*#__PURE__*/function (_React$Component) {
       _this.dirty = true;
       _this.errors = EMPTY_ERRORS;
       _this.warnings = EMPTY_ERRORS;
-
-      _this.triggerMetaEvent(); // Force trigger re-render since we need sync renderProps with new meta
-
-
+      _this.triggerMetaEvent();
+      // Force trigger re-render since we need sync renderProps with new meta
       _this.reRender();
-
       return rootPromise;
     };
-
     _this.isFieldValidating = function () {
       return !!_this.validatePromise;
     };
-
     _this.isFieldTouched = function () {
       return _this.touched;
     };
-
     _this.isFieldDirty = function () {
       // Touched or validate or has initialValue
       if (_this.dirty || _this.props.initialValue !== undefined) {
         return true;
-      } // Form set initialValue
-
-
+      }
+      // Form set initialValue
       var fieldContext = _this.props.fieldContext;
-
       var _fieldContext$getInte = fieldContext.getInternalHooks(HOOK_MARK),
-          getInitialValue = _fieldContext$getInte.getInitialValue;
-
+        getInitialValue = _fieldContext$getInte.getInitialValue;
       if (getInitialValue(_this.getNamePath()) !== undefined) {
         return true;
       }
-
       return false;
     };
-
     _this.getErrors = function () {
       return _this.errors;
     };
-
     _this.getWarnings = function () {
       return _this.warnings;
     };
-
     _this.isListField = function () {
       return _this.props.isListField;
     };
-
     _this.isList = function () {
       return _this.props.isList;
     };
-
     _this.isPreserve = function () {
       return _this.props.preserve;
     };
-
     _this.getMeta = function () {
       // Make error & validating in cache to save perf
       _this.prevValidating = _this.isFieldValidating();
@@ -36451,121 +36078,93 @@ var Field = /*#__PURE__*/function (_React$Component) {
       };
       return meta;
     };
-
     _this.getOnlyChild = function (children) {
       // Support render props
       if (typeof children === 'function') {
         var meta = _this.getMeta();
-
         return objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, _this.getOnlyChild(children(_this.getControlled(), meta, _this.props.fieldContext))), {}, {
           isFunction: true
         });
-      } // Filed element only
-
-
+      }
+      // Filed element only
       var childList = toArray_toArray(children);
-
       if (childList.length !== 1 || ! /*#__PURE__*/react.isValidElement(childList[0])) {
         return {
           child: childList,
           isFunction: false
         };
       }
-
       return {
         child: childList[0],
         isFunction: false
       };
     };
-
     _this.getValue = function (store) {
       var getFieldsValue = _this.props.fieldContext.getFieldsValue;
-
       var namePath = _this.getNamePath();
-
       return valueUtil_getValue(store || getFieldsValue(true), namePath);
     };
-
     _this.getControlled = function () {
       var childProps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var _this$props6 = _this.props,
-          trigger = _this$props6.trigger,
-          validateTrigger = _this$props6.validateTrigger,
-          getValueFromEvent = _this$props6.getValueFromEvent,
-          normalize = _this$props6.normalize,
-          valuePropName = _this$props6.valuePropName,
-          getValueProps = _this$props6.getValueProps,
-          fieldContext = _this$props6.fieldContext;
+        trigger = _this$props6.trigger,
+        validateTrigger = _this$props6.validateTrigger,
+        getValueFromEvent = _this$props6.getValueFromEvent,
+        normalize = _this$props6.normalize,
+        valuePropName = _this$props6.valuePropName,
+        getValueProps = _this$props6.getValueProps,
+        fieldContext = _this$props6.fieldContext;
       var mergedValidateTrigger = validateTrigger !== undefined ? validateTrigger : fieldContext.validateTrigger;
-
       var namePath = _this.getNamePath();
-
       var getInternalHooks = fieldContext.getInternalHooks,
-          getFieldsValue = fieldContext.getFieldsValue;
-
+        getFieldsValue = fieldContext.getFieldsValue;
       var _getInternalHooks = getInternalHooks(HOOK_MARK),
-          dispatch = _getInternalHooks.dispatch;
-
+        dispatch = _getInternalHooks.dispatch;
       var value = _this.getValue();
-
       var mergedGetValueProps = getValueProps || function (val) {
         return defineProperty_defineProperty({}, valuePropName, val);
-      }; // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       var originTriggerFunc = childProps[trigger];
-
-      var control = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, childProps), mergedGetValueProps(value)); // Add trigger
-
-
+      var control = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, childProps), mergedGetValueProps(value));
+      // Add trigger
       control[trigger] = function () {
         // Mark as touched
         _this.touched = true;
         _this.dirty = true;
-
         _this.triggerMetaEvent();
-
         var newValue;
-
         for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
           args[_key] = arguments[_key];
         }
-
         if (getValueFromEvent) {
           newValue = getValueFromEvent.apply(void 0, args);
         } else {
           newValue = defaultGetValueFromEvent.apply(void 0, [valuePropName].concat(args));
         }
-
         if (normalize) {
           newValue = normalize(newValue, value, getFieldsValue(true));
         }
-
         dispatch({
           type: 'updateValue',
           namePath: namePath,
           value: newValue
         });
-
         if (originTriggerFunc) {
           originTriggerFunc.apply(void 0, args);
         }
-      }; // Add validateTrigger
-
-
+      };
+      // Add validateTrigger
       var validateTriggerList = typeUtil_toArray(mergedValidateTrigger || []);
       validateTriggerList.forEach(function (triggerName) {
         // Wrap additional function of component, so that we can get latest value from store
         var originTrigger = control[triggerName];
-
         control[triggerName] = function () {
           if (originTrigger) {
             originTrigger.apply(void 0, arguments);
-          } // Always use latest rules
-
-
+          }
+          // Always use latest rules
           var rules = _this.props.rules;
-
           if (rules && rules.length) {
             // We dispatch validate to root,
             // since it will update related data with other field with same name
@@ -36579,37 +36178,29 @@ var Field = /*#__PURE__*/function (_React$Component) {
       });
       return control;
     };
-
     if (props.fieldContext) {
       var getInternalHooks = props.fieldContext.getInternalHooks;
-
       var _getInternalHooks2 = getInternalHooks(HOOK_MARK),
-          initEntityValue = _getInternalHooks2.initEntityValue;
-
+        initEntityValue = _getInternalHooks2.initEntityValue;
       initEntityValue(_assertThisInitialized(_this));
     }
-
     return _this;
   }
-
   _createClass(Field, [{
     key: "componentDidMount",
     value: function componentDidMount() {
       var _this$props7 = this.props,
-          shouldUpdate = _this$props7.shouldUpdate,
-          fieldContext = _this$props7.fieldContext;
-      this.mounted = true; // Register on init
-
+        shouldUpdate = _this$props7.shouldUpdate,
+        fieldContext = _this$props7.fieldContext;
+      this.mounted = true;
+      // Register on init
       if (fieldContext) {
         var getInternalHooks = fieldContext.getInternalHooks;
-
         var _getInternalHooks3 = getInternalHooks(HOOK_MARK),
-            registerField = _getInternalHooks3.registerField;
-
+          registerField = _getInternalHooks3.registerField;
         this.cancelRegisterFunc = registerField(this);
-      } // One more render for component in case fields not ready
-
-
+      }
+      // One more render for component in case fields not ready
       if (shouldUpdate === true) {
         this.reRender();
       }
@@ -36632,14 +36223,11 @@ var Field = /*#__PURE__*/function (_React$Component) {
     value: function render() {
       var resetCount = this.state.resetCount;
       var children = this.props.children;
-
       var _this$getOnlyChild = this.getOnlyChild(children),
-          child = _this$getOnlyChild.child,
-          isFunction = _this$getOnlyChild.isFunction; // Not need to `cloneElement` since user can handle this in render function self
-
-
+        child = _this$getOnlyChild.child,
+        isFunction = _this$getOnlyChild.isFunction;
+      // Not need to `cloneElement` since user can handle this in render function self
       var returnChildNode;
-
       if (isFunction) {
         returnChildNode = child;
       } else if ( /*#__PURE__*/react.isValidElement(child)) {
@@ -36648,38 +36236,30 @@ var Field = /*#__PURE__*/function (_React$Component) {
         es_warning(!child, '`children` of Field is not validate ReactElement.');
         returnChildNode = child;
       }
-
       return /*#__PURE__*/react.createElement(react.Fragment, {
         key: resetCount
       }, returnChildNode);
     }
   }]);
-
   return Field;
 }(react.Component);
-
 Field.contextType = FieldContext;
 Field.defaultProps = {
   trigger: 'onChange',
   valuePropName: 'value'
 };
-
 function WrapperField(_ref5) {
   var name = _ref5.name,
-      restProps = _objectWithoutProperties(_ref5, Field_excluded);
-
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref5, Field_excluded);
   var fieldContext = react.useContext(FieldContext);
   var namePath = name !== undefined ? getNamePath(name) : undefined;
   var key = 'keep';
-
   if (!restProps.isListField) {
     key = "_".concat((namePath || []).join('_'));
-  } // Warning if it's a directly list field.
+  }
+  // Warning if it's a directly list field.
   // We can still support multiple level field preserve.
-
-
   if (false) {}
-
   return /*#__PURE__*/react.createElement(Field, extends_extends({
     key: key,
     name: namePath
@@ -36687,7 +36267,6 @@ function WrapperField(_ref5) {
     fieldContext: fieldContext
   }));
 }
-
 /* harmony default export */ const es_Field = (WrapperField);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/ListContext.js
 
@@ -36702,13 +36281,12 @@ var ListContext = /*#__PURE__*/react.createContext(null);
 
 
 
-
 var List = function List(_ref) {
   var name = _ref.name,
-      initialValue = _ref.initialValue,
-      children = _ref.children,
-      rules = _ref.rules,
-      validateTrigger = _ref.validateTrigger;
+    initialValue = _ref.initialValue,
+    children = _ref.children,
+    rules = _ref.rules,
+    validateTrigger = _ref.validateTrigger;
   var context = react.useContext(FieldContext);
   var keyRef = react.useRef({
     keys: [],
@@ -36723,8 +36301,8 @@ var List = function List(_ref) {
     return objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, context), {}, {
       prefixName: prefixName
     });
-  }, [context, prefixName]); // List context
-
+  }, [context, prefixName]);
+  // List context
   var listContext = react.useMemo(function () {
     return {
       getKey: function getKey(namePath) {
@@ -36733,23 +36311,19 @@ var List = function List(_ref) {
         return [keyManager.keys[pathName], namePath.slice(len + 1)];
       }
     };
-  }, [prefixName]); // User should not pass `children` as other type.
-
+  }, [prefixName]);
+  // User should not pass `children` as other type.
   if (typeof children !== 'function') {
     es_warning(false, 'Form.List only accepts function as children.');
     return null;
   }
-
   var shouldUpdate = function shouldUpdate(prevValue, nextValue, _ref2) {
     var source = _ref2.source;
-
     if (source === 'internal') {
       return false;
     }
-
     return prevValue !== nextValue;
   };
-
   return /*#__PURE__*/react.createElement(es_ListContext.Provider, {
     value: listContext
   }, /*#__PURE__*/react.createElement(FieldContext.Provider, {
@@ -36763,10 +36337,9 @@ var List = function List(_ref) {
     isList: true
   }, function (_ref3, meta) {
     var _ref3$value = _ref3.value,
-        value = _ref3$value === void 0 ? [] : _ref3$value,
-        onChange = _ref3.onChange;
+      value = _ref3$value === void 0 ? [] : _ref3$value,
+      onChange = _ref3.onChange;
     var getFieldValue = context.getFieldValue;
-
     var getNewValue = function getNewValue() {
       var values = getFieldValue(prefixName || []);
       return values || [];
@@ -36774,37 +36347,30 @@ var List = function List(_ref) {
     /**
      * Always get latest value in case user update fields by `form` api.
      */
-
-
     var operations = {
       add: function add(defaultValue, index) {
         // Mapping keys
         var newValue = getNewValue();
-
         if (index >= 0 && index <= newValue.length) {
           keyManager.keys = [].concat(_toConsumableArray(keyManager.keys.slice(0, index)), [keyManager.id], _toConsumableArray(keyManager.keys.slice(index)));
           onChange([].concat(_toConsumableArray(newValue.slice(0, index)), [defaultValue], _toConsumableArray(newValue.slice(index))));
         } else {
           if (false) {}
-
           keyManager.keys = [].concat(_toConsumableArray(keyManager.keys), [keyManager.id]);
           onChange([].concat(_toConsumableArray(newValue), [defaultValue]));
         }
-
         keyManager.id += 1;
       },
       remove: function remove(index) {
         var newValue = getNewValue();
         var indexSet = new Set(Array.isArray(index) ? index : [index]);
-
         if (indexSet.size <= 0) {
           return;
         }
-
         keyManager.keys = keyManager.keys.filter(function (_, keysIndex) {
           return !indexSet.has(keysIndex);
-        }); // Trigger store change
-
+        });
+        // Trigger store change
         onChange(newValue.filter(function (_, valueIndex) {
           return !indexSet.has(valueIndex);
         }));
@@ -36813,35 +36379,28 @@ var List = function List(_ref) {
         if (from === to) {
           return;
         }
-
-        var newValue = getNewValue(); // Do not handle out of range
-
+        var newValue = getNewValue();
+        // Do not handle out of range
         if (from < 0 || from >= newValue.length || to < 0 || to >= newValue.length) {
           return;
         }
-
-        keyManager.keys = valueUtil_move(keyManager.keys, from, to); // Trigger store change
-
+        keyManager.keys = valueUtil_move(keyManager.keys, from, to);
+        // Trigger store change
         onChange(valueUtil_move(newValue, from, to));
       }
     };
     var listValue = value || [];
-
     if (!Array.isArray(listValue)) {
       listValue = [];
-
       if (false) {}
     }
-
     return children(listValue.map(function (__, index) {
       var key = keyManager.keys[index];
-
       if (key === undefined) {
         keyManager.keys[index] = keyManager.id;
         key = keyManager.keys[index];
         keyManager.id += 1;
       }
-
       return {
         name: index,
         key: key,
@@ -36850,18 +36409,15 @@ var List = function List(_ref) {
     }), operations, meta);
   })));
 };
-
 /* harmony default export */ const es_List = (List);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/utils/asyncUtil.js
 function allPromiseFinish(promiseList) {
   var hasError = false;
   var count = promiseList.length;
   var results = [];
-
   if (!promiseList.length) {
     return Promise.resolve([]);
   }
-
   return new Promise(function (resolve, reject) {
     promiseList.forEach(function (promise, index) {
       promise.catch(function (e) {
@@ -36870,15 +36426,12 @@ function allPromiseFinish(promiseList) {
       }).then(function (result) {
         count -= 1;
         results[index] = result;
-
         if (count > 0) {
           return;
         }
-
         if (hasError) {
           reject(results);
         }
-
         resolve(results);
       });
     });
@@ -36894,25 +36447,21 @@ var SPLIT = '__@field_split__';
 /**
  * Convert name path into string to fast the fetch speed of Map.
  */
-
 function normalize(namePath) {
   return namePath.map(function (cell) {
     return "".concat(_typeof(cell), ":").concat(cell);
-  }) // Magic split
+  })
+  // Magic split
   .join(SPLIT);
 }
 /**
  * NameMap like a `Map` but accepts `string[]` as key.
  */
-
-
 var NameMap = /*#__PURE__*/function () {
   function NameMap() {
     _classCallCheck(this, NameMap);
-
     this.kvs = new Map();
   }
-
   _createClass(NameMap, [{
     key: "set",
     value: function set(key, value) {
@@ -36928,7 +36477,6 @@ var NameMap = /*#__PURE__*/function () {
     value: function update(key, updater) {
       var origin = this.get(key);
       var next = updater(origin);
-
       if (!next) {
         this.delete(key);
       } else {
@@ -36939,24 +36487,22 @@ var NameMap = /*#__PURE__*/function () {
     key: "delete",
     value: function _delete(key) {
       this.kvs.delete(normalize(key));
-    } // Since we only use this in test, let simply realize this
-
+    }
+    // Since we only use this in test, let simply realize this
   }, {
     key: "map",
     value: function map(callback) {
       return _toConsumableArray(this.kvs.entries()).map(function (_ref) {
         var _ref2 = slicedToArray_slicedToArray(_ref, 2),
-            key = _ref2[0],
-            value = _ref2[1];
-
+          key = _ref2[0],
+          value = _ref2[1];
         var cells = key.split(SPLIT);
         return callback({
           key: cells.map(function (cell) {
             var _cell$match = cell.match(/^([^:]*):(.*)$/),
-                _cell$match2 = slicedToArray_slicedToArray(_cell$match, 3),
-                type = _cell$match2[1],
-                unit = _cell$match2[2];
-
+              _cell$match2 = slicedToArray_slicedToArray(_cell$match, 3),
+              type = _cell$match2[1],
+              unit = _cell$match2[2];
             return type === 'number' ? Number(unit) : unit;
           }),
           value: value
@@ -36969,17 +36515,15 @@ var NameMap = /*#__PURE__*/function () {
       var json = {};
       this.map(function (_ref3) {
         var key = _ref3.key,
-            value = _ref3.value;
+          value = _ref3.value;
         json[key.join('.')] = value;
         return null;
       });
       return json;
     }
   }]);
-
   return NameMap;
 }();
-
 /* harmony default export */ const utils_NameMap = (NameMap);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/useForm.js
 
@@ -36999,9 +36543,7 @@ var useForm_excluded = ["name", "errors"];
 
 var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
   var _this = this;
-
   _classCallCheck(this, FormStore);
-
   this.formHooked = false;
   this.forceRootUpdate = void 0;
   this.subscribable = true;
@@ -37012,7 +36554,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
   this.validateMessages = null;
   this.preserve = null;
   this.lastValidatePromise = null;
-
   this.getForm = function () {
     return {
       getFieldValue: _this.getFieldValue,
@@ -37034,7 +36575,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       getInternalHooks: _this.getInternalHooks
     };
   };
-
   this.getInternalHooks = function (key) {
     if (key === HOOK_MARK) {
       _this.formHooked = true;
@@ -37053,133 +36593,101 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         registerWatch: _this.registerWatch
       };
     }
-
     es_warning(false, '`getInternalHooks` is internal usage. Should not call directly.');
     return null;
   };
-
   this.useSubscribe = function (subscribable) {
     _this.subscribable = subscribable;
   };
-
   this.prevWithoutPreserves = null;
-
   this.setInitialValues = function (initialValues, init) {
     _this.initialValues = initialValues || {};
-
     if (init) {
       var _this$prevWithoutPres;
-
-      var nextStore = setValues({}, initialValues, _this.store); // We will take consider prev form unmount fields.
+      var nextStore = setValues({}, initialValues, _this.store);
+      // We will take consider prev form unmount fields.
       // When the field is not `preserve`, we need fill this with initialValues instead of store.
       // eslint-disable-next-line array-callback-return
-
       (_this$prevWithoutPres = _this.prevWithoutPreserves) === null || _this$prevWithoutPres === void 0 ? void 0 : _this$prevWithoutPres.map(function (_ref) {
         var namePath = _ref.key;
         nextStore = setValue(nextStore, namePath, valueUtil_getValue(initialValues, namePath));
       });
       _this.prevWithoutPreserves = null;
-
       _this.updateStore(nextStore);
     }
   };
-
   this.destroyForm = function () {
     var prevWithoutPreserves = new utils_NameMap();
-
     _this.getFieldEntities(true).forEach(function (entity) {
       if (!_this.isMergedPreserve(entity.isPreserve())) {
         prevWithoutPreserves.set(entity.getNamePath(), true);
       }
     });
-
     _this.prevWithoutPreserves = prevWithoutPreserves;
   };
-
   this.getInitialValue = function (namePath) {
-    var initValue = valueUtil_getValue(_this.initialValues, namePath); // Not cloneDeep when without `namePath`
-
+    var initValue = valueUtil_getValue(_this.initialValues, namePath);
+    // Not cloneDeep when without `namePath`
     return namePath.length ? utils_cloneDeep(initValue) : initValue;
   };
-
   this.setCallbacks = function (callbacks) {
     _this.callbacks = callbacks;
   };
-
   this.setValidateMessages = function (validateMessages) {
     _this.validateMessages = validateMessages;
   };
-
   this.setPreserve = function (preserve) {
     _this.preserve = preserve;
   };
-
   this.watchList = [];
-
   this.registerWatch = function (callback) {
     _this.watchList.push(callback);
-
     return function () {
       _this.watchList = _this.watchList.filter(function (fn) {
         return fn !== callback;
       });
     };
   };
-
   this.notifyWatch = function () {
     var namePath = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-
     // No need to cost perf when nothing need to watch
     if (_this.watchList.length) {
       var values = _this.getFieldsValue();
-
       _this.watchList.forEach(function (callback) {
         callback(values, namePath);
       });
     }
   };
-
   this.timeoutId = null;
-
   this.warningUnhooked = function () {
     if (false) {}
   };
-
   this.updateStore = function (nextStore) {
     _this.store = nextStore;
   };
-
   this.getFieldEntities = function () {
     var pure = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
     if (!pure) {
       return _this.fieldEntities;
     }
-
     return _this.fieldEntities.filter(function (field) {
       return field.getNamePath().length;
     });
   };
-
   this.getFieldsMap = function () {
     var pure = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
     var cache = new utils_NameMap();
-
     _this.getFieldEntities(pure).forEach(function (field) {
       var namePath = field.getNamePath();
       cache.set(namePath, field);
     });
-
     return cache;
   };
-
   this.getFieldEntitiesForNamePathList = function (nameList) {
     if (!nameList) {
       return _this.getFieldEntities(true);
     }
-
     var cache = _this.getFieldsMap(true);
-
     return nameList.map(function (name) {
       var namePath = getNamePath(name);
       return cache.get(namePath) || {
@@ -37187,32 +36695,25 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       };
     });
   };
-
   this.getFieldsValue = function (nameList, filterFunc) {
     _this.warningUnhooked();
-
     if (nameList === true && !filterFunc) {
       return _this.store;
     }
-
     var fieldEntities = _this.getFieldEntitiesForNamePathList(Array.isArray(nameList) ? nameList : null);
-
     var filteredNameList = [];
     fieldEntities.forEach(function (entity) {
       var _entity$isListField;
-
-      var namePath = 'INVALIDATE_NAME_PATH' in entity ? entity.INVALIDATE_NAME_PATH : entity.getNamePath(); // Ignore when it's a list item and not specific the namePath,
+      var namePath = 'INVALIDATE_NAME_PATH' in entity ? entity.INVALIDATE_NAME_PATH : entity.getNamePath();
+      // Ignore when it's a list item and not specific the namePath,
       // since parent field is already take in count
-
       if (!nameList && ((_entity$isListField = entity.isListField) === null || _entity$isListField === void 0 ? void 0 : _entity$isListField.call(entity))) {
         return;
       }
-
       if (!filterFunc) {
         filteredNameList.push(namePath);
       } else {
         var meta = 'getMeta' in entity ? entity.getMeta() : null;
-
         if (filterFunc(meta)) {
           filteredNameList.push(namePath);
         }
@@ -37220,19 +36721,14 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
     });
     return cloneByNamePathList(_this.store, filteredNameList.map(getNamePath));
   };
-
   this.getFieldValue = function (name) {
     _this.warningUnhooked();
-
     var namePath = getNamePath(name);
     return valueUtil_getValue(_this.store, namePath);
   };
-
   this.getFieldsError = function (nameList) {
     _this.warningUnhooked();
-
     var fieldEntities = _this.getFieldEntitiesForNamePathList(nameList);
-
     return fieldEntities.map(function (entity, index) {
       if (entity && !('INVALIDATE_NAME_PATH' in entity)) {
         return {
@@ -37241,7 +36737,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
           warnings: entity.getWarnings()
         };
       }
-
       return {
         name: getNamePath(nameList[index]),
         errors: [],
@@ -37249,39 +36744,27 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       };
     });
   };
-
   this.getFieldError = function (name) {
     _this.warningUnhooked();
-
     var namePath = getNamePath(name);
-
     var fieldError = _this.getFieldsError([namePath])[0];
-
     return fieldError.errors;
   };
-
   this.getFieldWarning = function (name) {
     _this.warningUnhooked();
-
     var namePath = getNamePath(name);
-
     var fieldError = _this.getFieldsError([namePath])[0];
-
     return fieldError.warnings;
   };
-
   this.isFieldsTouched = function () {
     _this.warningUnhooked();
-
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
-
     var arg0 = args[0],
-        arg1 = args[1];
+      arg1 = args[1];
     var namePathList;
     var isAllFieldsTouched = false;
-
     if (args.length === 0) {
       namePathList = null;
     } else if (args.length === 1) {
@@ -37296,26 +36779,22 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       namePathList = arg0.map(getNamePath);
       isAllFieldsTouched = arg1;
     }
-
     var fieldEntities = _this.getFieldEntities(true);
-
     var isFieldTouched = function isFieldTouched(field) {
       return field.isFieldTouched();
-    }; // ===== Will get fully compare when not config namePathList =====
-
-
+    };
+    // ===== Will get fully compare when not config namePathList =====
     if (!namePathList) {
       return isAllFieldsTouched ? fieldEntities.every(isFieldTouched) : fieldEntities.some(isFieldTouched);
-    } // Generate a nest tree for validate
-
-
+    }
+    // Generate a nest tree for validate
     var map = new utils_NameMap();
     namePathList.forEach(function (shortNamePath) {
       map.set(shortNamePath, []);
     });
     fieldEntities.forEach(function (field) {
-      var fieldNamePath = field.getNamePath(); // Find matched entity and put into list
-
+      var fieldNamePath = field.getNamePath();
+      // Find matched entity and put into list
       namePathList.forEach(function (shortNamePath) {
         if (shortNamePath.every(function (nameUnit, i) {
           return fieldNamePath[i] === nameUnit;
@@ -37325,60 +36804,48 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
           });
         }
       });
-    }); // Check if NameMap value is touched
-
+    });
+    // Check if NameMap value is touched
     var isNamePathListTouched = function isNamePathListTouched(entities) {
       return entities.some(isFieldTouched);
     };
-
     var namePathListEntities = map.map(function (_ref2) {
       var value = _ref2.value;
       return value;
     });
     return isAllFieldsTouched ? namePathListEntities.every(isNamePathListTouched) : namePathListEntities.some(isNamePathListTouched);
   };
-
   this.isFieldTouched = function (name) {
     _this.warningUnhooked();
-
     return _this.isFieldsTouched([name]);
   };
-
   this.isFieldsValidating = function (nameList) {
     _this.warningUnhooked();
-
     var fieldEntities = _this.getFieldEntities();
-
     if (!nameList) {
       return fieldEntities.some(function (testField) {
         return testField.isFieldValidating();
       });
     }
-
     var namePathList = nameList.map(getNamePath);
     return fieldEntities.some(function (testField) {
       var fieldNamePath = testField.getNamePath();
       return containsNamePath(namePathList, fieldNamePath) && testField.isFieldValidating();
     });
   };
-
   this.isFieldValidating = function (name) {
     _this.warningUnhooked();
-
     return _this.isFieldsValidating([name]);
   };
-
   this.resetWithFieldInitialValue = function () {
     var info = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     // Create cache
     var cache = new utils_NameMap();
-
     var fieldEntities = _this.getFieldEntities(true);
-
     fieldEntities.forEach(function (field) {
       var initialValue = field.props.initialValue;
-      var namePath = field.getNamePath(); // Record only if has `initialValue`
-
+      var namePath = field.getNamePath();
+      // Record only if has `initialValue`
       if (initialValue !== undefined) {
         var records = cache.get(namePath) || new Set();
         records.add({
@@ -37387,30 +36854,25 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         });
         cache.set(namePath, records);
       }
-    }); // Reset
-
+    });
+    // Reset
     var resetWithFields = function resetWithFields(entities) {
       entities.forEach(function (field) {
         var initialValue = field.props.initialValue;
-
         if (initialValue !== undefined) {
           var namePath = field.getNamePath();
-
           var formInitialValue = _this.getInitialValue(namePath);
-
           if (formInitialValue !== undefined) {
             // Warning if conflict with form initialValues and do not modify value
             es_warning(false, "Form already set 'initialValues' with path '".concat(namePath.join('.'), "'. Field can not overwrite it."));
           } else {
             var records = cache.get(namePath);
-
             if (records && records.size > 1) {
               // Warning if multiple field set `initialValue`and do not modify value
               es_warning(false, "Multiple Field with path '".concat(namePath.join('.'), "' set 'initialValue'. Can not decide which one to pick."));
             } else if (records) {
-              var originValue = _this.getFieldValue(namePath); // Set `initialValue`
-
-
+              var originValue = _this.getFieldValue(namePath);
+              // Set `initialValue`
               if (!info.skipExist || originValue === undefined) {
                 _this.updateStore(setValue(_this.store, namePath, _toConsumableArray(records)[0].value));
               }
@@ -37419,19 +36881,15 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         }
       });
     };
-
     var requiredFieldEntities;
-
     if (info.entities) {
       requiredFieldEntities = info.entities;
     } else if (info.namePathList) {
       requiredFieldEntities = [];
       info.namePathList.forEach(function (namePath) {
         var records = cache.get(namePath);
-
         if (records) {
           var _requiredFieldEntitie;
-
           (_requiredFieldEntitie = requiredFieldEntities).push.apply(_requiredFieldEntitie, _toConsumableArray(_toConsumableArray(records).map(function (r) {
             return r.entity;
           })));
@@ -37440,86 +36898,64 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
     } else {
       requiredFieldEntities = fieldEntities;
     }
-
     resetWithFields(requiredFieldEntities);
   };
-
   this.resetFields = function (nameList) {
     _this.warningUnhooked();
-
     var prevStore = _this.store;
-
     if (!nameList) {
       _this.updateStore(setValues({}, _this.initialValues));
-
       _this.resetWithFieldInitialValue();
-
       _this.notifyObservers(prevStore, null, {
         type: 'reset'
       });
-
       _this.notifyWatch();
-
       return;
-    } // Reset by `nameList`
-
-
+    }
+    // Reset by `nameList`
     var namePathList = nameList.map(getNamePath);
     namePathList.forEach(function (namePath) {
       var initialValue = _this.getInitialValue(namePath);
-
       _this.updateStore(setValue(_this.store, namePath, initialValue));
     });
-
     _this.resetWithFieldInitialValue({
       namePathList: namePathList
     });
-
     _this.notifyObservers(prevStore, namePathList, {
       type: 'reset'
     });
-
     _this.notifyWatch(namePathList);
   };
-
   this.setFields = function (fields) {
     _this.warningUnhooked();
-
     var prevStore = _this.store;
     var namePathList = [];
     fields.forEach(function (fieldData) {
       var name = fieldData.name,
-          errors = fieldData.errors,
-          data = _objectWithoutProperties(fieldData, useForm_excluded);
-
+        errors = fieldData.errors,
+        data = objectWithoutProperties_objectWithoutProperties(fieldData, useForm_excluded);
       var namePath = getNamePath(name);
-      namePathList.push(namePath); // Value
-
+      namePathList.push(namePath);
+      // Value
       if ('value' in data) {
         _this.updateStore(setValue(_this.store, namePath, data.value));
       }
-
       _this.notifyObservers(prevStore, [namePath], {
         type: 'setField',
         data: fieldData
       });
     });
-
     _this.notifyWatch(namePathList);
   };
-
   this.getFields = function () {
     var entities = _this.getFieldEntities(true);
-
     var fields = entities.map(function (field) {
       var namePath = field.getNamePath();
       var meta = field.getMeta();
-
       var fieldData = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, meta), {}, {
         name: namePath,
         value: _this.getFieldValue(namePath)
       });
-
       Object.defineProperty(fieldData, 'originRCField', {
         value: true
       });
@@ -37527,115 +36963,91 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
     });
     return fields;
   };
-
   this.initEntityValue = function (entity) {
     var initialValue = entity.props.initialValue;
-
     if (initialValue !== undefined) {
       var namePath = entity.getNamePath();
       var prevValue = valueUtil_getValue(_this.store, namePath);
-
       if (prevValue === undefined) {
         _this.updateStore(setValue(_this.store, namePath, initialValue));
       }
     }
   };
-
   this.isMergedPreserve = function (fieldPreserve) {
     var mergedPreserve = fieldPreserve !== undefined ? fieldPreserve : _this.preserve;
     return mergedPreserve !== null && mergedPreserve !== void 0 ? mergedPreserve : true;
   };
-
   this.registerField = function (entity) {
     _this.fieldEntities.push(entity);
-
     var namePath = entity.getNamePath();
-
-    _this.notifyWatch([namePath]); // Set initial values
-
-
+    _this.notifyWatch([namePath]);
+    // Set initial values
     if (entity.props.initialValue !== undefined) {
       var prevStore = _this.store;
-
       _this.resetWithFieldInitialValue({
         entities: [entity],
         skipExist: true
       });
-
       _this.notifyObservers(prevStore, [entity.getNamePath()], {
         type: 'valueUpdate',
         source: 'internal'
       });
-    } // un-register field callback
-
-
+    }
+    // un-register field callback
     return function (isListField, preserve) {
       var subNamePath = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
       _this.fieldEntities = _this.fieldEntities.filter(function (item) {
         return item !== entity;
-      }); // Clean up store value if not preserve
-
+      });
+      // Clean up store value if not preserve
       if (!_this.isMergedPreserve(preserve) && (!isListField || subNamePath.length > 1)) {
         var defaultValue = isListField ? undefined : _this.getInitialValue(namePath);
-
         if (namePath.length && _this.getFieldValue(namePath) !== defaultValue && _this.fieldEntities.every(function (field) {
-          return (// Only reset when no namePath exist
+          return (
+            // Only reset when no namePath exist
             !matchNamePath(field.getNamePath(), namePath)
           );
         })) {
           var _prevStore = _this.store;
-
-          _this.updateStore(setValue(_prevStore, namePath, defaultValue, true)); // Notify that field is unmount
-
-
+          _this.updateStore(setValue(_prevStore, namePath, defaultValue, true));
+          // Notify that field is unmount
           _this.notifyObservers(_prevStore, [namePath], {
             type: 'remove'
-          }); // Dependencies update
-
-
+          });
+          // Dependencies update
           _this.triggerDependenciesUpdate(_prevStore, namePath);
         }
       }
-
       _this.notifyWatch([namePath]);
     };
   };
-
   this.dispatch = function (action) {
     switch (action.type) {
       case 'updateValue':
         {
           var namePath = action.namePath,
-              value = action.value;
-
+            value = action.value;
           _this.updateValue(namePath, value);
-
           break;
         }
-
       case 'validateField':
         {
           var _namePath = action.namePath,
-              triggerName = action.triggerName;
-
+            triggerName = action.triggerName;
           _this.validateFields([_namePath], {
             triggerName: triggerName
           });
-
           break;
         }
-
-      default: // Currently we don't have other action. Do nothing.
-
+      default:
+      // Currently we don't have other action. Do nothing.
     }
   };
-
   this.notifyObservers = function (prevStore, namePathList, info) {
     if (_this.subscribable) {
       var mergedInfo = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, info), {}, {
         store: _this.getFieldsValue(true)
       });
-
       _this.getFieldEntities().forEach(function (_ref3) {
         var onStoreChange = _ref3.onStoreChange;
         onStoreChange(prevStore, namePathList, mergedInfo);
@@ -37644,75 +37056,55 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       _this.forceRootUpdate();
     }
   };
-
   this.triggerDependenciesUpdate = function (prevStore, namePath) {
     var childrenFields = _this.getDependencyChildrenFields(namePath);
-
     if (childrenFields.length) {
       _this.validateFields(childrenFields);
     }
-
     _this.notifyObservers(prevStore, childrenFields, {
       type: 'dependenciesUpdate',
       relatedFields: [namePath].concat(_toConsumableArray(childrenFields))
     });
-
     return childrenFields;
   };
-
   this.updateValue = function (name, value) {
     var namePath = getNamePath(name);
     var prevStore = _this.store;
-
     _this.updateStore(setValue(_this.store, namePath, value));
-
     _this.notifyObservers(prevStore, [namePath], {
       type: 'valueUpdate',
       source: 'internal'
     });
-
-    _this.notifyWatch([namePath]); // Dependencies update
-
-
-    var childrenFields = _this.triggerDependenciesUpdate(prevStore, namePath); // trigger callback function
-
-
+    _this.notifyWatch([namePath]);
+    // Dependencies update
+    var childrenFields = _this.triggerDependenciesUpdate(prevStore, namePath);
+    // trigger callback function
     var onValuesChange = _this.callbacks.onValuesChange;
-
     if (onValuesChange) {
       var changedValues = cloneByNamePathList(_this.store, [namePath]);
       onValuesChange(changedValues, _this.getFieldsValue());
     }
-
     _this.triggerOnFieldsChange([namePath].concat(_toConsumableArray(childrenFields)));
   };
-
   this.setFieldsValue = function (store) {
     _this.warningUnhooked();
-
     var prevStore = _this.store;
-
     if (store) {
       var nextStore = setValues(_this.store, store);
-
       _this.updateStore(nextStore);
     }
-
     _this.notifyObservers(prevStore, null, {
       type: 'valueUpdate',
       source: 'external'
     });
-
     _this.notifyWatch();
   };
-
   this.setFieldValue = function (name, value) {
     _this.setFields([{
       name: name,
       value: value
     }]);
   };
-
   this.getDependencyChildrenFields = function (rootNamePath) {
     var children = new Set();
     var childrenFields = [];
@@ -37721,7 +37113,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
      * Generate maps
      * Can use cache to save perf if user report performance issue with this
      */
-
     _this.getFieldEntities().forEach(function (field) {
       var dependencies = field.props.dependencies;
       (dependencies || []).forEach(function (dependency) {
@@ -37733,14 +37124,12 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         });
       });
     });
-
     var fillChildren = function fillChildren(namePath) {
       var fields = dependencies2fields.get(namePath) || new Set();
       fields.forEach(function (field) {
         if (!children.has(field)) {
           children.add(field);
           var fieldNamePath = field.getNamePath();
-
           if (field.isFieldDirty() && fieldNamePath.length) {
             childrenFields.push(fieldNamePath);
             fillChildren(fieldNamePath);
@@ -37748,26 +37137,21 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         }
       });
     };
-
     fillChildren(rootNamePath);
     return childrenFields;
   };
-
   this.triggerOnFieldsChange = function (namePathList, filedErrors) {
     var onFieldsChange = _this.callbacks.onFieldsChange;
-
     if (onFieldsChange) {
       var fields = _this.getFields();
       /**
        * Fill errors since `fields` may be replaced by controlled fields
        */
-
-
       if (filedErrors) {
         var cache = new utils_NameMap();
         filedErrors.forEach(function (_ref4) {
           var name = _ref4.name,
-              errors = _ref4.errors;
+            errors = _ref4.errors;
           cache.set(name, errors);
         });
         fields.forEach(function (field) {
@@ -37775,7 +37159,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
           field.errors = cache.get(field.name) || field.errors;
         });
       }
-
       var changedFields = fields.filter(function (_ref5) {
         var fieldName = _ref5.name;
         return containsNamePath(namePathList, fieldName);
@@ -37783,15 +37166,12 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       onFieldsChange(changedFields, fields);
     }
   };
-
   this.validateFields = function (nameList, options) {
     _this.warningUnhooked();
-
     var provideNameList = !!nameList;
-    var namePathList = provideNameList ? nameList.map(getNamePath) : []; // Collect result in promise list
-
+    var namePathList = provideNameList ? nameList.map(getNamePath) : [];
+    // Collect result in promise list
     var promiseList = [];
-
     _this.getFieldEntities(true).forEach(function (field) {
       // Add field if not provide `nameList`
       if (!provideNameList) {
@@ -37801,32 +37181,28 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
        * Recursive validate if configured.
        * TODO: perf improvement @zombieJ
        */
-
-
       if ((options === null || options === void 0 ? void 0 : options.recursive) && provideNameList) {
         var namePath = field.getNamePath();
-
-        if ( // nameList[i] === undefined 说明是以 nameList 开头的
+        if (
+        // nameList[i] === undefined 说明是以 nameList 开头的
         // ['name'] -> ['name','list']
         namePath.every(function (nameUnit, i) {
           return nameList[i] === nameUnit || nameList[i] === undefined;
         })) {
           namePathList.push(namePath);
         }
-      } // Skip if without rule
-
-
+      }
+      // Skip if without rule
       if (!field.props.rules || !field.props.rules.length) {
         return;
       }
-
-      var fieldNamePath = field.getNamePath(); // Add field validate rule in to promise list
-
+      var fieldNamePath = field.getNamePath();
+      // Add field validate rule in to promise list
       if (!provideNameList || containsNamePath(namePathList, fieldNamePath)) {
         var promise = field.validateRules(objectSpread2_objectSpread2({
           validateMessages: objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, defaultValidateMessages), _this.validateMessages)
-        }, options)); // Wrap promise with field
-
+        }, options));
+        // Wrap promise with field
         promiseList.push(promise.then(function () {
           return {
             name: fieldNamePath,
@@ -37835,20 +37211,17 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
           };
         }).catch(function (ruleErrors) {
           var _ruleErrors$forEach;
-
           var mergedErrors = [];
           var mergedWarnings = [];
           (_ruleErrors$forEach = ruleErrors.forEach) === null || _ruleErrors$forEach === void 0 ? void 0 : _ruleErrors$forEach.call(ruleErrors, function (_ref6) {
             var warningOnly = _ref6.rule.warningOnly,
-                errors = _ref6.errors;
-
+              errors = _ref6.errors;
             if (warningOnly) {
               mergedWarnings.push.apply(mergedWarnings, _toConsumableArray(errors));
             } else {
               mergedErrors.push.apply(mergedErrors, _toConsumableArray(errors));
             }
           });
-
           if (mergedErrors.length) {
             return Promise.reject({
               name: fieldNamePath,
@@ -37856,7 +37229,6 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
               warnings: mergedWarnings
             });
           }
-
           return {
             name: fieldNamePath,
             errors: mergedErrors,
@@ -37865,10 +37237,9 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         }));
       }
     });
-
     var summaryPromise = allPromiseFinish(promiseList);
-    _this.lastValidatePromise = summaryPromise; // Notify fields with rule that validate has finished and need update
-
+    _this.lastValidatePromise = summaryPromise;
+    // Notify fields with rule that validate has finished and need update
     summaryPromise.catch(function (results) {
       return results;
     }).then(function (results) {
@@ -37876,18 +37247,15 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         var name = _ref7.name;
         return name;
       });
-
       _this.notifyObservers(_this.store, resultNamePathList, {
         type: 'validateFinish'
       });
-
       _this.triggerOnFieldsChange(resultNamePathList, results);
     });
     var returnPromise = summaryPromise.then(function () {
       if (_this.lastValidatePromise === summaryPromise) {
         return Promise.resolve(_this.getFieldsValue(namePathList));
       }
-
       return Promise.reject([]);
     }).catch(function (results) {
       var errorList = results.filter(function (result) {
@@ -37898,20 +37266,17 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
         errorFields: errorList,
         outOfDate: _this.lastValidatePromise !== summaryPromise
       });
-    }); // Do not throw in console
-
+    });
+    // Do not throw in console
     returnPromise.catch(function (e) {
       return e;
     });
     return returnPromise;
   };
-
   this.submit = function () {
     _this.warningUnhooked();
-
     _this.validateFields().then(function (values) {
       var onFinish = _this.callbacks.onFinish;
-
       if (onFinish) {
         try {
           onFinish(values);
@@ -37922,23 +37287,18 @@ var FormStore = /*#__PURE__*/_createClass(function FormStore(forceRootUpdate) {
       }
     }).catch(function (e) {
       var onFinishFailed = _this.callbacks.onFinishFailed;
-
       if (onFinishFailed) {
         onFinishFailed(e);
       }
     });
   };
-
   this.forceRootUpdate = forceRootUpdate;
 });
-
 function useForm(form) {
   var formRef = react.useRef();
-
   var _React$useState = react.useState({}),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      forceUpdate = _React$useState2[1];
-
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    forceUpdate = _React$useState2[1];
   if (!formRef.current) {
     if (form) {
       formRef.current = form;
@@ -37947,15 +37307,12 @@ function useForm(form) {
       var forceReRender = function forceReRender() {
         forceUpdate({});
       };
-
       var formStore = new FormStore(forceReRender);
       formRef.current = formStore.getForm();
     }
   }
-
   return [formRef.current];
 }
-
 /* harmony default export */ const es_useForm = (useForm);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/FormContext.js
 
@@ -37967,12 +37324,11 @@ var FormContext = /*#__PURE__*/react.createContext({
   registerForm: function registerForm() {},
   unregisterForm: function unregisterForm() {}
 });
-
 var FormProvider = function FormProvider(_ref) {
   var validateMessages = _ref.validateMessages,
-      onFormChange = _ref.onFormChange,
-      onFormFinish = _ref.onFormFinish,
-      children = _ref.children;
+    onFormChange = _ref.onFormChange,
+    onFormFinish = _ref.onFormFinish,
+    children = _ref.children;
   var formContext = react.useContext(FormContext);
   var formsRef = react.useRef({});
   return /*#__PURE__*/react.createElement(FormContext.Provider, {
@@ -37988,7 +37344,6 @@ var FormProvider = function FormProvider(_ref) {
             forms: formsRef.current
           });
         }
-
         formContext.triggerFormChange(name, changedFields);
       },
       triggerFormFinish: function triggerFormFinish(name, values) {
@@ -37998,19 +37353,16 @@ var FormProvider = function FormProvider(_ref) {
             forms: formsRef.current
           });
         }
-
         formContext.triggerFormFinish(name, values);
       },
       registerForm: function registerForm(name, form) {
         if (name) {
           formsRef.current = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, formsRef.current), {}, defineProperty_defineProperty({}, name, form));
         }
-
         formContext.registerForm(name, form);
       },
       unregisterForm: function unregisterForm(name) {
         var newForms = objectSpread2_objectSpread2({}, formsRef.current);
-
         delete newForms[name];
         formsRef.current = newForms;
         formContext.unregisterForm(name);
@@ -38018,7 +37370,6 @@ var FormProvider = function FormProvider(_ref) {
     })
   }, children);
 };
-
 
 /* harmony default export */ const es_FormContext = (FormContext);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/Form.js
@@ -38032,108 +37383,97 @@ var Form_excluded = ["name", "initialValues", "fields", "form", "preserve", "chi
 
 
 
-
 var Form = function Form(_ref, ref) {
   var name = _ref.name,
-      initialValues = _ref.initialValues,
-      fields = _ref.fields,
-      form = _ref.form,
-      preserve = _ref.preserve,
-      children = _ref.children,
-      _ref$component = _ref.component,
-      Component = _ref$component === void 0 ? 'form' : _ref$component,
-      validateMessages = _ref.validateMessages,
-      _ref$validateTrigger = _ref.validateTrigger,
-      validateTrigger = _ref$validateTrigger === void 0 ? 'onChange' : _ref$validateTrigger,
-      onValuesChange = _ref.onValuesChange,
-      _onFieldsChange = _ref.onFieldsChange,
-      _onFinish = _ref.onFinish,
-      onFinishFailed = _ref.onFinishFailed,
-      restProps = _objectWithoutProperties(_ref, Form_excluded);
-
-  var formContext = react.useContext(es_FormContext); // We customize handle event since Context will makes all the consumer re-render:
+    initialValues = _ref.initialValues,
+    fields = _ref.fields,
+    form = _ref.form,
+    preserve = _ref.preserve,
+    children = _ref.children,
+    _ref$component = _ref.component,
+    Component = _ref$component === void 0 ? 'form' : _ref$component,
+    validateMessages = _ref.validateMessages,
+    _ref$validateTrigger = _ref.validateTrigger,
+    validateTrigger = _ref$validateTrigger === void 0 ? 'onChange' : _ref$validateTrigger,
+    onValuesChange = _ref.onValuesChange,
+    _onFieldsChange = _ref.onFieldsChange,
+    _onFinish = _ref.onFinish,
+    onFinishFailed = _ref.onFinishFailed,
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, Form_excluded);
+  var formContext = react.useContext(es_FormContext);
+  // We customize handle event since Context will makes all the consumer re-render:
   // https://reactjs.org/docs/context.html#contextprovider
-
   var _useForm = es_useForm(form),
-      _useForm2 = slicedToArray_slicedToArray(_useForm, 1),
-      formInstance = _useForm2[0];
-
+    _useForm2 = slicedToArray_slicedToArray(_useForm, 1),
+    formInstance = _useForm2[0];
   var _formInstance$getInte = formInstance.getInternalHooks(HOOK_MARK),
-      useSubscribe = _formInstance$getInte.useSubscribe,
-      setInitialValues = _formInstance$getInte.setInitialValues,
-      setCallbacks = _formInstance$getInte.setCallbacks,
-      setValidateMessages = _formInstance$getInte.setValidateMessages,
-      setPreserve = _formInstance$getInte.setPreserve,
-      destroyForm = _formInstance$getInte.destroyForm; // Pass ref with form instance
-
-
+    useSubscribe = _formInstance$getInte.useSubscribe,
+    setInitialValues = _formInstance$getInte.setInitialValues,
+    setCallbacks = _formInstance$getInte.setCallbacks,
+    setValidateMessages = _formInstance$getInte.setValidateMessages,
+    setPreserve = _formInstance$getInte.setPreserve,
+    destroyForm = _formInstance$getInte.destroyForm;
+  // Pass ref with form instance
   react.useImperativeHandle(ref, function () {
     return formInstance;
-  }); // Register form into Context
-
+  });
+  // Register form into Context
   react.useEffect(function () {
     formContext.registerForm(name, formInstance);
     return function () {
       formContext.unregisterForm(name);
     };
-  }, [formContext, formInstance, name]); // Pass props to store
-
+  }, [formContext, formInstance, name]);
+  // Pass props to store
   setValidateMessages(objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, formContext.validateMessages), validateMessages));
   setCallbacks({
     onValuesChange: onValuesChange,
     onFieldsChange: function onFieldsChange(changedFields) {
       formContext.triggerFormChange(name, changedFields);
-
       if (_onFieldsChange) {
         for (var _len = arguments.length, rest = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
           rest[_key - 1] = arguments[_key];
         }
-
         _onFieldsChange.apply(void 0, [changedFields].concat(rest));
       }
     },
     onFinish: function onFinish(values) {
       formContext.triggerFormFinish(name, values);
-
       if (_onFinish) {
         _onFinish(values);
       }
     },
     onFinishFailed: onFinishFailed
   });
-  setPreserve(preserve); // Set initial value, init store value when first mount
-
+  setPreserve(preserve);
+  // Set initial value, init store value when first mount
   var mountRef = react.useRef(null);
   setInitialValues(initialValues, !mountRef.current);
-
   if (!mountRef.current) {
     mountRef.current = true;
   }
-
   react.useEffect(function () {
     return destroyForm;
-  }, // eslint-disable-next-line react-hooks/exhaustive-deps
-  []); // Prepare children by `children` type
-
+  },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  []);
+  // Prepare children by `children` type
   var childrenNode;
   var childrenRenderProps = typeof children === 'function';
-
   if (childrenRenderProps) {
     var values = formInstance.getFieldsValue(true);
     childrenNode = children(values, formInstance);
   } else {
     childrenNode = children;
-  } // Not use subscribe when using render props
-
-
-  useSubscribe(!childrenRenderProps); // Listen if fields provided. We use ref to save prev data here to avoid additional render
-
+  }
+  // Not use subscribe when using render props
+  useSubscribe(!childrenRenderProps);
+  // Listen if fields provided. We use ref to save prev data here to avoid additional render
   var prevFieldsRef = react.useRef();
   react.useEffect(function () {
     if (!isSimilar(prevFieldsRef.current || [], fields || [])) {
       formInstance.setFields(fields || []);
     }
-
     prevFieldsRef.current = fields;
   }, [fields, formInstance]);
   var formContextValue = react.useMemo(function () {
@@ -38144,11 +37484,9 @@ var Form = function Form(_ref, ref) {
   var wrapperNode = /*#__PURE__*/react.createElement(FieldContext.Provider, {
     value: formContextValue
   }, childrenNode);
-
   if (Component === false) {
     return wrapperNode;
   }
-
   return /*#__PURE__*/react.createElement(Component, extends_extends({}, restProps, {
     onSubmit: function onSubmit(event) {
       event.preventDefault();
@@ -38157,14 +37495,12 @@ var Form = function Form(_ref, ref) {
     },
     onReset: function onReset(event) {
       var _restProps$onReset;
-
       event.preventDefault();
       formInstance.resetFields();
       (_restProps$onReset = restProps.onReset) === null || _restProps$onReset === void 0 ? void 0 : _restProps$onReset.call(restProps, event);
     }
   }), wrapperNode);
 };
-
 /* harmony default export */ const es_Form = (Form);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/useWatch.js
 
@@ -38180,16 +37516,17 @@ function useWatch_stringify(value) {
     return Math.random();
   }
 }
-
 function useWatch() {
-  var dependencies = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-  var form = arguments.length > 1 ? arguments[1] : undefined;
-
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+  var _args$ = args[0],
+    dependencies = _args$ === void 0 ? [] : _args$,
+    form = args[1];
   var _useState = (0,react.useState)(),
-      _useState2 = slicedToArray_slicedToArray(_useState, 2),
-      value = _useState2[0],
-      setValue = _useState2[1];
-
+    _useState2 = slicedToArray_slicedToArray(_useState, 2),
+    value = _useState2[0],
+    setValue = _useState2[1];
   var valueStr = (0,react.useMemo)(function () {
     return useWatch_stringify(value);
   }, [value]);
@@ -38197,10 +37534,9 @@ function useWatch() {
   valueStrRef.current = valueStr;
   var fieldContext = (0,react.useContext)(FieldContext);
   var formInstance = form || fieldContext;
-  var isValidForm = formInstance && formInstance._init; // Warning if not exist form instance
-
+  var isValidForm = formInstance && formInstance._init;
+  // Warning if not exist form instance
   if (false) {}
-
   var namePath = getNamePath(dependencies);
   var namePathRef = (0,react.useRef)(namePath);
   namePathRef.current = namePath;
@@ -38209,32 +37545,29 @@ function useWatch() {
     if (!isValidForm) {
       return;
     }
-
     var getFieldsValue = formInstance.getFieldsValue,
-        getInternalHooks = formInstance.getInternalHooks;
-
+      getInternalHooks = formInstance.getInternalHooks;
     var _getInternalHooks = getInternalHooks(HOOK_MARK),
-        registerWatch = _getInternalHooks.registerWatch;
-
+      registerWatch = _getInternalHooks.registerWatch;
     var cancelRegister = registerWatch(function (store) {
       var newValue = valueUtil_getValue(store, namePathRef.current);
-      var nextValueStr = useWatch_stringify(newValue); // Compare stringify in case it's nest object
-
+      var nextValueStr = useWatch_stringify(newValue);
+      // Compare stringify in case it's nest object
       if (valueStrRef.current !== nextValueStr) {
         valueStrRef.current = nextValueStr;
         setValue(newValue);
       }
-    }); // TODO: We can improve this perf in future
-
+    });
+    // TODO: We can improve this perf in future
     var initialValue = valueUtil_getValue(getFieldsValue(), namePathRef.current);
     setValue(initialValue);
     return cancelRegister;
-  }, // We do not need re-register since namePath content is the same
+  },
+  // We do not need re-register since namePath content is the same
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  []);
+  [isValidForm]);
   return value;
 }
-
 /* harmony default export */ const es_useWatch = (useWatch);
 ;// CONCATENATED MODULE: ./node_modules/rc-field-form/es/index.js
 
@@ -38299,8 +37632,7 @@ var NoFormStyle = function NoFormStyle(_ref) {
 ;// CONCATENATED MODULE: ./node_modules/antd/es/_util/statusUtils.js
 
 
-
-var InputStatuses = tuple('warning', 'error', '');
+var InputStatuses = (/* unused pure expression or super */ null && (['warning', 'error', '']));
 function getStatusClassNames(prefixCls, status, hasFeedback) {
   var _classNames;
   return classnames_default()((_classNames = {}, defineProperty_defineProperty(_classNames, prefixCls + "-status-success", status === 'success'), defineProperty_defineProperty(_classNames, prefixCls + "-status-warning", status === 'warning'), defineProperty_defineProperty(_classNames, prefixCls + "-status-error", status === 'error'), defineProperty_defineProperty(_classNames, prefixCls + "-status-validating", status === 'validating'), defineProperty_defineProperty(_classNames, prefixCls + "-has-feedback", hasFeedback), _classNames));
@@ -38320,14 +37652,12 @@ var CloseCircleFilled = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 8
 
 
 
-
 var CloseCircleFilled_CloseCircleFilled = function CloseCircleFilled(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_CloseCircleFilled
   }));
 };
-
 CloseCircleFilled_CloseCircleFilled.displayName = 'CloseCircleFilled';
 /* harmony default export */ const icons_CloseCircleFilled = (/*#__PURE__*/react.forwardRef(CloseCircleFilled_CloseCircleFilled));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/input/ClearableLabeledInput.js
@@ -38342,8 +37672,7 @@ CloseCircleFilled_CloseCircleFilled.displayName = 'CloseCircleFilled';
 
 
 
-
-var ClearableInputType = tuple('text', 'input');
+var ClearableInputType = ['text', 'input'];
 function hasAddon(props) {
   return !!(props.addonBefore || props.addonAfter);
 }
@@ -38664,7 +37993,7 @@ var Input_Input = /*#__PURE__*/(0,react.forwardRef)(function (props, ref) {
       _props$type = props.type,
       type = _props$type === void 0 ? 'text' : _props$type,
       inputClassName = props.inputClassName,
-      rest = _objectWithoutProperties(props, Input_excluded);
+      rest = objectWithoutProperties_objectWithoutProperties(props, Input_excluded);
 
   var _useMergedState = useMergedState(props.defaultValue, {
     value: props.value
@@ -38891,12 +38220,12 @@ var genDisabledStyle = function genDisabledStyle(token) {
 };
 var genInputLargeStyle = function genInputLargeStyle(token) {
   var inputPaddingVerticalLG = token.inputPaddingVerticalLG,
-    inputPaddingHorizontal = token.inputPaddingHorizontal,
     fontSizeLG = token.fontSizeLG,
     lineHeightLG = token.lineHeightLG,
-    borderRadiusLG = token.borderRadiusLG;
+    borderRadiusLG = token.borderRadiusLG,
+    inputPaddingHorizontalLG = token.inputPaddingHorizontalLG;
   return {
-    padding: inputPaddingVerticalLG + "px " + inputPaddingHorizontal + "px",
+    padding: inputPaddingVerticalLG + "px " + inputPaddingHorizontalLG + "px",
     fontSize: fontSizeLG,
     lineHeight: lineHeightLG,
     borderRadius: borderRadiusLG
@@ -39166,13 +38495,12 @@ var genInputGroupStyle = function genInputGroupStyle(token) {
 };
 var genInputStyle = function genInputStyle(token) {
   var _typeColor;
-  var prefixCls = token.prefixCls,
-    componentCls = token.componentCls,
+  var componentCls = token.componentCls,
     controlHeightSM = token.controlHeightSM,
     lineWidth = token.lineWidth;
   var FIXED_CHROME_COLOR_HEIGHT = 16;
   var colorSmallPadding = (controlHeightSM - lineWidth * 2 - FIXED_CHROME_COLOR_HEIGHT) / 2;
-  return defineProperty_defineProperty({}, "" + componentCls, extends_extends(extends_extends(extends_extends(extends_extends(extends_extends({}, resetComponent(token)), genBasicInputStyle(token)), genStatusStyle(token)), genCompactItemStyle(token, prefixCls)), {
+  return defineProperty_defineProperty({}, "" + componentCls, extends_extends(extends_extends(extends_extends(extends_extends({}, resetComponent(token)), genBasicInputStyle(token)), genStatusStyle(token)), {
     '&[type="color"]': (_typeColor = {
       height: token.controlHeight
     }, defineProperty_defineProperty(_typeColor, "&" + componentCls + "-lg", {
@@ -39390,8 +38718,9 @@ function initInputToken(token) {
     inputPaddingVertical: Math.max(Math.round((token.controlHeight - token.fontSize * token.lineHeight) / 2 * 10) / 10 - token.lineWidth, 3),
     inputPaddingVerticalLG: Math.ceil((token.controlHeightLG - token.fontSizeLG * token.lineHeightLG) / 2 * 10) / 10 - token.lineWidth,
     inputPaddingVerticalSM: Math.max(Math.round((token.controlHeightSM - token.fontSize * token.lineHeight) / 2 * 10) / 10 - token.lineWidth, 0),
-    inputPaddingHorizontal: token.controlPaddingHorizontal - token.lineWidth,
-    inputPaddingHorizontalSM: token.controlPaddingHorizontalSM - token.lineWidth,
+    inputPaddingHorizontal: token.paddingSM - token.lineWidth,
+    inputPaddingHorizontalSM: token.paddingXS - token.lineWidth,
+    inputPaddingHorizontalLG: token.controlPaddingHorizontal - token.lineWidth,
     inputBorderHoverColor: token.colorPrimaryHover,
     inputBorderActiveColor: token.colorPrimaryHover
   });
@@ -39432,7 +38761,11 @@ var genTextAreaStyle = function genTextAreaStyle(token) {
 // ============================== Export ==============================
 /* harmony default export */ const input_style = (genComponentStyleHook('Input', function (token) {
   var inputToken = initInputToken(token);
-  return [genInputStyle(inputToken), genTextAreaStyle(inputToken), genAffixStyle(inputToken), style_genGroupStyle(inputToken), genSearchInputStyle(inputToken)];
+  return [genInputStyle(inputToken), genTextAreaStyle(inputToken), genAffixStyle(inputToken), style_genGroupStyle(inputToken), genSearchInputStyle(inputToken),
+  // =====================================================
+  // ==             Space Compact                       ==
+  // =====================================================
+  genCompactItemStyle(inputToken)];
 }));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/input/Input.js
 
@@ -41067,8 +40400,7 @@ var Title_rest = undefined && undefined.__rest || function (s, e) {
 
 
 
-
-var TITLE_ELE_LIST = tupleNum(1, 2, 3, 4, 5);
+var TITLE_ELE_LIST = [1, 2, 3, 4, 5];
 var Title_Title = /*#__PURE__*/react.forwardRef(function (props, ref) {
   var _props$level = props.level,
     level = _props$level === void 0 ? 1 : _props$level,
@@ -41107,7 +40439,6 @@ function PageView(props) {
     page
   } = props;
   const [working, setWorking] = react.useState(page.working);
-
   const workClick = () => {
     // 切换工作状态
     if (page.working) {
@@ -41115,10 +40446,8 @@ function PageView(props) {
     } else {
       page.start();
     }
-
     setWorking(page.working);
   };
-
   return react.createElement(react.Fragment, null, react.createElement(card, null, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
   }, react.createElement(typography.Text, {
@@ -41132,6 +40461,46 @@ function PageView(props) {
     onClick: workClick
   }, working ? '停止' : '启动')))));
 }
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EyeOutlined.js
+// This icon file is generated automatically.
+var EyeOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z" } }] }, "name": "eye", "theme": "outlined" };
+/* harmony default export */ const asn_EyeOutlined = (EyeOutlined);
+
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EyeOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var EyeOutlined_EyeOutlined = function EyeOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_EyeOutlined
+  }));
+};
+EyeOutlined_EyeOutlined.displayName = 'EyeOutlined';
+/* harmony default export */ const icons_EyeOutlined = (/*#__PURE__*/react.forwardRef(EyeOutlined_EyeOutlined));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EyeInvisibleOutlined.js
+// This icon file is generated automatically.
+var EyeInvisibleOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M942.2 486.2Q889.47 375.11 816.7 305l-50.88 50.88C807.31 395.53 843.45 447.4 874.7 512 791.5 684.2 673.4 766 512 766q-72.67 0-133.87-22.38L323 798.75Q408 838 512 838q288.3 0 430.2-300.3a60.29 60.29 0 000-51.5zm-63.57-320.64L836 122.88a8 8 0 00-11.32 0L715.31 232.2Q624.86 186 512 186q-288.3 0-430.2 300.3a60.3 60.3 0 000 51.5q56.69 119.4 136.5 191.41L112.48 835a8 8 0 000 11.31L155.17 889a8 8 0 0011.31 0l712.15-712.12a8 8 0 000-11.32zM149.3 512C232.6 339.8 350.7 258 512 258c54.54 0 104.13 9.36 149.12 28.39l-70.3 70.3a176 176 0 00-238.13 238.13l-83.42 83.42C223.1 637.49 183.3 582.28 149.3 512zm246.7 0a112.11 112.11 0 01146.2-106.69L401.31 546.2A112 112 0 01396 512z" } }, { "tag": "path", "attrs": { "d": "M508 624c-3.46 0-6.87-.16-10.25-.47l-52.82 52.82a176.09 176.09 0 00227.42-227.42l-52.82 52.82c.31 3.38.47 6.79.47 10.25a111.94 111.94 0 01-112 112z" } }] }, "name": "eye-invisible", "theme": "outlined" };
+/* harmony default export */ const asn_EyeInvisibleOutlined = (EyeInvisibleOutlined);
+
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EyeInvisibleOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var EyeInvisibleOutlined_EyeInvisibleOutlined = function EyeInvisibleOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_EyeInvisibleOutlined
+  }));
+};
+EyeInvisibleOutlined_EyeInvisibleOutlined.displayName = 'EyeInvisibleOutlined';
+/* harmony default export */ const icons_EyeInvisibleOutlined = (/*#__PURE__*/react.forwardRef(EyeInvisibleOutlined_EyeInvisibleOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/_util/capitalize.js
 function capitalize(str) {
   if (typeof str !== 'string') {
@@ -41453,50 +40822,6 @@ var Group = function Group(props) {
   }, props.children)));
 };
 /* harmony default export */ const input_Group = (Group);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EyeInvisibleOutlined.js
-// This icon file is generated automatically.
-var EyeInvisibleOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M942.2 486.2Q889.47 375.11 816.7 305l-50.88 50.88C807.31 395.53 843.45 447.4 874.7 512 791.5 684.2 673.4 766 512 766q-72.67 0-133.87-22.38L323 798.75Q408 838 512 838q288.3 0 430.2-300.3a60.29 60.29 0 000-51.5zm-63.57-320.64L836 122.88a8 8 0 00-11.32 0L715.31 232.2Q624.86 186 512 186q-288.3 0-430.2 300.3a60.3 60.3 0 000 51.5q56.69 119.4 136.5 191.41L112.48 835a8 8 0 000 11.31L155.17 889a8 8 0 0011.31 0l712.15-712.12a8 8 0 000-11.32zM149.3 512C232.6 339.8 350.7 258 512 258c54.54 0 104.13 9.36 149.12 28.39l-70.3 70.3a176 176 0 00-238.13 238.13l-83.42 83.42C223.1 637.49 183.3 582.28 149.3 512zm246.7 0a112.11 112.11 0 01146.2-106.69L401.31 546.2A112 112 0 01396 512z" } }, { "tag": "path", "attrs": { "d": "M508 624c-3.46 0-6.87-.16-10.25-.47l-52.82 52.82a176.09 176.09 0 00227.42-227.42l-52.82 52.82c.31 3.38.47 6.79.47 10.25a111.94 111.94 0 01-112 112z" } }] }, "name": "eye-invisible", "theme": "outlined" };
-/* harmony default export */ const asn_EyeInvisibleOutlined = (EyeInvisibleOutlined);
-
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EyeInvisibleOutlined.js
-
-// GENERATE BY ./scripts/generate.ts
-// DON NOT EDIT IT MANUALLY
-
-
-
-
-var EyeInvisibleOutlined_EyeInvisibleOutlined = function EyeInvisibleOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
-    ref: ref,
-    icon: asn_EyeInvisibleOutlined
-  }));
-};
-
-EyeInvisibleOutlined_EyeInvisibleOutlined.displayName = 'EyeInvisibleOutlined';
-/* harmony default export */ const icons_EyeInvisibleOutlined = (/*#__PURE__*/react.forwardRef(EyeInvisibleOutlined_EyeInvisibleOutlined));
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EyeOutlined.js
-// This icon file is generated automatically.
-var EyeOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z" } }] }, "name": "eye", "theme": "outlined" };
-/* harmony default export */ const asn_EyeOutlined = (EyeOutlined);
-
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EyeOutlined.js
-
-// GENERATE BY ./scripts/generate.ts
-// DON NOT EDIT IT MANUALLY
-
-
-
-
-var EyeOutlined_EyeOutlined = function EyeOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
-    ref: ref,
-    icon: asn_EyeOutlined
-  }));
-};
-
-EyeOutlined_EyeOutlined.displayName = 'EyeOutlined';
-/* harmony default export */ const icons_EyeOutlined = (/*#__PURE__*/react.forwardRef(EyeOutlined_EyeOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/input/Password.js
 
 
@@ -41623,14 +40948,12 @@ var SearchOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 
 
 
 
-
 var SearchOutlined_SearchOutlined = function SearchOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_SearchOutlined
   }));
 };
-
 SearchOutlined_SearchOutlined.displayName = 'SearchOutlined';
 /* harmony default export */ const icons_SearchOutlined = (/*#__PURE__*/react.forwardRef(SearchOutlined_SearchOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/input/Search.js
@@ -41791,7 +41114,6 @@ var setting_view_awaiter = undefined && undefined.__awaiter || function (thisArg
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -41800,7 +41122,6 @@ var setting_view_awaiter = undefined && undefined.__awaiter || function (thisArg
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -41808,15 +41129,12 @@ var setting_view_awaiter = undefined && undefined.__awaiter || function (thisArg
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
-
 
 
 
@@ -41828,37 +41146,55 @@ function SettingView(props) {
   } = props;
   const [settings, setSettings] = react.useState([]);
   const [inputValue, setInputValue] = react.useState('');
-
   const updateSettings = () => setting_view_awaiter(this, void 0, void 0, function* () {
     setSettings(yield Settings.getSettingValue(setting));
   });
-
+  const [hide, setHide] = react.useState(true);
+  const [hideSettings, setHideSettings] = react.useState([]);
+  const updateHideSettings = () => setting_view_awaiter(this, void 0, void 0, function* () {
+    setHideSettings(yield Settings.getSettingValue(setting.key + '.hide'));
+  });
   react.useEffect(() => {
     updateSettings();
+    updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, setting.key + ':' + setting.name), settings.map(setting => react.createElement(tag, {
+  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, setting.key + ':' + setting.name), settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
     closable: true,
     key: setting,
     style: {
       userSelect: 'none'
     },
-    onDoubleClick: e => {
-      setInputValue(e.target.textContent);
-    },
+    onDoubleClick: e => setting_view_awaiter(this, void 0, void 0, function* () {
+      Settings.addSettingValue(props.setting.key + '.hide', e.target.textContent);
+      yield updateHideSettings();
+    }),
     onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
       Settings.delSettingValue(props.setting, setting);
       yield updateSettings();
-      updateBox();
+      // updateBox()
+    })
+  }, setting)), !hide && settings.filter(setting => hideSettings.includes(setting)).map(setting => react.createElement(tag, {
+    closable: true,
+    key: setting,
+    style: {
+      userSelect: 'none'
+    },
+    color: '#00000080',
+    onDoubleClick: e => setting_view_awaiter(this, void 0, void 0, function* () {
+      Settings.delSettingValue(props.setting.key + '.hide', setting);
+      yield updateHideSettings();
+    }),
+    onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
+      Settings.delSettingValue(props.setting, setting);
+      yield updateSettings();
     })
   }, setting))), react.createElement(es_row, null, react.createElement(es_col, {
-    span: 20
+    span: 16
   }, react.createElement(input, {
     type: 'text',
     value: inputValue,
     allowClear: true,
-    onChange: e => {
-      setInputValue(e.target.value);
-    }
+    onChange: e => setInputValue(e.target.value)
   })), react.createElement(es_col, {
     span: 4
   }, react.createElement(es_button, {
@@ -41871,11 +41207,16 @@ function SettingView(props) {
       if (inputValue) {
         Settings.addSettingValue(setting, inputValue);
       }
-
       setInputValue('');
       yield updateSettings();
       updateBox();
     })
+  })), react.createElement(es_col, {
+    span: 4
+  }, react.createElement(es_button, {
+    block: true,
+    icon: hide ? react.createElement(icons_EyeOutlined, null) : react.createElement(icons_EyeInvisibleOutlined, null),
+    onClick: () => setHide(!hide)
   }))));
 }
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/SyncOutlined.js
@@ -41890,14 +41231,12 @@ var SyncOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 
-
 var SyncOutlined_SyncOutlined = function SyncOutlined(props, ref) {
   return /*#__PURE__*/react.createElement(AntdIcon, objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_SyncOutlined
   }));
 };
-
 SyncOutlined_SyncOutlined.displayName = 'SyncOutlined';
 /* harmony default export */ const icons_SyncOutlined = (/*#__PURE__*/react.forwardRef(SyncOutlined_SyncOutlined));
 ;// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx
@@ -41907,7 +41246,6 @@ var uid_username_view_awaiter = undefined && undefined.__awaiter || function (th
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -41916,7 +41254,6 @@ var uid_username_view_awaiter = undefined && undefined.__awaiter || function (th
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -41924,11 +41261,9 @@ var uid_username_view_awaiter = undefined && undefined.__awaiter || function (th
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
@@ -41945,7 +41280,6 @@ function UidUsernameView(props) {
   const [settings, setSettings] = react.useState([]);
   const [inputUid, setInputUid] = react.useState('');
   const [inputUsername, setInputUsername] = react.useState('');
-
   const updateSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
     let uids = yield uu.get('uid')();
     Promise.all(uids.map(uid => uu.uid2username(uid))).then(usernames => {
@@ -41959,11 +41293,16 @@ function UidUsernameView(props) {
       setSettings(settings);
     });
   });
-
+  const [hide, setHide] = react.useState(true);
+  const [hideSettings, setHideSettings] = react.useState([]);
+  const updateHideSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+    setHideSettings(yield Settings.getSettingValue('uid.hide'));
+  });
   react.useEffect(() => {
     updateSettings();
+    updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, "uid\u540D\u79F0:"), settings.map(item => react.createElement(es_tooltip, {
+  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, "uid\u540D\u79F0:"), settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
     title: item.uid,
     key: item.uid,
     getPopupContainer: e => e,
@@ -41974,10 +41313,32 @@ function UidUsernameView(props) {
     style: {
       userSelect: 'none'
     },
-    onDoubleClick: () => {
-      setInputUid(item.uid);
-      setInputUsername(item.username);
+    onDoubleClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+      Settings.addSettingValue('uid.hide', item.uid);
+      yield updateHideSettings();
+    }),
+    onClose: () => {
+      uu.del('uid')(item.uid);
+      updateSettings();
+      updateBox();
     },
+    key: item.username
+  }, item.username))), !hide && settings.filter(item => hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
+    title: item.uid,
+    key: item.uid,
+    getPopupContainer: e => e,
+    mouseEnterDelay: 0,
+    trigger: 'click'
+  }, react.createElement(tag, {
+    closable: true,
+    style: {
+      userSelect: 'none'
+    },
+    color: '#00000080',
+    onDoubleClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+      Settings.delSettingValue('uid.hide', item.uid);
+      yield updateHideSettings();
+    }),
     onClose: () => {
       uu.del('uid')(item.uid);
       updateSettings();
@@ -41991,7 +41352,6 @@ function UidUsernameView(props) {
     value: inputUid,
     onChange: e => uid_username_view_awaiter(this, void 0, void 0, function* () {
       let value = e.target.value;
-
       if (!value) {
         setInputUid('');
         setInputUsername('');
@@ -42007,7 +41367,7 @@ function UidUsernameView(props) {
   })), react.createElement(es_col, {
     span: 8
   }, !!inputUsername && react.createElement(tag, null, inputUsername)), react.createElement(es_col, {
-    span: 3
+    span: 2
   }, react.createElement(es_button, {
     block: true,
     disabled: !inputUsername,
@@ -42016,14 +41376,13 @@ function UidUsernameView(props) {
       if (inputUid && inputUsername) {
         uu.add('uid')(inputUid);
       }
-
       setInputUid('');
       setInputUsername('');
       updateSettings();
       updateBox();
     }
   })), react.createElement(es_col, {
-    span: 3
+    span: 2
   }, react.createElement(es_button, {
     block: true,
     icon: react.createElement(icons_SyncOutlined, null),
@@ -42031,6 +41390,12 @@ function UidUsernameView(props) {
       GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
       updateSettings();
     })
+  })), react.createElement(es_col, {
+    span: 2
+  }, react.createElement(es_button, {
+    block: true,
+    icon: hide ? react.createElement(icons_EyeOutlined, null) : react.createElement(icons_EyeInvisibleOutlined, null),
+    onClick: () => setHide(!hide)
   }))));
 }
 ;// CONCATENATED MODULE: ./src/main-static.ts
@@ -42047,7 +41412,6 @@ const CSS_INNER_HTML = {
 
 function DisplayType() {
   var _a;
-
   const [displayType, setDisplayType] = react.useState((_a = document.getElementById(DISPLAY_STYLE_ID)) === null || _a === void 0 ? void 0 : _a.getAttribute('displayType'));
   return react.createElement(react.Fragment, null, react.createElement(card, null, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
@@ -42059,13 +41423,11 @@ function DisplayType() {
       const displayType = element.getAttribute('displayType') === 'display' ? 'debug' : 'display';
       element.setAttribute('displayType', displayType);
       element.innerHTML = CSS_INNER_HTML[displayType];
-
       for (let i = 0; i < window.frames.length; i++) {
         try {
           window.frames[i].document.getElementById(DISPLAY_STYLE_ID).innerHTML = CSS_INNER_HTML[displayType];
         } catch (ignore) {}
       }
-
       setDisplayType(displayType);
     }
   }, "\u6362")))));
@@ -42112,7 +41474,8 @@ function Box(props) {
     }
   }, react.createElement(react.Fragment, null, [...pageMap.values()].filter(page => page.isCurrent()).length !== 0 && react.createElement(es_layout, null, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
-  }, // 页面
+  },
+  // 页面
   [...pageMap.values()].filter(page => page.isCurrent()).map(page => react.createElement(PageView, {
     page: page
   }))), react.createElement(es_col, {
@@ -42165,11 +41528,10 @@ class SpecialPages {
   static init(specialPage) {
     this.sp.set(specialPage.key, specialPage);
   }
-
 }
 SpecialPages.sp = new Map();
-
-(() => {// this.init(new BaiduPage())  // 测试使用
+(() => {
+  // this.init(new BaiduPage())  // 测试使用
 })();
 ;// CONCATENATED MODULE: ./src/config/rule/rule.ts
 /**
@@ -42181,13 +41543,11 @@ class Rule {
     this.name = rule.name;
     this.mainSelector = rule.mainSelector;
     this.checker = rule.checker;
-
     if (this.checker.bingo) {
       // 普通规则没有bingo
       delete this.checker.bingo;
     }
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/rule/do-rule.ts
 var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
@@ -42196,7 +41556,6 @@ var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -42205,7 +41564,6 @@ var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -42213,21 +41571,17 @@ var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
 
 
-
 /**
  * 执行的规则
  */
-
 class DoRule {
   constructor(mainSelector) {
     this.mainSelector = mainSelector;
@@ -42236,8 +41590,6 @@ class DoRule {
    * 隐藏主体元素
    * @param mainElement 主体元素
    */
-
-
   display(mainElement) {
     return do_rule_awaiter(this, void 0, void 0, function* () {
       if ((yield this.bingo(mainElement)) && !mainElement.classList.contains(DISPLAY_CLASS)) {
@@ -42248,28 +41600,22 @@ class DoRule {
   /**
    * 显示主体元素
    */
-
-
   show(document = window.document) {
     let elements = document.querySelectorAll(this.mainSelector + '.' + DISPLAY_CLASS);
-
     for (let i = 0; i < elements.length; i++) {
       elements[i].classList.remove(DISPLAY_CLASS);
     }
   }
-
 }
 /**
  * 执行的多规则
  */
-
 class DoRuleN extends DoRule {
   constructor(mainSelector, checkers) {
     super(mainSelector);
     this.mainSelector = mainSelector;
     this.checkers = checkers;
   }
-
   bingo(mainElement) {
     return do_rule_awaiter(this, void 0, void 0, function* () {
       // 所有检查器之中满足一个即为中奖
@@ -42277,10 +41623,8 @@ class DoRuleN extends DoRule {
         if (checker.innerSelector) {
           // 有内部选择器, 选择所有内部元素判断, 满足一个即为中奖
           let elements = mainElement.querySelectorAll(checker.innerSelector);
-
           for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
-
             if (yield this.bingo0(element, checker)) {
               return true;
             }
@@ -42292,7 +41636,6 @@ class DoRuleN extends DoRule {
           }
         }
       }
-
       return false;
     });
   }
@@ -42302,86 +41645,66 @@ class DoRuleN extends DoRule {
    * @param checker 内部检查器
    * @returns 是否中奖
    */
-
-
   bingo0(element, checker) {
     var _a, _b;
-
     return do_rule_awaiter(this, void 0, void 0, function* () {
       if (checker.bingo) {
         return yield checker.bingo(element);
-      } // 如果是always 中奖
-
-
+      }
+      // 如果是always 中奖
       if (checker.always) {
         return true;
-      } // 是innerHTML 判断innerHTML是否在data的范围
-
-
+      }
+      // 是innerHTML 判断innerHTML是否在data的范围
       if (checker.innerHTML && checker.setting) {
         for (const settingData of yield Settings.getSettingValue(checker.setting)) {
           let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting);
-
           switch (type) {
             case 'equal':
               if (element.innerHTML === settingData) {
                 return true;
               }
-
               break;
-
             case 'like':
               if (element.innerHTML.includes(settingData)) {
                 return true;
               }
-
               break;
-
             case 'regexp':
               if (new RegExp(settingData, 'i').test(element.innerHTML)) {
                 return true;
               }
-
               break;
           }
         }
-      } // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
-
-
+      }
+      // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
       if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
         for (const settingData of yield Settings.getSettingValue(checker.setting)) {
           let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting);
           let value = element.getAttribute(checker.attribute);
-
           switch (type) {
             case 'equal':
               if (value === settingData) {
                 return true;
               }
-
               break;
-
             case 'like':
               if (value.includes(settingData)) {
                 return true;
               }
-
               break;
-
             case 'regexp':
               if (new RegExp(settingData, 'i').test(value)) {
                 return true;
               }
-
               break;
           }
         }
       }
-
       return false;
     });
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rule.ts
 class SpecialRule {}
@@ -42392,7 +41715,6 @@ var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -42401,7 +41723,6 @@ var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -42409,15 +41730,12 @@ var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
-
 
 
 class LivePageRule extends SpecialRule {
@@ -42432,49 +41750,39 @@ class LivePageRule extends SpecialRule {
         /**
          * 屏蔽带粉丝牌子的发言
          */
-
-
         if ((yield Settings.getSettingValue('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
           try {
             /**
              * 记录发言存入map 计数 + 1
              */
             let text = String(node.getAttribute('data-danmaku')); // 记录发言
-
             let lastCount = this.danmakuMap.get(text);
             this.danmakuMap.set(text, lastCount ? lastCount + 1 : 1); // danmakuMap 对应发言的 count + 1
-
             /**
              * 清除中央弹幕
              * 删除与发言相同内容,同时计数 - 1
              */
-
             let nodeList = document.querySelectorAll('.bilibili-danmaku.mode-roll');
-
             for (let i = 0; i < nodeList.length; i++) {
               const node = nodeList[i];
-
               if (node.innerHTML === text) {
                 node.remove();
-
                 if (this.danmakuMap.get(text) === 1) {
                   this.danmakuMap.delete(text);
                 } else {
                   this.danmakuMap.set(text, this.danmakuMap.get(text) - 1);
                 }
-
                 break;
               }
             }
           } catch (e) {
             console.error(e);
           } finally {
-            console.log(true, node); // 无论如何都要删除这条
-
+            console.log(true, node);
+            // 无论如何都要删除这条
             return true;
           }
         }
-
         return false;
       })
     }, {
@@ -42482,33 +41790,26 @@ class LivePageRule extends SpecialRule {
       bingo: element => live_page_awaiter(this, void 0, void 0, function* () {
         let text = element.innerHTML;
         let lastCount = this.danmakuMap.get(text);
-
         if (lastCount) {
           this.danmakuMap.set(text, lastCount - 1); // 计数 - 1
-
           return true;
         }
-
         return false;
       })
     }];
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
 var special_rules_a;
 
- // import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
-
+// import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
 class SpecialRules {
   static init(specialRule) {
     this.sp.set(specialRule.pageKey, specialRule);
   }
-
 }
 special_rules_a = SpecialRules;
 SpecialRules.sp = new Map();
-
 (() => {
   // this.init(new BaiduTest())
   special_rules_a.init(new LivePageRule());
@@ -42519,20 +41820,17 @@ class Observer {
     if (window0 === window) {
       return -1;
     }
-
     for (let i = 0; i < window.frames.length; i++) {
       if (window0 === window.frames[i]) {
         return i;
       }
     }
-
     return -1; // 都没有是错的, 默认-1为主window(然后不做处理)
   }
 
   wrKey(rule, window0) {
     return this.windowKey(window0) + ':' + rule.mainSelector;
   }
-
 }
 ;// CONCATENATED MODULE: ./src/observer/impl/my-observer.ts
 
@@ -42542,16 +41840,14 @@ class MyObserver extends Observer {
     super(...arguments);
     this.observerMap = new Map();
   }
-
   start(rule, window) {
     let key = this.wrKey(rule, window);
-
     if (!this.observerMap.has(key)) {
       this.handle(rule, window); // start处理(第一次)
-
       let observer = new MutationObserver(() => {
         this.handle(rule, window); // 变化后处理
       });
+
       observer.observe(window.document, {
         childList: true,
         subtree: true
@@ -42559,23 +41855,18 @@ class MyObserver extends Observer {
       this.observerMap.set(key, observer);
     }
   }
-
   handle(rule, window) {
     let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
-
     for (let i = 0; i < mains.length; i++) {
       rule.display(mains[i]);
     }
   }
-
   stop(rule, window) {
     var _a;
-
     let key = this.wrKey(rule, window);
     (_a = this.observerMap.get(key)) === null || _a === void 0 ? void 0 : _a.disconnect();
     this.observerMap.delete(key);
   }
-
 }
 ;// CONCATENATED MODULE: ./src/observer/impl/arrive-observer.ts
 
@@ -42588,11 +41879,9 @@ class ArriveObserver extends Observer {
       rule.display(mainElement);
     });
   }
-
   stop(rule, window) {
     window.document.unbindArrive(rule.mainSelector);
   }
-
 }
 ;// CONCATENATED MODULE: ./src/config/page/page.ts
 
@@ -42602,19 +41891,17 @@ class ArriveObserver extends Observer {
 /**
  * 页面配置
  */
-
 class Page {
   constructor(page) {
     var _a;
-
     this.observer = new ArriveObserver();
     this.iframeObserver = new MyObserver();
     this.working = false;
     this.checkerMap = new Map();
     this.key = page.key;
     this.name = (_a = page.name) !== null && _a !== void 0 ? _a : page.key;
-    this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers); // 添加特殊规则 特殊规则优先处理
-
+    this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers);
+    // 添加特殊规则 特殊规则优先处理
     if (SpecialRules.sp.has(this.key)) {
       let specialRule = SpecialRules.sp.get(this.key);
       specialRule.spCheckers.forEach(spChecker => {
@@ -42629,22 +41916,17 @@ class Page {
       });
     }
   }
-
   isCurrent() {
     return this.regexp.test(location.href);
   }
-
   insert(rule) {
     let _checkers = this.checkerMap.get(rule.mainSelector);
-
     let checkers = _checkers ? _checkers : [];
     checkers.push(rule.checker);
-
     if (!_checkers) {
       this.checkerMap.set(rule.mainSelector, checkers);
     }
   }
-
   rules() {
     let arr = [];
     this.checkerMap.forEach((checkers, mainSelector) => {
@@ -42652,11 +41934,9 @@ class Page {
     });
     return arr;
   }
-
   start() {
     for (const rule of this.rules()) {
       this.observer.start(rule, window);
-
       for (let i = 0; i < window.frames.length; i++) {
         try {
           let frame = window.frames[i];
@@ -42664,16 +41944,14 @@ class Page {
         } catch (ignore) {}
       }
     }
-
     this.working = true;
   }
-
   stop() {
     for (const rule of this.rules()) {
-      this.observer.stop(rule, window); // document.unbindArrive(rule.mainSelector);
-
-      rule.show(); // iframe里执行stop()
-
+      this.observer.stop(rule, window);
+      // document.unbindArrive(rule.mainSelector);
+      rule.show();
+      // iframe里执行stop()
       for (let i = 0; i < window.frames.length; i++) {
         try {
           let frame = window.frames[i];
@@ -42682,15 +41960,12 @@ class Page {
         } catch (ignore) {}
       }
     }
-
     this.working = false;
   }
   /**
    * 初始化start
    * @param window0
    */
-
-
   arrive(window0) {
     if (this.isCurrent()) {
       for (let rule of this.rules()) {
@@ -42700,7 +41975,6 @@ class Page {
           this.iframeObserver.start(rule, window0);
         }
       }
-
       if (document === window.document) {
         this.working = true;
       }
@@ -42710,8 +41984,6 @@ class Page {
    * dom离开时stop
    * @param window0
    */
-
-
   leave(window0) {
     if (this.isCurrent()) {
       for (let rule of this.rules()) {
@@ -42723,7 +41995,6 @@ class Page {
       }
     }
   }
-
 }
 ;// CONCATENATED MODULE: ./src/yaml/page.yaml
 /* harmony default export */ const page = ("baidu_main:\n  name: 百度配置\n  regexp:\n    pattern: baidu.com\nbaidu_main2:\n  name: 百度配置2\n  regexp:\n    pattern: baidu.com\nzhihu:\n  name: zhihu\n  regexp:\n    pattern: zhihu.com\nbilibili_all:\n  name: 比例全部\n  regexp:\n    pattern: bilibili.com\nbilibili_main:\n  name: 比例首页\n  regexp:\n    pattern: www.bilibili.com/$\nbilibili_live:\n  name: 比例直播\n  regexp:\n    pattern: live.bilibili.com");
@@ -42743,22 +42014,19 @@ function readFiles() {
   Object.keys(pageData).forEach(pageKey => {
     pageData[pageKey].key = pageKey;
     pageMap.set(pageKey, new Page(pageData[pageKey]));
-  }); // 特殊页面配置
-
+  });
+  // 特殊页面配置
   SpecialPages.sp.forEach((page, key) => {
     pageMap.set(key, page);
   });
   let ruleData = parse(rule);
   Object.keys(ruleData).forEach(ruleKey => {
     var _a;
-
     let rule0 = ruleData[ruleKey];
     rule0.key = ruleKey;
-
     if (rule0.setting) {
       rule0.setting = Settings.getSystemSettings().get(rule0.setting);
     }
-
     (_a = pageMap.get(rule0.page)) === null || _a === void 0 ? void 0 : _a.insert(new Rule(rule0));
   });
   return pageMap;
@@ -42770,7 +42038,6 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
       resolve(value);
     });
   }
-
   return new (P || (P = Promise))(function (resolve, reject) {
     function fulfilled(value) {
       try {
@@ -42779,7 +42046,6 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
         reject(e);
       }
     }
-
     function rejected(value) {
       try {
         step(generator["throw"](value));
@@ -42787,16 +42053,12 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
         reject(e);
       }
     }
-
     function step(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
-
-
 
 
 
@@ -42807,16 +42069,14 @@ function init() {
   return main_awaiter(this, void 0, void 0, function* () {
     let pageMap = readFiles();
     createReact(pageMap)(); // 创建box
-
     createDisplayStyle('display', window.document)();
     iframes({
       displayStyle: CSS_INNER_HTML.display,
       pageMap: pageMap
-    }); // 油猴菜单展示/隐藏配置
-
+    });
+    // 油猴菜单展示/隐藏配置
     GM_registerMenuCommand('配置', () => {
       var _a;
-
       let main = document.querySelector('#' + APP_ID + ' div');
       main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
     });
@@ -42826,27 +42086,21 @@ function init() {
  * 创建div 添加react组件
  * @returns root
  */
-
-
 function createReact(pageMap, root = {
   root: undefined
 }) {
   if (root.root) {
     root.root.unmount();
   }
-
   for (const page of pageMap.values()) {
     page.arrive(window);
   }
-
   let div;
-
   if (!document.getElementById(APP_ID)) {
     div = document.createElement('div');
     div.setAttribute("id", APP_ID);
     document.body.appendChild(div);
   }
-
   root.root = (0,client/* createRoot */.s)(document.getElementById(APP_ID));
   root.root.render(react.createElement(Box, {
     pageMap: pageMap
@@ -42867,8 +42121,6 @@ function createReact(pageMap, root = {
  * @param type
  * @param document
  */
-
-
 function createDisplayStyle(type, document) {
   if (!document.getElementById(DISPLAY_STYLE_ID)) {
     let element = document.createElement('style');
@@ -42878,7 +42130,6 @@ function createDisplayStyle(type, document) {
     element.innerHTML = CSS_INNER_HTML[type];
     document.body.appendChild(element);
   }
-
   return () => {
     document.leave('#' + DISPLAY_STYLE_ID, {
       fireOnAttributesModification: true,
@@ -42886,30 +42137,26 @@ function createDisplayStyle(type, document) {
       existing: false
     }, function () {
       var _a;
-
       createDisplayStyle((_a = this.getAttribute('displayType')) !== null && _a !== void 0 ? _a : 'display', document);
     });
   };
 }
-
 function iframes(data) {
   let framesData = [];
   setInterval(() => {
     for (let i = 0; i < window.frames.length; i++) {
-      let frame = window.frames[i]; // 第一次
-
+      let frame = window.frames[i];
+      // 第一次
       if (!framesData[i] || framesData[i].frame !== frame) {
         let frameData = {};
         framesData[i] = frameData;
         frameData.frame = frame;
-      } // 不跨域且dom改变了
-
-
+      }
+      // 不跨域且dom改变了
       try {
         if (frame.document && framesData[i].document !== frame.document) {
           framesData[i].document = frame.document;
           createDisplayStyle('display', frame.document);
-
           for (const page of data.pageMap.values()) {
             page.stop();
             page.start();
@@ -42919,7 +42166,6 @@ function iframes(data) {
     }
   }, 500);
 }
-
 init();
 })();
 
