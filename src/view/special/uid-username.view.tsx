@@ -1,7 +1,8 @@
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
-import {PlusOutlined, SyncOutlined} from '@ant-design/icons';
+import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined, SyncOutlined} from '@ant-design/icons';
 import {Button, Card, Col, Input, Row, Tag, Tooltip} from "antd";
 import React from "react";
+import {Settings} from "@/config/setting/setting";
 
 export function UidUsernameView(props: {
     updateBox: () => void
@@ -22,19 +23,41 @@ export function UidUsernameView(props: {
                 setSettings(settings)
             })
     }
+    const [hide, setHide] = React.useState(true);
+    const [hideSettings, setHideSettings] = React.useState<string[]>([]);
+    const updateHideSettings = async () => {
+        setHideSettings(await Settings.getSettingValue('uid.hide'));
+    }
     React.useEffect(() => {
-        updateSettings()
+        updateSettings();
+        updateHideSettings();
     }, [])
     return <Card>
         <Card>
             <div>uid名称:</div>
-            {settings.map(item =>
+            {settings.filter(item => !hideSettings.includes(item.uid)).map(item =>
                 <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
                          trigger='click'>
                     <Tag closable={true} style={{userSelect: 'none'}}
-                         onDoubleClick={() => {
-                             setInputUid(item.uid);
-                             setInputUsername(item.username);
+                         onDoubleClick={async () => {
+                             Settings.addSettingValue('uid.hide', item.uid);
+                             await updateHideSettings();
+                         }}
+                         onClose={() => {
+                             uu.del('uid')(item.uid)
+                             updateSettings()
+                             updateBox()
+                         }} key={item.username}>{item.username}</Tag>
+                </Tooltip>
+            )}
+            {!hide && settings.filter(item => hideSettings.includes(item.uid)).map(item =>
+                <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
+                         trigger='click'>
+                    <Tag closable={true} style={{userSelect: 'none'}}
+                         color={'#00000080'}
+                         onDoubleClick={async () => {
+                             Settings.delSettingValue('uid.hide', item.uid);
+                             await updateHideSettings();
                          }}
                          onClose={() => {
                              uu.del('uid')(item.uid)
@@ -64,7 +87,7 @@ export function UidUsernameView(props: {
             <Col span={8}>
                 {!!inputUsername && <Tag>{inputUsername}</Tag>}
             </Col>
-            <Col span={3}>
+            <Col span={2}>
                 <Button
                     block
                     disabled={!inputUsername}
@@ -79,7 +102,7 @@ export function UidUsernameView(props: {
                         updateBox()
                     }}></Button>
             </Col>
-            <Col span={3}>
+            <Col span={2}>
                 <Button
                     block
                     icon={<SyncOutlined/>}
@@ -89,6 +112,13 @@ export function UidUsernameView(props: {
                             .forEach(item => GM_deleteValue(item))
                         updateSettings()
                     }}></Button>
+            </Col>
+            <Col span={2}>
+                <Button
+                    block
+                    icon={hide ? <EyeOutlined/> : <EyeInvisibleOutlined/>}
+                    onClick={() => setHide(!hide)}>
+                </Button>
             </Col>
         </Row>
     </Card>;

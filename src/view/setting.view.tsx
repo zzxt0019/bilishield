@@ -1,5 +1,5 @@
 import {Setting, Settings} from "@/config/setting/setting";
-import {PlusOutlined} from '@ant-design/icons';
+import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined} from '@ant-design/icons';
 import {Button, Card, Col, Input, Row, Tag} from "antd";
 import React from "react";
 
@@ -13,33 +13,51 @@ export function SettingView(props: {
     const updateSettings = async () => {
         setSettings(await Settings.getSettingValue(setting));
     };
+    const [hide, setHide] = React.useState(true);
+    const [hideSettings, setHideSettings] = React.useState<string[]>([]);
+    const updateHideSettings = async () => {
+        setHideSettings(await Settings.getSettingValue(setting.key + '.hide'));
+    }
     React.useEffect(() => {
-        updateSettings()
+        updateSettings();
+        updateHideSettings();
     }, [])
     return <Card>
         <Card>
             <div>
                 {setting.key + ':' + setting.name}
             </div>
-            {settings.map(setting =>
+            {settings.filter(setting => !hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
-                     onDoubleClick={(e) => {
-                         setInputValue((e.target as any).textContent)
+                     onDoubleClick={async (e) => {
+                         Settings.addSettingValue(props.setting.key + '.hide', (e.target as any).textContent);
+                         await updateHideSettings();
                      }}
                      onClose={async () => {
                          Settings.delSettingValue(props.setting, setting)
                          await updateSettings()
-                         updateBox()
+                         // updateBox()
+                     }}>{setting}</Tag>
+            )}
+            {!hide && settings.filter(setting => hideSettings.includes(setting)).map(setting =>
+                <Tag closable={true} key={setting} style={{userSelect: 'none'}}
+                     color={'#00000080'}
+                     onDoubleClick={async (e) => {
+                         Settings.delSettingValue(props.setting.key + '.hide', setting);
+                         await updateHideSettings();
+                     }}
+                     onClose={async () => {
+                         Settings.delSettingValue(props.setting, setting)
+                         await updateSettings()
                      }}>{setting}</Tag>
             )}
         </Card>
         <Row>
-            <Col span={20}>
+            <Col span={16}>
                 <Input type='text' value={inputValue}
                        allowClear={true}
-                       onChange={(e) => {
-                           setInputValue(e.target.value);
-                       }}></Input>
+                       onChange={e => setInputValue(e.target.value)}>
+                </Input>
             </Col>
             <Col span={4}>
                 <Button
@@ -56,6 +74,13 @@ export function SettingView(props: {
                         await updateSettings()
                         updateBox()
                     }}></Button>
+            </Col>
+            <Col span={4}>
+                <Button
+                    block
+                    icon={hide ? <EyeOutlined/> : <EyeInvisibleOutlined/>}
+                    onClick={() => setHide(!hide)}>
+                </Button>
             </Col>
         </Row>
     </Card>
