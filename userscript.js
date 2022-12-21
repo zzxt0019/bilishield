@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1671614847864
+// @version     1.1.1671651669311
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
