@@ -5,11 +5,25 @@
     <title>bilishield</title>
 </head>
 <body>
-<div>
-    <a href="./userscript.js">userscript.js</a>
-</div>
-<div>
-    <a href="./userscript.min.js">userscript.min.js</a>
-</div>
 </body>
+<script>
+    window.onload = () => {
+        let table = document.createElement('table');
+        let data = document.domain === 'zzxt0019.github.io' ? ['./userscript.js', './userscript.min.js'] : ['./dist/userscript.js', './dist/userscript.min.js'];
+        data.forEach((path) => {
+            let tr = document.createElement('tr');
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let a = document.createElement('a');
+            a.href = path;
+            a.innerText = path.substring(path.lastIndexOf('/') + 1);
+            td1.appendChild(a);
+            fetch(path).then(res => res.blob().then(blob => td2.innerText = (blob.size / 1024).toFixed(2) + 'KB'));
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            table.appendChild(tr);
+        })
+        document.body.appendChild(table);
+    }
+</script>
 </html>
