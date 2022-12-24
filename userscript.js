@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1671854941782
+// @version     1.1.1671855551935
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/icon.png
+// @description bilibili屏蔽 更新时间: 12/24/2022
 // @match       *://*.bilibili.com/*
 // @noframes
-// @description bilibili屏蔽
-// @notes       更新时间: 12/24/2022
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
