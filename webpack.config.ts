@@ -29,6 +29,7 @@ const config: Configuration = {
                 target: 'es2016',
                 banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
                     .replace('${timestamp}', String(new Date().getTime()))
+                    .replace('${date}', String(new Date().toLocaleDateString()))
                     .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
                 include: /min/
             })
@@ -62,12 +63,16 @@ const config: Configuration = {
             include: /^((?!min).)*$/,
             banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
                 .replace('${timestamp}', String(new Date().getTime()))
+                .replace('${date}', String(new Date().toLocaleDateString()))
                 .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
         }),
         new CopyPlugin({
             patterns: [{
                 from: __dirname + '/gh-index.html',
                 to: __dirname + '/dist/index.html',
+            }, {
+                from: __dirname + '/Elysia.png',
+                to: __dirname + '/dist/icon.png'
             }]
         })
     ]

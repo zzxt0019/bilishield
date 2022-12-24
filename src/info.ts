@@ -2,16 +2,11 @@
 // @name        bilibili屏蔽
 // @version     1.1.${timestamp}
 // @author      zzxt0019
-// @match       *://www.bilibili.com/*
-// @match       *://search.bilibili.com/*
-// @match       *://live.bilibili.com/*
-// @match       *://space.bilibili.com/*
-// @match       *://t.bilibili.com/*
-// @match       *://h.bilibili.com/*
-// @match       *://manga.bilibili.com/*
-// @match       *://message.bilibili.com/*
+// @icon        https://zzxt0019.github.io/bilishield/icon.png
+// @match       *://*.bilibili.com/*
 // @noframes
 // @description bilibili屏蔽
+// @notes       更新时间: ${date}
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
