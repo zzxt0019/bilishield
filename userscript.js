@@ -1,17 +1,12 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1671853234301
+// @version     1.1.1671854941782
 // @author      zzxt0019
-// @match       *://www.bilibili.com/*
-// @match       *://search.bilibili.com/*
-// @match       *://live.bilibili.com/*
-// @match       *://space.bilibili.com/*
-// @match       *://t.bilibili.com/*
-// @match       *://h.bilibili.com/*
-// @match       *://manga.bilibili.com/*
-// @match       *://message.bilibili.com/*
+// @icon        https://zzxt0019.github.io/bilishield/icon.png
+// @match       *://*.bilibili.com/*
 // @noframes
 // @description bilibili屏蔽
+// @notes       更新时间: 12/24/2022
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_deleteValue
