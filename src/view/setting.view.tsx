@@ -36,19 +36,20 @@ export function SettingView(props: {
                      onClose={async () => {
                          Settings.delSettingValue(props.setting, setting)
                          await updateSettings()
-                         // updateBox()
+                         updateBox()
                      }}>{setting}</Tag>
             )}
             {!hide && settings.filter(setting => hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
                      color={'#00000080'}
-                     onDoubleClick={async (e) => {
+                     onDoubleClick={async () => {
                          Settings.delSettingValue(props.setting.key + '.hide', setting);
                          await updateHideSettings();
                      }}
                      onClose={async () => {
                          Settings.delSettingValue(props.setting, setting)
                          await updateSettings()
+                         updateBox()
                      }}>{setting}</Tag>
             )}
         </Card>
