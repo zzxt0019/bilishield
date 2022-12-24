@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1671651669311
+// @version     1.1.1671853234301
 // @author      zzxt0019
 // @match       *://www.bilibili.com/*
 // @match       *://search.bilibili.com/*
@@ -41327,7 +41327,7 @@ function SettingView(props) {
     onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
       Settings.delSettingValue(props.setting, setting);
       yield updateSettings();
-      // updateBox()
+      updateBox();
     })
   }, setting)), !hide && settings.filter(setting => hideSettings.includes(setting)).map(setting => react.createElement(tag, {
     closable: true,
@@ -41336,13 +41336,14 @@ function SettingView(props) {
       userSelect: 'none'
     },
     color: '#00000080',
-    onDoubleClick: e => setting_view_awaiter(this, void 0, void 0, function* () {
+    onDoubleClick: () => setting_view_awaiter(this, void 0, void 0, function* () {
       Settings.delSettingValue(props.setting.key + '.hide', setting);
       yield updateHideSettings();
     }),
     onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
       Settings.delSettingValue(props.setting, setting);
       yield updateSettings();
+      updateBox();
     })
   }, setting))), react.createElement(es_row, null, react.createElement(es_col, {
     span: 16
