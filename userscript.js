@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672125585779
+// @version     1.1.1672132428793
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/27/2022
@@ -4331,11 +4331,806 @@ var __webpack_exports__ = {};
 
 // EXTERNAL MODULE: ./node_modules/arrive/src/arrive.js
 var arrive = __webpack_require__(5640);
-// EXTERNAL MODULE: ./node_modules/react/index.js
-var react = __webpack_require__(7294);
-var react_namespaceObject = /*#__PURE__*/__webpack_require__.t(react, 2);
-// EXTERNAL MODULE: ./node_modules/react-dom/client.js
-var client = __webpack_require__(745);
+;// CONCATENATED MODULE: ./src/main-static.ts
+const APP_ID = 'zzxt0019app';
+const DISPLAY_CLASS = 'zzxt0019class';
+const DISPLAY_STYLE_ID = 'zzxt0019style';
+const CSS_INNER_HTML = {
+  hide: '.zzxt0019class { display: none !important; }',
+  debug: '.zzxt0019class { background-color: yellow !important; }'
+};
+;// CONCATENATED MODULE: ./src/config/page/special/special-pages.ts
+// import {BaiduPage} from "@/config/page/special/impl/baidu-page";
+class SpecialPages {
+  static init(specialPage) {
+    this.sp.set(specialPage.key, specialPage);
+  }
+}
+SpecialPages.sp = new Map();
+(() => {
+  // this.init(new BaiduPage())  // 测试使用
+})();
+;// CONCATENATED MODULE: ./src/config/rule/rule.ts
+/**
+ * 规则配置
+ */
+class Rule {
+  constructor(rule) {
+    this.key = rule.key;
+    this.name = rule.name;
+    this.mainSelector = rule.mainSelector;
+    this.checker = rule.checker;
+    if (this.checker.bingo) {
+      // 普通规则没有bingo
+      delete this.checker.bingo;
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/config/setting/default-setting.ts
+class DefaultSettings {
+  /*******************
+   *   原始的4个配置方法
+   *******************/
+  // 原始的获取配置值
+  static _getSettingValue(param) {
+    let key = typeof param === 'string' ? param : param.key;
+    return GM_getValue('settings.' + key, []);
+  }
+  // 原始的设置配置值
+  static _setSettingValue(param, data) {
+    let key = typeof param === 'string' ? param : param.key;
+    GM_setValue('settings.' + key, data);
+  }
+  // 原始的添加配置值
+  static _addSettingValue(param, data) {
+    let oldData = DefaultSettings._getSettingValue(param);
+    oldData.push(...(typeof data === 'string' ? [data] : data));
+    DefaultSettings._setSettingValue(param, [...new Set(oldData)]);
+  }
+  // 原始的删除配置值
+  static _delSettingValue(param, data) {
+    let delSet = new Set(typeof data === 'string' ? [data] : data);
+    DefaultSettings._setSettingValue(param, DefaultSettings._getSettingValue(param).filter(item => !delSet.has(item)));
+  }
+}
+;// CONCATENATED MODULE: ./src/config/setting/special/special-setting.ts
+class SpecialSetting {}
+;// CONCATENATED MODULE: ./src/config/setting/special/impl/uid-username.ts
+var __awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+
+class UidUsername extends SpecialSetting {
+  get(key) {
+    return () => __awaiter(this, void 0, void 0, function* () {
+      if (key === 'uid') {
+        return GM_getValue('settings.uid', []);
+      } else if (key === 'username') {
+        let uids = yield this.get('uid')();
+        return Promise.all(uids.map(uid => this.uid2username(uid)));
+      }
+      return [];
+    });
+  }
+  set(key) {
+    return uid => {
+      DefaultSettings._setSettingValue('uid', uid);
+    };
+  }
+  add(key) {
+    return uid => {
+      DefaultSettings._addSettingValue('uid', uid);
+    };
+  }
+  del(key) {
+    return uid => {
+      DefaultSettings._delSettingValue('uid', uid);
+    };
+  }
+  type(key) {
+    return () => {
+      if (key === 'uid') {
+        return 'equal';
+      } else if (key === 'username') {
+        return 'like';
+      } else {
+        return 'like';
+      }
+    };
+  }
+  uid2username(_uid) {
+    return __awaiter(this, void 0, void 0, function* () {
+      // 输入错误
+      if (_uid === '') {
+        return '';
+      }
+      // 缓存在有效期内, 取缓存
+      let uid = Number(_uid);
+      let obj = GM_getValue('uid_' + uid);
+      let biliUp = obj;
+      if (biliUp && new Date().getTime() < biliUp.expiretime) {
+        return biliUp.username;
+      }
+      // 异步查询
+      return new Promise((res, rej) => {
+        this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex);
+      }).catch(() => Promise.resolve(''));
+    });
+  }
+  /**
+   * 查询用户名
+   * @param res
+   * @param rej
+   * @param uid
+   * @param firstIndex 首次调用时的index
+   * @param apiIndex 当前调用时的index
+   */
+  queryUsername(res, rej, uid, firstIndex, apiIndex) {
+    let api = UidUsername.apis[apiIndex];
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: api.url(uid),
+      onload: response => {
+        let json = JSON.parse(response.responseText);
+        if (api.success(json)) {
+          // 成功, 记录并返回
+          UidUsername.apiIndex = apiIndex;
+          let username = api.username(json);
+          // 保存至GM
+          let biliUp = {
+            uid,
+            username,
+            expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000
+          };
+          GM_setValue('uid_' + uid, biliUp);
+          res(username);
+        } else if (api.change(json)) {
+          // 拦截请求, 尝试其他api
+          apiIndex = (apiIndex + 1) % UidUsername.apis.length;
+          // 若firstIndex === apiIndex 说明循环一圈都被拦截, 不需要再查了, 直接错误
+          if (firstIndex !== apiIndex) {
+            this.queryUsername(res, rej, uid, firstIndex, apiIndex);
+          } else {
+            rej();
+          }
+        } else {
+          // 其他 错误
+          rej();
+        }
+      }
+    });
+  }
+}
+UidUsername.apiIndex = 0;
+UidUsername.apis = [{
+  url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+  success: json => json.code === 0,
+  username: json => json.data.card.name,
+  change: json => json.code === -412 // 请求被拦截
+}, {
+  url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
+  success: json => json.code === 0,
+  username: json => json.data.name,
+  change: json => json.code === -412 // 请求被拦截
+}];
+
+class BiliUp {
+  constructor(uid, username, expiretime) {
+    this.uid = uid;
+    this.username = username;
+    this.expiretime = expiretime;
+  }
+}
+;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
+var _a;
+
+class SpecialSettings {}
+_a = SpecialSettings;
+SpecialSettings.sp = new Map();
+(() => {
+  _a.sp.set('uid', new UidUsername());
+  _a.sp.set('username', _a.sp.get('uid'));
+})();
+;// CONCATENATED MODULE: ./src/config/setting/setting.ts
+var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+
+/**
+ * 数据配置
+ */
+class Setting {
+  constructor(setting) {
+    this.key = setting.key;
+    this.name = setting.name;
+    this.type = setting.type;
+  }
+}
+class Settings {
+  static getSystemSettings() {
+    if (!Settings.settingMap) {
+      let obj = GM_getValue('script.setting');
+      Settings.settingMap = new Map();
+      Object.keys(obj).forEach(key => {
+        let setting = obj[key];
+        setting.key = key;
+        Settings.settingMap.set(key, setting);
+      });
+    }
+    return Settings.settingMap;
+  }
+  // 加入特殊配置后的获取配置值
+  static getSettingValue(param) {
+    return setting_awaiter(this, void 0, void 0, function* () {
+      let key = typeof param === 'string' ? param : param.key;
+      if (SpecialSettings.sp.has(key)) {
+        return SpecialSettings.sp.get(key).get(key)();
+      } else {
+        return DefaultSettings._getSettingValue(param);
+      }
+    });
+  }
+  // 加入特殊配置后的设置配置值
+  static setSettingValue(param, data) {
+    let key = typeof param === 'string' ? param : param.key;
+    if (SpecialSettings.sp.has(key)) {
+      return SpecialSettings.sp.get(key).set(key)(data);
+    } else {
+      DefaultSettings._setSettingValue(param, data);
+    }
+  }
+  // 加入特殊配置后的添加配置值
+  static addSettingValue(param, data) {
+    let key = typeof param === 'string' ? param : param.key;
+    if (SpecialSettings.sp.has(key)) {
+      return SpecialSettings.sp.get(key).add(key)(data);
+    } else {
+      DefaultSettings._addSettingValue(param, data);
+    }
+  }
+  // 加入特殊配置后的删除配置值
+  static delSettingValue(param, data) {
+    let key = typeof param === 'string' ? param : param.key;
+    if (SpecialSettings.sp.has(key)) {
+      return SpecialSettings.sp.get(key).del(key)(data);
+    } else {
+      DefaultSettings._delSettingValue(param, data);
+    }
+  }
+  static getCheckType(param) {
+    let key = typeof param === 'string' ? param : param.key;
+    if (SpecialSettings.sp.has(key)) {
+      return SpecialSettings.sp.get(key).type(key)();
+    } else {
+      return Settings.getSystemSettings().get(key).type;
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/config/rule/do-rule.ts
+var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+
+/**
+ * 执行的规则
+ */
+class DoRule {
+  constructor(mainSelector) {
+    this.mainSelector = mainSelector;
+  }
+  /**
+   * 隐藏主体元素
+   * @param mainElement 主体元素
+   */
+  display(mainElement) {
+    return do_rule_awaiter(this, void 0, void 0, function* () {
+      if ((yield this.bingo(mainElement)) && !mainElement.classList.contains(DISPLAY_CLASS)) {
+        mainElement.classList.add(DISPLAY_CLASS);
+      }
+    });
+  }
+  /**
+   * 显示主体元素
+   */
+  show(document = window.document) {
+    let elements = document.querySelectorAll(this.mainSelector + '.' + DISPLAY_CLASS);
+    for (let i = 0; i < elements.length; i++) {
+      elements[i].classList.remove(DISPLAY_CLASS);
+    }
+  }
+}
+/**
+ * 执行的多规则
+ */
+class DoRuleN extends DoRule {
+  constructor(mainSelector, checkers) {
+    super(mainSelector);
+    this.mainSelector = mainSelector;
+    this.checkers = checkers;
+  }
+  bingo(mainElement) {
+    return do_rule_awaiter(this, void 0, void 0, function* () {
+      // 所有检查器之中满足一个即为中奖
+      for (const checker of this.checkers) {
+        if (checker.innerSelector) {
+          // 有内部选择器, 选择所有内部元素判断, 满足一个即为中奖
+          let elements = mainElement.querySelectorAll(checker.innerSelector);
+          for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            if (yield this.bingo0(element, checker)) {
+              return true;
+            }
+          }
+        } else {
+          // 没有内部选择器, 即为当前元素, 判断
+          if (yield this.bingo0(mainElement, checker)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+  }
+  /**
+   * 判断当前一个元素是否中奖
+   * @param element 当前元素
+   * @param checker 内部检查器
+   * @returns 是否中奖
+   */
+  bingo0(element, checker) {
+    var _a, _b;
+    return do_rule_awaiter(this, void 0, void 0, function* () {
+      if (checker.bingo) {
+        return yield checker.bingo(element);
+      }
+      // 如果是always 中奖
+      if (checker.always) {
+        return true;
+      }
+      // 是innerHTML 判断innerHTML是否在data的范围
+      if (checker.innerHTML && checker.setting) {
+        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
+          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting);
+          switch (type) {
+            case 'equal':
+              if (element.innerHTML === settingData) {
+                return true;
+              }
+              break;
+            case 'like':
+              if (element.innerHTML.includes(settingData)) {
+                return true;
+              }
+              break;
+            case 'regexp':
+              if (new RegExp(settingData, 'i').test(element.innerHTML)) {
+                return true;
+              }
+              break;
+          }
+        }
+      }
+      // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
+      if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
+        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
+          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting);
+          let value = element.getAttribute(checker.attribute);
+          switch (type) {
+            case 'equal':
+              if (value === settingData) {
+                return true;
+              }
+              break;
+            case 'like':
+              if (value.includes(settingData)) {
+                return true;
+              }
+              break;
+            case 'regexp':
+              if (new RegExp(settingData, 'i').test(value)) {
+                return true;
+              }
+              break;
+          }
+        }
+      }
+      return false;
+    });
+  }
+}
+;// CONCATENATED MODULE: ./src/config/rule/special/special-rule.ts
+class SpecialRule {}
+;// CONCATENATED MODULE: ./src/config/rule/special/impl/live-page.ts
+var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+
+class LivePageRule extends SpecialRule {
+  constructor() {
+    super(...arguments);
+    this.pageKey = 'bilibili_live';
+    this.danmakuMap = new Map();
+    this.spCheckers = [{
+      mainSelector: '.chat-item.danmaku-item',
+      bingo: node => live_page_awaiter(this, void 0, void 0, function* () {
+        var _a;
+        /**
+         * 屏蔽带粉丝牌子的发言
+         */
+        if ((yield Settings.getSettingValue('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
+          try {
+            /**
+             * 记录发言存入map 计数 + 1
+             */
+            let text = String(node.getAttribute('data-danmaku')); // 记录发言
+            let lastCount = this.danmakuMap.get(text);
+            this.danmakuMap.set(text, lastCount ? lastCount + 1 : 1); // danmakuMap 对应发言的 count + 1
+            /**
+             * 清除中央弹幕
+             * 删除与发言相同内容,同时计数 - 1
+             */
+            let nodeList = document.querySelectorAll('.bilibili-danmaku.mode-roll');
+            for (let i = 0; i < nodeList.length; i++) {
+              const node = nodeList[i];
+              if (node.innerHTML === text) {
+                node.remove();
+                if (this.danmakuMap.get(text) === 1) {
+                  this.danmakuMap.delete(text);
+                } else {
+                  this.danmakuMap.set(text, this.danmakuMap.get(text) - 1);
+                }
+                break;
+              }
+            }
+          } catch (e) {
+            console.error(e);
+          } finally {
+            console.log(true, node);
+            // 无论如何都要删除这条
+            return true;
+          }
+        }
+        return false;
+      })
+    }, {
+      mainSelector: '.bilibili-danmaku.mode-roll',
+      bingo: element => live_page_awaiter(this, void 0, void 0, function* () {
+        let text = element.innerHTML;
+        let lastCount = this.danmakuMap.get(text);
+        if (lastCount) {
+          this.danmakuMap.set(text, lastCount - 1); // 计数 - 1
+          return true;
+        }
+        return false;
+      })
+    }];
+  }
+}
+;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
+var special_rules_a;
+
+// import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
+class SpecialRules {
+  static init(specialRule) {
+    this.sp.set(specialRule.pageKey, specialRule);
+  }
+}
+special_rules_a = SpecialRules;
+SpecialRules.sp = new Map();
+(() => {
+  // this.init(new BaiduTest())
+  special_rules_a.init(new LivePageRule());
+})();
+;// CONCATENATED MODULE: ./src/observer/observer.ts
+class Observer {
+  windowKey(window0) {
+    if (window0 === window) {
+      return -1;
+    }
+    for (let i = 0; i < window.frames.length; i++) {
+      if (window0 === window.frames[i]) {
+        return i;
+      }
+    }
+    return -1; // 都没有是错的, 默认-1为主window(然后不做处理)
+  }
+
+  wrKey(rule, window0) {
+    return this.windowKey(window0) + ':' + rule.mainSelector;
+  }
+}
+;// CONCATENATED MODULE: ./src/observer/impl/my-observer.ts
+
+
+class MyObserver extends Observer {
+  constructor() {
+    super(...arguments);
+    this.observerMap = new Map();
+  }
+  start(rule, window) {
+    let key = this.wrKey(rule, window);
+    if (!this.observerMap.has(key)) {
+      this.handle(rule, window); // start处理(第一次)
+      let observer = new MutationObserver(() => {
+        this.handle(rule, window); // 变化后处理
+      });
+
+      observer.observe(window.document, {
+        childList: true,
+        subtree: true
+      });
+      this.observerMap.set(key, observer);
+    }
+  }
+  handle(rule, window) {
+    let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
+    for (let i = 0; i < mains.length; i++) {
+      rule.display(mains[i]);
+    }
+  }
+  stop(rule, window) {
+    var _a;
+    let key = this.wrKey(rule, window);
+    (_a = this.observerMap.get(key)) === null || _a === void 0 ? void 0 : _a.disconnect();
+    this.observerMap.delete(key);
+  }
+}
+;// CONCATENATED MODULE: ./src/observer/impl/arrive-observer.ts
+
+class ArriveObserver extends Observer {
+  start(rule, window) {
+    window.document.arrive(rule.mainSelector, {
+      fireOnAttributesModification: true,
+      existing: true
+    }, mainElement => {
+      rule.display(mainElement);
+    });
+  }
+  stop(rule, window) {
+    window.document.unbindArrive(rule.mainSelector);
+  }
+}
+;// CONCATENATED MODULE: ./src/config/page/page.ts
+
+
+
+
+/**
+ * 页面配置
+ */
+class Page {
+  constructor(page) {
+    var _a;
+    this.observer = new ArriveObserver();
+    this.iframeObserver = new MyObserver();
+    this.working = false;
+    this.checkerMap = new Map();
+    this.key = page.key;
+    this.name = (_a = page.name) !== null && _a !== void 0 ? _a : page.key;
+    this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers);
+    // 添加特殊规则 特殊规则优先处理
+    if (SpecialRules.sp.has(this.key)) {
+      let specialRule = SpecialRules.sp.get(this.key);
+      specialRule.spCheckers.forEach(spChecker => {
+        this.insert({
+          name: '',
+          key: '',
+          mainSelector: spChecker.mainSelector,
+          checker: {
+            bingo: spChecker.bingo
+          }
+        });
+      });
+    }
+  }
+  isCurrent() {
+    return this.regexp.test(location.href);
+  }
+  insert(rule) {
+    let _checkers = this.checkerMap.get(rule.mainSelector);
+    let checkers = _checkers ? _checkers : [];
+    checkers.push(rule.checker);
+    if (!_checkers) {
+      this.checkerMap.set(rule.mainSelector, checkers);
+    }
+  }
+  rules() {
+    let arr = [];
+    this.checkerMap.forEach((checkers, mainSelector) => {
+      arr.push(new DoRuleN(mainSelector, checkers));
+    });
+    return arr;
+  }
+  start() {
+    for (const rule of this.rules()) {
+      this.observer.start(rule, window);
+      for (let i = 0; i < window.frames.length; i++) {
+        try {
+          let frame = window.frames[i];
+          this.iframeObserver.start(rule, frame);
+        } catch (ignore) {}
+      }
+    }
+    this.working = true;
+  }
+  stop() {
+    for (const rule of this.rules()) {
+      this.observer.stop(rule, window);
+      // document.unbindArrive(rule.mainSelector);
+      rule.show();
+      // iframe里执行stop()
+      for (let i = 0; i < window.frames.length; i++) {
+        try {
+          let frame = window.frames[i];
+          this.iframeObserver.stop(rule, frame);
+          rule.show(frame.document);
+        } catch (ignore) {}
+      }
+    }
+    this.working = false;
+  }
+  /**
+   * 初始化start
+   * @param window0
+   */
+  arrive(window0) {
+    if (this.isCurrent()) {
+      for (let rule of this.rules()) {
+        if (window0 === window) {
+          this.observer.start(rule, window0);
+        } else {
+          this.iframeObserver.start(rule, window0);
+        }
+      }
+      if (document === window.document) {
+        this.working = true;
+      }
+    }
+  }
+  /**
+   * dom离开时stop
+   * @param window0
+   */
+  leave(window0) {
+    if (this.isCurrent()) {
+      for (let rule of this.rules()) {
+        if (window0 === window) {
+          this.observer.stop(rule, window0);
+        } else {
+          this.iframeObserver.stop(rule, window0);
+        }
+      }
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/init/read-etc.ts
+
+
+
+
+function readEtc() {
+  let pageData = GM_getValue('script.page');
+  let pageMap = new Map();
+  Object.keys(pageData).forEach(pageKey => {
+    pageData[pageKey].key = pageKey;
+    pageMap.set(pageKey, new Page(pageData[pageKey]));
+  });
+  // 特殊页面配置
+  SpecialPages.sp.forEach((page, key) => {
+    pageMap.set(key, page);
+  });
+  let ruleData = GM_getValue('script.rule');
+  Object.keys(ruleData).forEach(ruleKey => {
+    var _a;
+    let rule0 = ruleData[ruleKey];
+    rule0.key = ruleKey;
+    if (rule0.setting) {
+      rule0.setting = Settings.getSystemSettings().get(rule0.setting);
+    }
+    (_a = pageMap.get(rule0.page)) === null || _a === void 0 ? void 0 : _a.insert(new Rule(rule0));
+  });
+  return pageMap;
+}
 ;// CONCATENATED MODULE: ./node_modules/yaml/browser/dist/nodes/Node.js
 const ALIAS = Symbol.for('yaml.alias');
 const DOC = Symbol.for('yaml.document');
@@ -11940,39 +12735,8 @@ function public_api_stringify(value, replacer, options) {
 /* harmony default export */ const browser = ((/* unused pure expression or super */ null && (YAML)));
 
 
-;// CONCATENATED MODULE: ./src/yaml/setting.yaml
-/* harmony default export */ const setting = ("bilibili_card:\n  name: 卡片\n  type: like\nbilibili_match:\n  name: 文字匹配\n  type: regexp\n");
-;// CONCATENATED MODULE: ./src/config/setting/default-setting.ts
-class DefaultSettings {
-  /*******************
-   *   原始的4个配置方法
-   *******************/
-  // 原始的获取配置值
-  static _getSettingValue(param) {
-    let key = typeof param === 'string' ? param : param.key;
-    return GM_getValue('settings.' + key, []);
-  }
-  // 原始的设置配置值
-  static _setSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    GM_setValue('settings.' + key, data);
-  }
-  // 原始的添加配置值
-  static _addSettingValue(param, data) {
-    let oldData = DefaultSettings._getSettingValue(param);
-    oldData.push(...(typeof data === 'string' ? [data] : data));
-    DefaultSettings._setSettingValue(param, [...new Set(oldData)]);
-  }
-  // 原始的删除配置值
-  static _delSettingValue(param, data) {
-    let delSet = new Set(typeof data === 'string' ? [data] : data);
-    DefaultSettings._setSettingValue(param, DefaultSettings._getSettingValue(param).filter(item => !delSet.has(item)));
-  }
-}
-;// CONCATENATED MODULE: ./src/config/setting/special/special-setting.ts
-class SpecialSetting {}
-;// CONCATENATED MODULE: ./src/config/setting/special/impl/uid-username.ts
-var __awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+;// CONCATENATED MODULE: ./src/init/check-update.ts
+var check_update_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function (resolve) {
       resolve(value);
@@ -12000,240 +12764,43 @@ var __awaiter = undefined && undefined.__awaiter || function (thisArg, _argument
   });
 };
 
-
-class UidUsername extends SpecialSetting {
-  get(key) {
-    return () => __awaiter(this, void 0, void 0, function* () {
-      if (key === 'uid') {
-        return GM_getValue('settings.uid', []);
-      } else if (key === 'username') {
-        let uids = yield this.get('uid')();
-        return Promise.all(uids.map(uid => this.uid2username(uid)));
+function checkVersion() {
+  return check_update_awaiter(this, void 0, void 0, function* () {
+    let version = GM_getValue('script.version');
+    if (GM_info.script.version > version) {
+      // 存储版本 < 当前版本 => 更新配置
+      let promises = [];
+      yamlSources.forEach(yamlSource => {
+        promises.push(fetch(yamlSource.url));
+      });
+      let responses = yield Promise.all(promises);
+      for (let i = 0; i < yamlSources.length; i++) {
+        GM_setValue('script.' + yamlSources[i].key, parse(yield responses[i].text()));
       }
-      return [];
-    });
-  }
-  set(key) {
-    return uid => {
-      DefaultSettings._setSettingValue('uid', uid);
-    };
-  }
-  add(key) {
-    return uid => {
-      DefaultSettings._addSettingValue('uid', uid);
-    };
-  }
-  del(key) {
-    return uid => {
-      DefaultSettings._delSettingValue('uid', uid);
-    };
-  }
-  type(key) {
-    return () => {
-      if (key === 'uid') {
-        return 'equal';
-      } else if (key === 'username') {
-        return 'like';
-      } else {
-        return 'like';
-      }
-    };
-  }
-  uid2username(_uid) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // 输入错误
-      if (_uid === '') {
-        return '';
-      }
-      // 缓存在有效期内, 取缓存
-      let uid = Number(_uid);
-      let obj = GM_getValue('uid_' + uid);
-      let biliUp = obj;
-      if (biliUp && new Date().getTime() < biliUp.expiretime) {
-        return biliUp.username;
-      }
-      // 异步查询
-      return new Promise((res, rej) => {
-        this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex);
-      }).catch(() => Promise.resolve(''));
-    });
-  }
-  /**
-   * 查询用户名
-   * @param res
-   * @param rej
-   * @param uid
-   * @param firstIndex 首次调用时的index
-   * @param apiIndex 当前调用时的index
-   */
-  queryUsername(res, rej, uid, firstIndex, apiIndex) {
-    let api = UidUsername.apis[apiIndex];
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: api.url(uid),
-      onload: response => {
-        let json = JSON.parse(response.responseText);
-        if (api.success(json)) {
-          // 成功, 记录并返回
-          UidUsername.apiIndex = apiIndex;
-          let username = api.username(json);
-          // 保存至GM
-          let biliUp = {
-            uid,
-            username,
-            expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000
-          };
-          GM_setValue('uid_' + uid, biliUp);
-          res(username);
-        } else if (api.change(json)) {
-          // 拦截请求, 尝试其他api
-          apiIndex = (apiIndex + 1) % UidUsername.apis.length;
-          // 若firstIndex === apiIndex 说明循环一圈都被拦截, 不需要再查了, 直接错误
-          if (firstIndex !== apiIndex) {
-            this.queryUsername(res, rej, uid, firstIndex, apiIndex);
-          } else {
-            rej();
-          }
-        } else {
-          // 其他 错误
-          rej();
-        }
-      }
-    });
-  }
-}
-UidUsername.apiIndex = 0;
-UidUsername.apis = [{
-  url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
-  success: json => json.code === 0,
-  username: json => json.data.card.name,
-  change: json => json.code === -412 // 请求被拦截
-}, {
-  url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
-  success: json => json.code === 0,
-  username: json => json.data.name,
-  change: json => json.code === -412 // 请求被拦截
-}];
-
-class BiliUp {
-  constructor(uid, username, expiretime) {
-    this.uid = uid;
-    this.username = username;
-    this.expiretime = expiretime;
-  }
-}
-;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
-var _a;
-
-class SpecialSettings {}
-_a = SpecialSettings;
-SpecialSettings.sp = new Map();
-(() => {
-  _a.sp.set('uid', new UidUsername());
-  _a.sp.set('username', _a.sp.get('uid'));
-})();
-;// CONCATENATED MODULE: ./src/config/setting/setting.ts
-var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
+      GM_setValue('script.version', GM_info.script.version);
+    } else if (GM_info.script.version < version) {
+      // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
+      yamlSources.forEach(yamlSource => {
+        GM_setValue('script.' + yamlSource.key, parse(GM_getResourceText(yamlSource.key)));
+      });
     }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
-};
-
-
-
-
+}
 /**
- * 数据配置
+ * 配置源
  */
-class Setting {
-  constructor(setting) {
-    this.key = setting.key;
-    this.name = setting.name;
-    this.type = setting.type;
-  }
-}
-class Settings {
-  static getSystemSettings() {
-    return Settings.settingMap;
-  }
-  // 加入特殊配置后的获取配置值
-  static getSettingValue(param) {
-    return setting_awaiter(this, void 0, void 0, function* () {
-      let key = typeof param === 'string' ? param : param.key;
-      if (SpecialSettings.sp.has(key)) {
-        return SpecialSettings.sp.get(key).get(key)();
-      } else {
-        return DefaultSettings._getSettingValue(param);
-      }
-    });
-  }
-  // 加入特殊配置后的设置配置值
-  static setSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).set(key)(data);
-    } else {
-      DefaultSettings._setSettingValue(param, data);
-    }
-  }
-  // 加入特殊配置后的添加配置值
-  static addSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).add(key)(data);
-    } else {
-      DefaultSettings._addSettingValue(param, data);
-    }
-  }
-  // 加入特殊配置后的删除配置值
-  static delSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).del(key)(data);
-    } else {
-      DefaultSettings._delSettingValue(param, data);
-    }
-  }
-  static getCheckType(param) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).type(key)();
-    } else {
-      return Settings.settingMap.get(key).type;
-    }
-  }
-}
-(() => {
-  let obj = parse(setting);
-  Settings.settingMap = new Map();
-  Object.keys(obj).forEach(key => {
-    let setting = obj[key];
-    setting.key = key;
-    Settings.settingMap.set(key, setting);
-  });
-})();
+const yamlSources = [{
+  key: 'page',
+  url: 'https://zzxt0019.github.io/bilishield/page.yaml'
+}, {
+  key: 'rule',
+  url: 'https://zzxt0019.github.io/bilishield/rule.yaml'
+}, {
+  key: 'setting',
+  url: 'https://zzxt0019.github.io/bilishield/setting.yaml'
+}];
+// EXTERNAL MODULE: ./node_modules/react-dom/client.js
+var client = __webpack_require__(745);
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
@@ -12276,6 +12843,9 @@ function _toConsumableArray(arr) {
 // EXTERNAL MODULE: ./node_modules/classnames/index.js
 var classnames = __webpack_require__(4184);
 var classnames_default = /*#__PURE__*/__webpack_require__.n(classnames);
+// EXTERNAL MODULE: ./node_modules/react/index.js
+var react = __webpack_require__(7294);
+var react_namespaceObject = /*#__PURE__*/__webpack_require__.t(react, 2);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/config-provider/context.js
 
 const defaultIconPrefixCls = 'anticon';
@@ -42512,14 +43082,6 @@ function UidUsernameView(props) {
     onClick: () => setHide(!hide)
   }))));
 }
-;// CONCATENATED MODULE: ./src/main-static.ts
-const APP_ID = 'zzxt0019app';
-const DISPLAY_CLASS = 'zzxt0019class';
-const DISPLAY_STYLE_ID = 'zzxt0019style';
-const CSS_INNER_HTML = {
-  display: '.zzxt0019class { display: none !important; }',
-  debug: '.zzxt0019class { background-color: yellow !important; }'
-};
 ;// CONCATENATED MODULE: ./src/view/display-type.tsx
 
 
@@ -42534,7 +43096,7 @@ function DisplayType() {
   }, react.createElement(es_button, {
     onClick: () => {
       let element = document.getElementById(DISPLAY_STYLE_ID);
-      const displayType = element.getAttribute('displayType') === 'display' ? 'debug' : 'display';
+      const displayType = element.getAttribute('displayType') === 'hide' ? 'debug' : 'hide';
       element.setAttribute('displayType', displayType);
       element.innerHTML = CSS_INNER_HTML[displayType];
       for (let i = 0; i < window.frames.length; i++) {
@@ -42636,514 +43198,98 @@ function Box(props) {
     }
   }, "\u9690\u85CF\u83DC\u5355")))))));
 }
-;// CONCATENATED MODULE: ./src/config/page/special/special-pages.ts
-// import {BaiduPage} from "@/config/page/special/impl/baidu-page";
-class SpecialPages {
-  static init(specialPage) {
-    this.sp.set(specialPage.key, specialPage);
-  }
-}
-SpecialPages.sp = new Map();
-(() => {
-  // this.init(new BaiduPage())  // 测试使用
-})();
-;// CONCATENATED MODULE: ./src/config/rule/rule.ts
-/**
- * 规则配置
- */
-class Rule {
-  constructor(rule) {
-    this.key = rule.key;
-    this.name = rule.name;
-    this.mainSelector = rule.mainSelector;
-    this.checker = rule.checker;
-    if (this.checker.bingo) {
-      // 普通规则没有bingo
-      delete this.checker.bingo;
-    }
-  }
-}
-;// CONCATENATED MODULE: ./src/config/rule/do-rule.ts
-var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
+;// CONCATENATED MODULE: ./src/init/create-box.tsx
+
+
 
 
 /**
- * 执行的规则
+ * 创建div 添加react组件
+ * @returns root
  */
-class DoRule {
-  constructor(mainSelector) {
-    this.mainSelector = mainSelector;
+function createBox(pageMap, root = {
+  root: undefined
+}) {
+  if (root.root) {
+    root.root.unmount();
   }
-  /**
-   * 隐藏主体元素
-   * @param mainElement 主体元素
-   */
-  display(mainElement) {
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      if ((yield this.bingo(mainElement)) && !mainElement.classList.contains(DISPLAY_CLASS)) {
-        mainElement.classList.add(DISPLAY_CLASS);
-      }
-    });
+  for (const page of pageMap.values()) {
+    page.arrive(window);
   }
-  /**
-   * 显示主体元素
-   */
-  show(document = window.document) {
-    let elements = document.querySelectorAll(this.mainSelector + '.' + DISPLAY_CLASS);
-    for (let i = 0; i < elements.length; i++) {
-      elements[i].classList.remove(DISPLAY_CLASS);
-    }
+  let div;
+  if (!document.getElementById(APP_ID)) {
+    div = document.createElement('div');
+    div.setAttribute("id", APP_ID);
+    document.body.appendChild(div);
   }
-}
-/**
- * 执行的多规则
- */
-class DoRuleN extends DoRule {
-  constructor(mainSelector, checkers) {
-    super(mainSelector);
-    this.mainSelector = mainSelector;
-    this.checkers = checkers;
-  }
-  bingo(mainElement) {
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      // 所有检查器之中满足一个即为中奖
-      for (const checker of this.checkers) {
-        if (checker.innerSelector) {
-          // 有内部选择器, 选择所有内部元素判断, 满足一个即为中奖
-          let elements = mainElement.querySelectorAll(checker.innerSelector);
-          for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
-            if (yield this.bingo0(element, checker)) {
-              return true;
-            }
-          }
-        } else {
-          // 没有内部选择器, 即为当前元素, 判断
-          if (yield this.bingo0(mainElement, checker)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    });
-  }
-  /**
-   * 判断当前一个元素是否中奖
-   * @param element 当前元素
-   * @param checker 内部检查器
-   * @returns 是否中奖
-   */
-  bingo0(element, checker) {
-    var _a, _b;
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      if (checker.bingo) {
-        return yield checker.bingo(element);
-      }
-      // 如果是always 中奖
-      if (checker.always) {
-        return true;
-      }
-      // 是innerHTML 判断innerHTML是否在data的范围
-      if (checker.innerHTML && checker.setting) {
-        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting);
-          switch (type) {
-            case 'equal':
-              if (element.innerHTML === settingData) {
-                return true;
-              }
-              break;
-            case 'like':
-              if (element.innerHTML.includes(settingData)) {
-                return true;
-              }
-              break;
-            case 'regexp':
-              if (new RegExp(settingData, 'i').test(element.innerHTML)) {
-                return true;
-              }
-              break;
-          }
-        }
-      }
-      // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
-      if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
-        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting);
-          let value = element.getAttribute(checker.attribute);
-          switch (type) {
-            case 'equal':
-              if (value === settingData) {
-                return true;
-              }
-              break;
-            case 'like':
-              if (value.includes(settingData)) {
-                return true;
-              }
-              break;
-            case 'regexp':
-              if (new RegExp(settingData, 'i').test(value)) {
-                return true;
-              }
-              break;
-          }
-        }
-      }
-      return false;
-    });
-  }
-}
-;// CONCATENATED MODULE: ./src/config/rule/special/special-rule.ts
-class SpecialRule {}
-;// CONCATENATED MODULE: ./src/config/rule/special/impl/live-page.ts
-var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
-
-
-class LivePageRule extends SpecialRule {
-  constructor() {
-    super(...arguments);
-    this.pageKey = 'bilibili_live';
-    this.danmakuMap = new Map();
-    this.spCheckers = [{
-      mainSelector: '.chat-item.danmaku-item',
-      bingo: node => live_page_awaiter(this, void 0, void 0, function* () {
-        var _a;
-        /**
-         * 屏蔽带粉丝牌子的发言
-         */
-        if ((yield Settings.getSettingValue('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
-          try {
-            /**
-             * 记录发言存入map 计数 + 1
-             */
-            let text = String(node.getAttribute('data-danmaku')); // 记录发言
-            let lastCount = this.danmakuMap.get(text);
-            this.danmakuMap.set(text, lastCount ? lastCount + 1 : 1); // danmakuMap 对应发言的 count + 1
-            /**
-             * 清除中央弹幕
-             * 删除与发言相同内容,同时计数 - 1
-             */
-            let nodeList = document.querySelectorAll('.bilibili-danmaku.mode-roll');
-            for (let i = 0; i < nodeList.length; i++) {
-              const node = nodeList[i];
-              if (node.innerHTML === text) {
-                node.remove();
-                if (this.danmakuMap.get(text) === 1) {
-                  this.danmakuMap.delete(text);
-                } else {
-                  this.danmakuMap.set(text, this.danmakuMap.get(text) - 1);
-                }
-                break;
-              }
-            }
-          } catch (e) {
-            console.error(e);
-          } finally {
-            console.log(true, node);
-            // 无论如何都要删除这条
-            return true;
-          }
-        }
-        return false;
-      })
-    }, {
-      mainSelector: '.bilibili-danmaku.mode-roll',
-      bingo: element => live_page_awaiter(this, void 0, void 0, function* () {
-        let text = element.innerHTML;
-        let lastCount = this.danmakuMap.get(text);
-        if (lastCount) {
-          this.danmakuMap.set(text, lastCount - 1); // 计数 - 1
-          return true;
-        }
-        return false;
-      })
-    }];
-  }
-}
-;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
-var special_rules_a;
-
-// import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
-class SpecialRules {
-  static init(specialRule) {
-    this.sp.set(specialRule.pageKey, specialRule);
-  }
-}
-special_rules_a = SpecialRules;
-SpecialRules.sp = new Map();
-(() => {
-  // this.init(new BaiduTest())
-  special_rules_a.init(new LivePageRule());
-})();
-;// CONCATENATED MODULE: ./src/observer/observer.ts
-class Observer {
-  windowKey(window0) {
-    if (window0 === window) {
-      return -1;
-    }
-    for (let i = 0; i < window.frames.length; i++) {
-      if (window0 === window.frames[i]) {
-        return i;
-      }
-    }
-    return -1; // 都没有是错的, 默认-1为主window(然后不做处理)
-  }
-
-  wrKey(rule, window0) {
-    return this.windowKey(window0) + ':' + rule.mainSelector;
-  }
-}
-;// CONCATENATED MODULE: ./src/observer/impl/my-observer.ts
-
-
-class MyObserver extends Observer {
-  constructor() {
-    super(...arguments);
-    this.observerMap = new Map();
-  }
-  start(rule, window) {
-    let key = this.wrKey(rule, window);
-    if (!this.observerMap.has(key)) {
-      this.handle(rule, window); // start处理(第一次)
-      let observer = new MutationObserver(() => {
-        this.handle(rule, window); // 变化后处理
-      });
-
-      observer.observe(window.document, {
-        childList: true,
-        subtree: true
-      });
-      this.observerMap.set(key, observer);
-    }
-  }
-  handle(rule, window) {
-    let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
-    for (let i = 0; i < mains.length; i++) {
-      rule.display(mains[i]);
-    }
-  }
-  stop(rule, window) {
-    var _a;
-    let key = this.wrKey(rule, window);
-    (_a = this.observerMap.get(key)) === null || _a === void 0 ? void 0 : _a.disconnect();
-    this.observerMap.delete(key);
-  }
-}
-;// CONCATENATED MODULE: ./src/observer/impl/arrive-observer.ts
-
-class ArriveObserver extends Observer {
-  start(rule, window) {
-    window.document.arrive(rule.mainSelector, {
+  root.root = (0,client/* createRoot */.s)(document.getElementById(APP_ID));
+  root.root.render(react.createElement(Box, {
+    pageMap: pageMap
+  }));
+  return () => {
+    document.leave('#' + APP_ID, {
       fireOnAttributesModification: true,
-      existing: true
-    }, mainElement => {
-      rule.display(mainElement);
+      onceOnly: false,
+      existing: false
+    }, function () {
+      createBox(pageMap, root);
     });
-  }
-  stop(rule, window) {
-    window.document.unbindArrive(rule.mainSelector);
-  }
+  };
 }
-;// CONCATENATED MODULE: ./src/config/page/page.ts
-
-
-
+;// CONCATENATED MODULE: ./src/init/create-display-style.tsx
 
 /**
- * 页面配置
+ * 创建hideStyle
+ * 返回监听方法
+ * @param type
+ * @param document
  */
-class Page {
-  constructor(page) {
-    var _a;
-    this.observer = new ArriveObserver();
-    this.iframeObserver = new MyObserver();
-    this.working = false;
-    this.checkerMap = new Map();
-    this.key = page.key;
-    this.name = (_a = page.name) !== null && _a !== void 0 ? _a : page.key;
-    this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers);
-    // 添加特殊规则 特殊规则优先处理
-    if (SpecialRules.sp.has(this.key)) {
-      let specialRule = SpecialRules.sp.get(this.key);
-      specialRule.spCheckers.forEach(spChecker => {
-        this.insert({
-          name: '',
-          key: '',
-          mainSelector: spChecker.mainSelector,
-          checker: {
-            bingo: spChecker.bingo
-          }
-        });
-      });
-    }
+function createDisplayStyle(type, document) {
+  if (!document.getElementById(DISPLAY_STYLE_ID)) {
+    let element = document.createElement('style');
+    element.setAttribute('id', DISPLAY_STYLE_ID);
+    element.setAttribute('type', 'text/css');
+    element.setAttribute('displayType', type);
+    element.innerHTML = CSS_INNER_HTML[type];
+    document.body.appendChild(element);
   }
-  isCurrent() {
-    return this.regexp.test(location.href);
-  }
-  insert(rule) {
-    let _checkers = this.checkerMap.get(rule.mainSelector);
-    let checkers = _checkers ? _checkers : [];
-    checkers.push(rule.checker);
-    if (!_checkers) {
-      this.checkerMap.set(rule.mainSelector, checkers);
-    }
-  }
-  rules() {
-    let arr = [];
-    this.checkerMap.forEach((checkers, mainSelector) => {
-      arr.push(new DoRuleN(mainSelector, checkers));
+  return () => {
+    document.leave('#' + DISPLAY_STYLE_ID, {
+      fireOnAttributesModification: true,
+      onceOnly: false,
+      existing: false
+    }, function () {
+      var _a;
+      createDisplayStyle((_a = this.getAttribute('displayType')) !== null && _a !== void 0 ? _a : 'hide', document);
     });
-    return arr;
-  }
-  start() {
-    for (const rule of this.rules()) {
-      this.observer.start(rule, window);
-      for (let i = 0; i < window.frames.length; i++) {
-        try {
-          let frame = window.frames[i];
-          this.iframeObserver.start(rule, frame);
-        } catch (ignore) {}
-      }
-    }
-    this.working = true;
-  }
-  stop() {
-    for (const rule of this.rules()) {
-      this.observer.stop(rule, window);
-      // document.unbindArrive(rule.mainSelector);
-      rule.show();
-      // iframe里执行stop()
-      for (let i = 0; i < window.frames.length; i++) {
-        try {
-          let frame = window.frames[i];
-          this.iframeObserver.stop(rule, frame);
-          rule.show(frame.document);
-        } catch (ignore) {}
-      }
-    }
-    this.working = false;
-  }
-  /**
-   * 初始化start
-   * @param window0
-   */
-  arrive(window0) {
-    if (this.isCurrent()) {
-      for (let rule of this.rules()) {
-        if (window0 === window) {
-          this.observer.start(rule, window0);
-        } else {
-          this.iframeObserver.start(rule, window0);
-        }
-      }
-      if (document === window.document) {
-        this.working = true;
-      }
-    }
-  }
-  /**
-   * dom离开时stop
-   * @param window0
-   */
-  leave(window0) {
-    if (this.isCurrent()) {
-      for (let rule of this.rules()) {
-        if (window0 === window) {
-          this.observer.stop(rule, window0);
-        } else {
-          this.iframeObserver.stop(rule, window0);
-        }
-      }
-    }
-  }
+  };
 }
-;// CONCATENATED MODULE: ./src/yaml/page.yaml
-/* harmony default export */ const page = ("bilibili_all:\n  name: 比例全部\n  regexp:\n    pattern: bilibili.com\nbilibili_main:\n  name: 比例首页\n  regexp:\n    pattern: www.bilibili.com/$\nbilibili_live:\n  name: 比例直播\n  regexp:\n    pattern: live.bilibili.com\nbilibili_video:\n  name: 比例视频\n  regexp:\n    pattern: bilibili.com/video");
-;// CONCATENATED MODULE: ./src/yaml/rule.yaml
-/* harmony default export */ const rule = ("# 比例首页\nbilibili_rank_up:\n  name: 比例首页排行榜 up用户名\n  page: bilibili_main\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: .info .name\n    setting: username\n    innerHTML: true\nbilibili_rank_title:\n  page: bilibili_main\n  name: 比例首页排行榜 标题\n  mainSelector: .rank-wrap\n  checker:\n    innerSelector: '[title]'\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_pgc:\n  page: bilibili_main\n  name: 比例首页排行榜 番剧国创\n  mainSelector: .pgc-rank-wrap\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_rank_manka:\n  page: bilibili_main\n  name: 比例首页排行榜 漫画\n  mainSelector: .manga-rank-item\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_upperright_video:\n  page: bilibili_main\n  name: 比例首页 右上视频\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperright_video_up:\n  page: bilibili_main\n  name: 比例首页 右上视频 UP\n  mainSelector: .video-card-reco\n  checker:\n    innerSelector: p.up\n    setting: username\n    innerHTML: true\nbilibili_upperleft_card:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: img\n    setting: bilibili_match\n    attribute: alt\nbilibili_upperleft_card_adv:\n  page: bilibili_main\n  name: 比例首页 左边上角滑动图片\n  mainSelector: .van-slide .item\n  checker:\n    innerSelector: i.bypb-icon\nbilibili_left_video_title:\n  page: bilibili_main\n  name: 比例首页 左边视频块 标题\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.title\n    setting: bilibili_match\n    attribute: title\nbilibili_left_video_up:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_left_video_adv:\n  page: bilibili_main\n  name: 比例首页 左边视频块 up\n  mainSelector: .video-card-common\n  checker:\n    always: true\n    innerSelector: .gg-normal-icon\nbilibili_zhuanlan_title:\n  page: bilibili_main\n  name: 比例首页 专栏 标题\n  mainSelector: .article-card\n  checker:\n    innerSelector: .title\n    setting: bilibili_match\n    attribute: title\nbilibili_zhuanlan_up:\n  page: bilibili_main\n  name: 比例首页 专栏 UP\n  mainSelector: .article-card\n  checker:\n    innerSelector: a.up\n    setting: username\n    innerHTML: true\nbilibili_banner_adv:\n  page: bilibili_main\n  name: 比例首页 广告横条\n  mainSelector: a.banner-card.b-wrap\n  checker:\n    always: true\n    innerSelector: .gg-icon\n\n\nbilibili_ex_title:\n  page: bilibili_main\n  name: 比例首页 推广 标题\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_ex_up:\n  page: bilibili_main\n  name: 比例首页 推广 UP\n  mainSelector: .ex-card-common\n  checker:\n    innerSelector: a.ex-up\n    innerHTML: true\n    setting: username\nbilibili__live_up:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.name\n    innerHTML: true\n    setting: username\nbilibili__live_title:\n  page: bilibili_main\n  name: 比例首页 直播 标题\n  mainSelector: .live-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili__live_type:\n  page: bilibili_main\n  name: 比例首页 直播 分类\n  mainSelector: .live-card\n  checker:\n    innerSelector: p.tag\n    innerHTML: true\n    setting: bilibili_match\nbilibili_timeline_card:\n  page: bilibili_main\n  name: 比例首页 番剧国创左侧卡片\n  mainSelector: .time-line-card.item\n  checker:\n    innerSelector: a[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_manga_card:\n  page: bilibili_main\n  name: 比例首页 漫画左侧卡片\n  mainSelector: .manga-card\n  checker:\n    innerSelector: p[title]\n    attribute: title\n    setting: bilibili_match\nbilibili_number:\n  page: bilibili_main\n  name: 这无缘无故的攀比之心是从何而来\n  mainSelector: span.number\n  checker:\n    always: true\n\n# 比例整体(评论区)\nbilibili_all_comment_card:\n  name: 主评论卡片\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker:\n    setting: bilibili_card\n    innerSelector: .sailing-img\n    attribute: alt\nbilibili_all_comment_img:\n  name: 主评论图片\n  page: bilibili_all\n  mainSelector: .list-item\n  checker:\n    setting: bilibili_card\n    innerSelector: p.text img\n    attribute: alt\nbilibili_all_comment_uid:\n  name: 主评论人\n  page: bilibili_all\n  mainSelector: .list-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\nbilibili_all_inner_comment_img:\n  name: 子评论图片\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker:\n    setting: bilibili_card\n    innerSelector: img\n    attribute: alt\nbilibili_all_inner_comment_uid:\n  name: 子评论人\n  page: bilibili_all\n  mainSelector: .reply-item.reply-wrap\n  checker:\n    setting: uid\n    innerSelector: a[data-usercard-mid]\n    attribute: data-usercard-mid\n\n# 比例直播页面\nbilibili_live_right_word:\n  name: 直播右侧弹幕 关键字\n  page: bilibili_live\n  mainSelector: .chat-item.danmaku-item\n  checker:\n    setting: bilibili_match\n    attribute: data-danmaku\nbilibili_live_roll_word:\n  name: 直播中央弹幕 关键字\n  page: bilibili_live\n  mainSelector: .bilibili-danmaku.mode-roll\n  checker:\n    setting: bilibili_match\n    innerHTML: true\n\n# 比例视频页\nbilibili_video_right_word:\n  name: 视频页右侧 推荐视频 关键字\n  page: bilibili_video\n  mainSelector: .video-page-card\n  checker:\n    setting: bilibili_match\n    innerSelector: .info span.title[title]\n    attribute: title\nbilibili_video_right_up:\n  name: 视频页右侧 推荐视频 up\n  page: bilibili_video\n  mainSelector: .video-page-card\n  checker:\n    setting: username\n    innerSelector: .count.up a\n    innerHTML: true");
-;// CONCATENATED MODULE: ./src/test/read-system-file.tsx
+;// CONCATENATED MODULE: ./src/init/iframes.tsx
 
-
-
-
-
-
-
-function readFiles() {
-  let pageData = parse(page);
-  let pageMap = new Map();
-  Object.keys(pageData).forEach(pageKey => {
-    pageData[pageKey].key = pageKey;
-    pageMap.set(pageKey, new Page(pageData[pageKey]));
-  });
-  // 特殊页面配置
-  SpecialPages.sp.forEach((page, key) => {
-    pageMap.set(key, page);
-  });
-  let ruleData = parse(rule);
-  Object.keys(ruleData).forEach(ruleKey => {
-    var _a;
-    let rule0 = ruleData[ruleKey];
-    rule0.key = ruleKey;
-    if (rule0.setting) {
-      rule0.setting = Settings.getSystemSettings().get(rule0.setting);
+function iframes(pageMap) {
+  let framesData = [];
+  setInterval(() => {
+    for (let i = 0; i < window.frames.length; i++) {
+      let frame = window.frames[i];
+      // 第一次
+      if (!framesData[i] || framesData[i].frame !== frame) {
+        let frameData = {};
+        framesData[i] = frameData;
+        frameData.frame = frame;
+      }
+      // 不跨域且dom改变了
+      try {
+        if (frame.document && framesData[i].document !== frame.document) {
+          framesData[i].document = frame.document;
+          createDisplayStyle('hide', frame.document);
+          for (const page of pageMap.values()) {
+            page.stop();
+            page.start();
+          }
+        }
+      } catch (ignore) {}
     }
-    (_a = pageMap.get(rule0.page)) === null || _a === void 0 ? void 0 : _a.insert(new Rule(rule0));
-  });
-  return pageMap;
+  }, 500);
 }
 ;// CONCATENATED MODULE: ./src/main.tsx
 var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
@@ -43179,108 +43325,25 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
 
 
 
-function init() {
-  return main_awaiter(this, void 0, void 0, function* () {
-    let pageMap = readFiles();
-    createReact(pageMap)(); // 创建box
-    createDisplayStyle('display', window.document)();
-    iframes({
-      displayStyle: CSS_INNER_HTML.display,
-      pageMap: pageMap
-    });
-    // 油猴菜单展示/隐藏配置
-    GM_registerMenuCommand('配置', () => {
-      var _a;
-      let main = document.querySelector('#' + APP_ID + ' div');
-      main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
-    });
+
+(() => main_awaiter(void 0, void 0, void 0, function* () {
+  // 检查版本是否更新 更新配置
+  yield checkVersion();
+  // 读取配置生成 PageMap
+  let pageMap = readEtc();
+  // 创建ui-box
+  createBox(pageMap)();
+  // 创建隐藏元素的style标签
+  createDisplayStyle('hide', window.document)();
+  // 追加页面iframe内部屏蔽
+  iframes(pageMap);
+  // 油猴菜单展示/隐藏配置
+  GM_registerMenuCommand('配置', () => {
+    var _a;
+    let main = document.querySelector('#' + APP_ID + ' div');
+    main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
   });
-}
-/**
- * 创建div 添加react组件
- * @returns root
- */
-function createReact(pageMap, root = {
-  root: undefined
-}) {
-  if (root.root) {
-    root.root.unmount();
-  }
-  for (const page of pageMap.values()) {
-    page.arrive(window);
-  }
-  let div;
-  if (!document.getElementById(APP_ID)) {
-    div = document.createElement('div');
-    div.setAttribute("id", APP_ID);
-    document.body.appendChild(div);
-  }
-  root.root = (0,client/* createRoot */.s)(document.getElementById(APP_ID));
-  root.root.render(react.createElement(Box, {
-    pageMap: pageMap
-  }));
-  return () => {
-    document.leave('#' + APP_ID, {
-      fireOnAttributesModification: true,
-      onceOnly: false,
-      existing: false
-    }, function () {
-      createReact(pageMap, root);
-    });
-  };
-}
-/**
- * 创建displayStyle
- * 返回监听方法
- * @param type
- * @param document
- */
-function createDisplayStyle(type, document) {
-  if (!document.getElementById(DISPLAY_STYLE_ID)) {
-    let element = document.createElement('style');
-    element.setAttribute('id', DISPLAY_STYLE_ID);
-    element.setAttribute('type', 'text/css');
-    element.setAttribute('displayType', type);
-    element.innerHTML = CSS_INNER_HTML[type];
-    document.body.appendChild(element);
-  }
-  return () => {
-    document.leave('#' + DISPLAY_STYLE_ID, {
-      fireOnAttributesModification: true,
-      onceOnly: false,
-      existing: false
-    }, function () {
-      var _a;
-      createDisplayStyle((_a = this.getAttribute('displayType')) !== null && _a !== void 0 ? _a : 'display', document);
-    });
-  };
-}
-function iframes(data) {
-  let framesData = [];
-  setInterval(() => {
-    for (let i = 0; i < window.frames.length; i++) {
-      let frame = window.frames[i];
-      // 第一次
-      if (!framesData[i] || framesData[i].frame !== frame) {
-        let frameData = {};
-        framesData[i] = frameData;
-        frameData.frame = frame;
-      }
-      // 不跨域且dom改变了
-      try {
-        if (frame.document && framesData[i].document !== frame.document) {
-          framesData[i].document = frame.document;
-          createDisplayStyle('display', frame.document);
-          for (const page of data.pageMap.values()) {
-            page.stop();
-            page.start();
-          }
-        }
-      } catch (ignore) {}
-    }
-  }, 500);
-}
-init();
+}))();
 })();
 
 /******/ })()
