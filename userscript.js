@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672133118765
+// @version     1.1.1672150285201
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/27/2022
@@ -12765,8 +12765,9 @@ var check_update_awaiter = undefined && undefined.__awaiter || function (thisArg
 };
 
 function checkVersion() {
+  var _a;
   return check_update_awaiter(this, void 0, void 0, function* () {
-    let version = GM_getValue('script.version');
+    let version = (_a = GM_getValue('script.version')) !== null && _a !== void 0 ? _a : '1.0';
     if (GM_info.script.version > version) {
       // 存储版本 < 当前版本 => 更新配置
       let promises = [];
