@@ -10,12 +10,9 @@ export async function checkVersion() {
 
         let responses = await Promise.all(promises);
         for (let i = 0; i < yamlSources.length; i++) {
-            let str = await responses[i].text();
-            let uint8Array = new TextEncoder().encode(str);
-            console.log(new TextDecoder('gbk').decode(uint8Array));
-            // GM_setValue('script.' + yamlSources[i].key, yaml.parse(await responses[i].text()));
+            GM_setValue('script.' + yamlSources[i].key, yaml.parse(await responses[i].text()));
         }
-        // GM_setValue('script.version', GM_info.script.version);
+        GM_setValue('script.version', GM_info.script.version);
     }
 }
 
