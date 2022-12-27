@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672124061898
+// @version     1.1.1672125585779
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/27/2022

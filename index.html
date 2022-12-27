@@ -9,7 +9,19 @@
 <script>
     window.onload = () => {
         let table = document.createElement('table');
-        let data = document.domain === 'zzxt0019.github.io' ? ['./userscript.js', './userscript.min.js'] : ['./dist/userscript.js', './dist/userscript.min.js'];
+        let data = document.domain === 'zzxt0019.github.io' ? [
+            './userscript.js',
+            './userscript.min.js',
+            './page.yaml',
+            './rule.yaml',
+            './setting.yaml',
+        ] : [
+            './dist/userscript.js',
+            './dist/userscript.min.js',
+            './dist/page.yaml',
+            './dist/rule.yaml',
+            './dist/setting.yaml',
+        ];
         data.forEach((path) => {
             let tr = document.createElement('tr');
             let td1 = document.createElement('td');
