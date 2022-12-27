@@ -68,11 +68,8 @@ const config: Configuration = {
         }),
         new CopyPlugin({
             patterns: [{
-                from: __dirname + '/gh-index.html',
-                to: __dirname + '/dist/index.html',
-            }, {
-                from: __dirname + '/Elysia.png',
-                to: __dirname + '/dist/icon.png'
+                from: __dirname + '/public/',
+                to: __dirname + '/dist/',
             }]
         })
     ]
