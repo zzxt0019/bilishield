@@ -1,5 +1,3 @@
-import * as yaml from "yaml";
-import settingText from '../../yaml/setting.yaml';
 import {DefaultSettings} from "./default-setting";
 import {SpecialSetting} from "./special/special-setting";
 import {SpecialSettings} from './special/special-settings';
@@ -23,7 +21,7 @@ export class Setting {
 export class Settings {
     static settingMap: Map<string, Setting>
     static {  // 解析settingText到settingMap
-        let obj = yaml.parse(settingText)
+        let obj: any = GM_getValue('script.setting');
         Settings.settingMap = new Map()
         Object.keys(obj).forEach(key => {
             let setting = obj[key]

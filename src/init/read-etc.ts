@@ -1,13 +1,10 @@
 import {SpecialPages} from "@/config/page/special/special-pages";
 import {Rule} from "@/config/rule/rule";
 import {Settings} from "@/config/setting/setting";
-import * as yaml from "yaml";
-import {Page} from '../config/page/page';
-import pageText from '../yaml/page.yaml';
-import ruleText from '../yaml/rule.yaml';
+import {Page} from '@/config/page/page';
 
-export function readFiles() {
-    let pageData = yaml.parse(pageText);
+export function readEtc() {
+    let pageData: any = GM_getValue('script.page');
     let pageMap: Map<string, Page> = new Map()
     Object.keys(pageData).forEach(pageKey => {
         pageData[pageKey].key = pageKey
@@ -17,7 +14,7 @@ export function readFiles() {
     SpecialPages.sp.forEach((page, key) => {
         pageMap.set(key, page)
     })
-    let ruleData = yaml.parse(ruleText)
+    let ruleData: any = GM_getValue('script.rule')
     Object.keys(ruleData).forEach(ruleKey => {
         let rule0 = ruleData[ruleKey]
         rule0.key = ruleKey

@@ -17,7 +17,7 @@ export function DisplayType() {
                 <Col span={10}>
                     <Button onClick={() => {
                         let element: HTMLElement = document.getElementById(DISPLAY_STYLE_ID) as HTMLElement;
-                        const displayType = element.getAttribute('displayType') === 'display' ? 'debug' : 'display';
+                        const displayType = element.getAttribute('displayType') === 'hide' ? 'debug' : 'hide';
                         element.setAttribute('displayType', displayType);
                         element.innerHTML = CSS_INNER_HTML[displayType];
                         for (let i = 0; i < window.frames.length; i++) {
