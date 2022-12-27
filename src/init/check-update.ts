@@ -1,8 +1,8 @@
 import * as yaml from "yaml";
 
 export async function checkVersion() {
-    let version = GM_getValue('script.version');
-    if (GM_info.script.version === version) {
+    let version: string = GM_getValue('script.version');
+    if (GM_info.script.version > version) {  // 存储版本 < 当前版本 => 更新配置
         let promises: Promise<Response>[] = [];
         yamlSources.forEach(yamlSource => {
             promises.push(fetch(yamlSource.url));
@@ -13,6 +13,10 @@ export async function checkVersion() {
             GM_setValue('script.' + yamlSources[i].key, yaml.parse(await responses[i].text()));
         }
         GM_setValue('script.version', GM_info.script.version);
+    } else if (GM_info.script.version < version) {  // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
+        yamlSources.forEach(yamlSource => {
+            GM_setValue('script.' + yamlSource.key, yaml.parse(GM_getResourceText(yamlSource.key)));
+        })
     }
 }
 

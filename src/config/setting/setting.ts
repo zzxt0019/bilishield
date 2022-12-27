@@ -20,17 +20,17 @@ export class Setting {
 
 export class Settings {
     static settingMap: Map<string, Setting>
-    static {  // 解析settingText到settingMap
-        let obj: any = GM_getValue('script.setting');
-        Settings.settingMap = new Map()
-        Object.keys(obj).forEach(key => {
-            let setting = obj[key]
-            setting.key = key
-            Settings.settingMap.set(key, setting)
-        })
-    }
 
     static getSystemSettings(): Map<string, Setting> {
+        if (!Settings.settingMap) {
+            let obj: any = GM_getValue('script.setting');
+            Settings.settingMap = new Map()
+            Object.keys(obj).forEach(key => {
+                let setting = obj[key]
+                setting.key = key
+                Settings.settingMap.set(key, setting)
+            })
+        }
         return Settings.settingMap
     }
 
@@ -79,7 +79,7 @@ export class Settings {
         if (SpecialSettings.sp.has(key)) {
             return (SpecialSettings.sp.get(key) as SpecialSetting).type(key)()
         } else {
-            return (Settings.settingMap.get(key) as Setting).type
+            return (Settings.getSystemSettings().get(key) as Setting).type
         }
     }
 }
