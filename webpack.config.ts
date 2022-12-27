@@ -2,8 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
-
-const CopyPlugin = require('copy-webpack-plugin');
+import CopyPlugin from "copy-webpack-plugin";
 
 const config: Configuration = {
     resolve: {
@@ -43,18 +42,6 @@ const config: Configuration = {
                 exclude: /node_modules/,
                 use: ['babel-loader', 'ts-loader']
             },
-            {
-                test: /\.css$/,
-                use: ["raw-loader"]
-            },
-            {
-                test: /\.less$/,
-                use: ['raw-loader', 'less-loader']
-            },
-            {
-                test: /\.yml|\.yaml$/,
-                use: ['raw-loader']
-            }
         ],
     },
     plugins: [

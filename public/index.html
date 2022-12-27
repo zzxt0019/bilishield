@@ -7,35 +7,50 @@
 <body>
 </body>
 <script>
+    let data = document.domain === 'zzxt0019.github.io' ? [
+        './userscript.js',
+        './userscript.min.js',
+        './page.yaml',
+        './rule.yaml',
+        './setting.yaml',
+    ] : [
+        '../dist/userscript.js',
+        '../dist/userscript.min.js',
+        '../dist/page.yaml',
+        '../dist/rule.yaml',
+        '../dist/setting.yaml',
+    ];
     window.onload = () => {
-        let table = document.createElement('table');
-        let data = document.domain === 'zzxt0019.github.io' ? [
-            './userscript.js',
-            './userscript.min.js',
-            './page.yaml',
-            './rule.yaml',
-            './setting.yaml',
-        ] : [
-            './dist/userscript.js',
-            './dist/userscript.min.js',
-            './dist/page.yaml',
-            './dist/rule.yaml',
-            './dist/setting.yaml',
-        ];
+        let table = document.body.appendChild(document.createElement('table'));
+        let divs = [];
         data.forEach((path) => {
-            let tr = document.createElement('tr');
-            let td1 = document.createElement('td');
-            let td2 = document.createElement('td');
-            let a = document.createElement('a');
-            a.href = path;
-            a.innerText = path.substring(path.lastIndexOf('/') + 1);
-            td1.appendChild(a);
-            fetch(path).then(res => res.blob().then(blob => td2.innerText = (blob.size / 1024).toFixed(2) + 'KB'));
-            tr.appendChild(td1);
-            tr.appendChild(td2);
-            table.appendChild(tr);
+            // details
+            let div = document.body.appendChild(document.createElement('div'));
+            div.style.display = 'none';
+            divs.push(div);
+            let tr = table.appendChild(document.createElement('tr'));
+            let td1 = tr.appendChild(document.createElement('td'));
+            let td2 = tr.appendChild(document.createElement('td'));
+            let a1 = td1.appendChild(document.createElement('a'));
+            a1.href = 'javascript:void(0);';
+            a1.onclick = () => {
+                divs.forEach(div0 => {
+                    div.style.display = div.style.display === 'none' ? '' : 'none';
+                    if (div !== div0) {
+                        div0.style.display = 'none';
+                    }
+                });
+            }
+            a1.innerText = path.substring(path.lastIndexOf('/') + 1);
+            let a2 = td2.appendChild(document.createElement('a'));
+            a2.href = path;
+            fetch(path).then(res => {
+                res.blob().then(blob => {
+                    a2.innerText = (blob.size / 1024).toFixed(2) + 'KB';
+                    blob.arrayBuffer().then(res => div.innerText = new TextDecoder('utf-8').decode(res));
+                });
+            });
         })
-        document.body.appendChild(table);
     }
 </script>
 </html>
