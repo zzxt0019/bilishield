@@ -1,7 +1,7 @@
 import * as yaml from "yaml";
 
 export async function checkVersion() {
-    let version: string = GM_getValue('script.version');
+    let version: string = GM_getValue('script.version') ?? '1.0';
     if (GM_info.script.version > version) {  // 存储版本 < 当前版本 => 更新配置
         let promises: Promise<Response>[] = [];
         yamlSources.forEach(yamlSource => {
