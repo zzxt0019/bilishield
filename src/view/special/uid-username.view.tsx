@@ -104,7 +104,7 @@ export function UidUsernameView(props: {
                 </Row>
                 <Row>
                     <Select size={'small'} style={{width: '100%'}} showSearch={true} allowClear={true}
-                            placeholder={searched.length > 20 ? '123' : '000'} virtual={false}
+                            placeholder={'username'} showArrow={false}
                             disabled={inputUid !== '' && searched.length === 0}
                             value={inputUsername}
                             getPopupContainer={target => target}
