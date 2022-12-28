@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672217198759
+// @version     1.1.1672231071201
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/28/2022
@@ -49032,8 +49032,8 @@ function UidUsernameView(props) {
     },
     showSearch: true,
     allowClear: true,
-    placeholder: searched.length > 20 ? '123' : '000',
-    virtual: false,
+    placeholder: 'username',
+    showArrow: false,
     disabled: inputUid !== '' && searched.length === 0,
     value: inputUsername,
     getPopupContainer: target => target,
