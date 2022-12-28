@@ -24,9 +24,6 @@ export function SettingView(props: {
     }, [])
     return <Card>
         <Card>
-            <div>
-                {setting.key + ':' + setting.name}
-            </div>
             {settings.filter(setting => !hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
                      onDoubleClick={async (e) => {

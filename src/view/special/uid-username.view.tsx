@@ -42,7 +42,6 @@ export function UidUsernameView(props: {
     }, [])
     return <Card>
         <Card>
-            <div>uid名称:</div>
             {settings.filter(item => !hideSettings.includes(item.uid)).map(item =>
                 <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
                          trigger='click'>
