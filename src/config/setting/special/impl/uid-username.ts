@@ -64,11 +64,11 @@ export class UidUsername extends SpecialSetting {
         }).catch(() => Promise.resolve(''))
     }
 
-    async username2Uid(username: string): Promise<{ uid: number, username: string }[]> {
+    async username2uid(username: string, page: number = 1): Promise<{ uid: number, username: string }[]> {
         return new Promise<{ uid: number, username: string }[]>((res, rej) => {
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: 'http://api.bilibili.com/x/web-interface/search/type?search_type=bili_user&keyword=' + username,
+                url: 'http://api.bilibili.com/x/web-interface/search/type?search_type=bili_user&page=' + page + '&keyword=' + username,
                 onload: (response) => {
                     let json = JSON.parse(response.responseText)
                     if (json.code === 0 && json.data?.result) {

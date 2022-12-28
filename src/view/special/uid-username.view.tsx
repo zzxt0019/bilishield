@@ -11,8 +11,10 @@ export function UidUsernameView(props: {
     const uu: UidUsername = React.useState(new UidUsername())[0];
     const [settings, setSettings] = React.useState<{ username: string, uid: string }[]>([]);
     const [inputUid, setInputUid] = React.useState('');
-    const [inputUsername, setInputUsername] = React.useState('');
-    const [searched, setSearched] = React.useState<{ uid: number, username: string }[]>([]);
+    const [inputUsername, setInputUsername] = React.useState<string | undefined>(undefined);
+    const [searched, setSearched] = React.useState<{ uid: number, username: string; }[]>([]);
+    const [searchKeyword, setSearchKeyword] = React.useState('');
+    const [toUpdate, setToUpdate] = React.useState(0);
     const updateSettings = async () => {
         let uids = await uu.get('uid')()
         Promise.all(uids.map(uid => uu.uid2username(uid)))
@@ -26,6 +28,11 @@ export function UidUsernameView(props: {
     }
     const [hide, setHide] = React.useState(true);
     const [hideSettings, setHideSettings] = React.useState<string[]>([]);
+    const uid2username = async (uid: string) => {
+        let username: string | undefined = await uu.uid2username(uid);
+        username = username === '' ? undefined : username;
+        return username;
+    }
     const updateHideSettings = async () => {
         setHideSettings(await Settings.getSettingValue('uid.hide'));
     }
@@ -79,34 +86,53 @@ export function UidUsernameView(props: {
                                    // uid搜索后点取消, 清空username
                                    setInputUid('')
                                    if (searched.length === 0) {
-                                       setInputUsername('')
+                                       setInputUsername(undefined)
                                    }
                                } else if (/^[1-9](\d+)?$/.test(value)) {
                                    // 手动更改uid后, 清空username选项
                                    setInputUid(value + '');
-                                   setInputUsername(await uu.uid2username(value + ''));
+                                   setInputUsername(await uid2username(value + ''));
                                    setSearched([])
                                } else {  // 不是正整数 => 不改变(变为上一次的值)
                                    setInputUid(inputUid);
                                    if (searched.length !== 0) {
                                        setSearched([]);
-                                       setInputUsername(await uu.uid2username(inputUid));
+                                       setInputUsername(await uid2username(inputUid));
                                    }
                                }
                            }}></Input>
                 </Row>
                 <Row>
-                    <Select size={'small'} style={{width: '100%'}} showSearch={true} showArrow={false} placeholder='username'
+                    <Select size={'small'} style={{width: '100%'}} showSearch={true} allowClear={true}
+                            placeholder={searched.length > 20 ? '123' : '000'} virtual={false}
                             disabled={inputUid !== '' && searched.length === 0}
                             value={inputUsername}
                             getPopupContainer={target => target}
                             filterOption={false}
-                            onSearch={async (username) => {
-                                setSearched(await uu.username2Uid(username));
+                            onSearch={async (keyword) => {
+                                setSearchKeyword(keyword)
+                                setSearched(await uu.username2uid(keyword));
                             }}
                             onChange={async (uid) => {
-                                setInputUid(uid + '');
-                                setInputUsername(await uu.uid2username(uid + ''));
+                                if (uid) {
+                                    setInputUid(uid + '');
+                                    setInputUsername(await uid2username(uid + ''));
+                                } else {
+                                    setInputUid('');
+                                    setInputUsername(undefined);
+                                    setSearched([]);
+                                }
+                            }}
+                            onPopupScroll={async (e) => {
+                                let target: any = e.target;
+                                if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                                    // 滑动到底部
+                                    if (searchKeyword && searched.length % 20 === 0) {
+                                        searched.push(...await uu.username2uid(searchKeyword, searched.length / 20 + 1));
+                                        setSearched(searched);
+                                        setToUpdate(toUpdate + 1);
+                                    }
+                                }
                             }}>
                         {
                             searched.map(result =>
@@ -131,7 +157,7 @@ export function UidUsernameView(props: {
                         setInputUid('');
                         // 是通过username搜索的, 不清空当前username
                         if (searched.length === 0) {
-                            setInputUsername('');
+                            setInputUsername(undefined);
                         }
                         updateSettings()
                         updateBox()
