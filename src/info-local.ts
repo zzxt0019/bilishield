@@ -1,6 +1,9 @@
 // ==UserScript==
-// @name        本地文件测试
+// @name        bilibili屏蔽-开发
+// @version     0.0
 // @author      zzxt0019
+// @icon        https://zzxt0019.github.io/bilishield/Elysia.png
+// @description bilibili屏蔽 本地开发环境
 // @require     file://D:\【本地路径】\bilishield\dist\userscript.js
 // @resource    page file://D:\【本地路径】\bilishield\public\page.yaml
 // @resource    rule file://D:\【本地路径】\bilishield\public\rule.yaml

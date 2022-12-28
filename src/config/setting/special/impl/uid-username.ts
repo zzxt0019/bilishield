@@ -64,6 +64,27 @@ export class UidUsername extends SpecialSetting {
         }).catch(() => Promise.resolve(''))
     }
 
+    async username2Uid(username: string): Promise<{ uid: number, username: string }[]> {
+        return new Promise<{ uid: number, username: string }[]>((res, rej) => {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: 'http://api.bilibili.com/x/web-interface/search/type?search_type=bili_user&keyword=' + username,
+                onload: (response) => {
+                    let json = JSON.parse(response.responseText)
+                    if (json.code === 0 && json.data?.result) {
+                        let results = [];
+                        for (let i = 0; i < json.data.result.length; i++) {
+                            results.push({uid: json.data.result[i].mid, username: json.data.result[i].uname})
+                        }
+                        res(results);
+                    } else {
+                        rej();
+                    }
+                }
+            })
+        }).catch(() => Promise.resolve([]));
+    }
+
     /**
      * 查询用户名
      * @param res

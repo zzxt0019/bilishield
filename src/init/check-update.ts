@@ -2,42 +2,20 @@ import * as yaml from "yaml";
 
 export async function checkVersion() {
     let version: string = GM_getValue('script.version') ?? '1.0';
+    let configs = ['page', 'rule', 'setting'];
     if (GM_info.script.version > version) {  // 存储版本 < 当前版本 => 更新配置
         let promises: Promise<Response>[] = [];
-        yamlSources.forEach(yamlSource => {
-            promises.push(fetch(yamlSource.url));
-        });
-
+        configs.forEach(key => {
+            promises.push(fetch(GM_info.script.icon?.substring(0, 38) + key + '.yaml'));
+        })
         let responses = await Promise.all(promises);
-        for (let i = 0; i < yamlSources.length; i++) {
-            GM_setValue('script.' + yamlSources[i].key, yaml.parse(await responses[i].text()));
+        for (let i = 0; i < configs.length; i++) {
+            GM_setValue('script.' + configs[i], yaml.parse(await responses[i].text()));
         }
         GM_setValue('script.version', GM_info.script.version);
     } else if (GM_info.script.version < version) {  // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
-        yamlSources.forEach(yamlSource => {
-            GM_setValue('script.' + yamlSource.key, yaml.parse(GM_getResourceText(yamlSource.key)));
+        configs.forEach(config => {
+            GM_setValue('script.' + config, yaml.parse(GM_getResourceText(config)));
         })
     }
-}
-
-/**
- * 配置源
- */
-const yamlSources: YamlSource[] = [
-    {
-        key: 'page',
-        url: 'https://zzxt0019.github.io/bilishield/page.yaml'
-    },
-    {
-        key: 'rule',
-        url: 'https://zzxt0019.github.io/bilishield/rule.yaml'
-    }, {
-        key: 'setting',
-        url: 'https://zzxt0019.github.io/bilishield/setting.yaml'
-    },
-]
-
-interface YamlSource {
-    key: 'page' | 'rule' | 'setting'
-    url: string
 }
