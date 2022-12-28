@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672231071201
+// @version     1.1.1672231411988
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/28/2022
@@ -42857,7 +42857,7 @@ function SettingView(props) {
     updateSettings();
     updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, setting.key + ':' + setting.name), settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
+  return react.createElement(card, null, react.createElement(card, null, settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
     closable: true,
     key: setting,
     style: {
@@ -48952,7 +48952,7 @@ function UidUsernameView(props) {
     updateSettings();
     updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, react.createElement("div", null, "uid\u540D\u79F0:"), settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
+  return react.createElement(card, null, react.createElement(card, null, settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
     title: item.uid,
     key: item.uid,
     getPopupContainer: e => e,
