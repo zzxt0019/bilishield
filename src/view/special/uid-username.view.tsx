@@ -40,7 +40,7 @@ export function UidUsernameView(props: {
         updateSettings();
         updateHideSettings();
     }, [])
-    return <Card>
+    return <>
         <Card>
             {settings.filter(item => !hideSettings.includes(item.uid)).map(item =>
                 <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
@@ -145,7 +145,7 @@ export function UidUsernameView(props: {
             <Col span={2}>
                 <Button
                     size={'small'}
-                    style={{height: '100%'}}
+                    style={{width: '100%', height: '100%'}}
                     block
                     disabled={!inputUsername}
                     icon={<PlusOutlined/>}
@@ -165,7 +165,7 @@ export function UidUsernameView(props: {
             <Col span={2}>
                 <Button
                     size={'small'}
-                    style={{height: '100%'}}
+                    style={{width: '100%', height: '100%'}}
                     block
                     icon={<SyncOutlined/>}
                     onClick={async () => {
@@ -178,12 +178,12 @@ export function UidUsernameView(props: {
             <Col span={2}>
                 <Button
                     size={'small'}
-                    style={{height: '100%'}}
+                    style={{width: '100%', height: '100%'}}
                     block
                     icon={hide ? <EyeOutlined/> : <EyeInvisibleOutlined/>}
                     onClick={() => setHide(!hide)}>
                 </Button>
             </Col>
         </Row>
-    </Card>;
+    </>;
 }

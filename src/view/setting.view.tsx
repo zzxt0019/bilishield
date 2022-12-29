@@ -22,7 +22,7 @@ export function SettingView(props: {
         updateSettings();
         updateHideSettings();
     }, [])
-    return <Card>
+    return <>
         <Card>
             {settings.filter(setting => !hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
@@ -51,13 +51,13 @@ export function SettingView(props: {
             )}
         </Card>
         <Row>
-            <Col span={16}>
-                <Input type='text' value={inputValue}
+            <Col span={18}>
+                <Input type='text' value={inputValue} placeholder={setting.name}
                        allowClear={true}
                        onChange={e => setInputValue(e.target.value)}>
                 </Input>
             </Col>
-            <Col span={4}>
+            <Col span={3}>
                 <Button
                     block
                     icon={<PlusOutlined/>}
@@ -73,7 +73,7 @@ export function SettingView(props: {
                         updateBox()
                     }}></Button>
             </Col>
-            <Col span={4}>
+            <Col span={3}>
                 <Button
                     block
                     icon={hide ? <EyeOutlined/> : <EyeInvisibleOutlined/>}
@@ -81,5 +81,5 @@ export function SettingView(props: {
                 </Button>
             </Col>
         </Row>
-    </Card>
+    </>
 }

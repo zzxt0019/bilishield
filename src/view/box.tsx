@@ -85,7 +85,7 @@ export function Box(props: {
                     <Col span={8}></Col>
                     <Col span={8}></Col>
                     <Col span={8}>
-                        <Button size="small" block
+                        <Button block
                                 onClick={() => {
                                     (mainRef as any).current.style.setProperty('display', 'none')
                                 }}>隐藏菜单</Button>

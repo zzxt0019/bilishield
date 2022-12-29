@@ -47,7 +47,7 @@ const config: Configuration = {
     plugins: [
         new BannerPlugin({
             raw: true,
-            include: /^((?!min).)*$/,
+            include: 'userscript.js',
             banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
                 .replace('${timestamp}', String(new Date().getTime()))
                 .replace('${date}', String(new Date().toLocaleDateString()))

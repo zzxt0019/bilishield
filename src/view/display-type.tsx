@@ -7,7 +7,7 @@ export function DisplayType() {
         document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') as string
     )
     return <>
-        <Card>
+        <Card style={{height: '100%'}}>
             <Row>
                 <Col span={14}>
                     <Typography.Text>
