@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672231411988
+// @version     1.1.1672305931059
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
-// @description bilibili屏蔽 更新时间: 12/28/2022
+// @description bilibili屏蔽 更新时间: 12/29/2022
 // @match       *://*.bilibili.com/*
 // @noframes
 // @grant       GM_setValue
@@ -42144,7 +42144,11 @@ function PageView(props) {
     }
     setWorking(page.working);
   };
-  return react.createElement(react.Fragment, null, react.createElement(card, null, react.createElement(es_row, null, react.createElement(es_col, {
+  return react.createElement(react.Fragment, null, react.createElement(card, {
+    style: {
+      height: '100%'
+    }
+  }, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
   }, react.createElement(typography.Text, {
     type: working ? 'success' : 'danger'
@@ -42857,7 +42861,7 @@ function SettingView(props) {
     updateSettings();
     updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
+  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
     closable: true,
     key: setting,
     style: {
@@ -42889,14 +42893,15 @@ function SettingView(props) {
       updateBox();
     })
   }, setting))), react.createElement(es_row, null, react.createElement(es_col, {
-    span: 16
+    span: 18
   }, react.createElement(input, {
     type: 'text',
     value: inputValue,
+    placeholder: setting.name,
     allowClear: true,
     onChange: e => setInputValue(e.target.value)
   })), react.createElement(es_col, {
-    span: 4
+    span: 3
   }, react.createElement(es_button, {
     block: true,
     icon: react.createElement(icons_PlusOutlined, null),
@@ -42912,7 +42917,7 @@ function SettingView(props) {
       updateBox();
     })
   })), react.createElement(es_col, {
-    span: 4
+    span: 3
   }, react.createElement(es_button, {
     block: true,
     icon: hide ? react.createElement(icons_EyeOutlined, null) : react.createElement(icons_EyeInvisibleOutlined, null),
@@ -48952,7 +48957,7 @@ function UidUsernameView(props) {
     updateSettings();
     updateHideSettings();
   }, []);
-  return react.createElement(card, null, react.createElement(card, null, settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
+  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
     title: item.uid,
     key: item.uid,
     getPopupContainer: e => e,
@@ -49071,6 +49076,7 @@ function UidUsernameView(props) {
   }, react.createElement(es_button, {
     size: 'small',
     style: {
+      width: '100%',
       height: '100%'
     },
     block: true,
@@ -49093,6 +49099,7 @@ function UidUsernameView(props) {
   }, react.createElement(es_button, {
     size: 'small',
     style: {
+      width: '100%',
       height: '100%'
     },
     block: true,
@@ -49106,6 +49113,7 @@ function UidUsernameView(props) {
   }, react.createElement(es_button, {
     size: 'small',
     style: {
+      width: '100%',
       height: '100%'
     },
     block: true,
@@ -49120,7 +49128,11 @@ function UidUsernameView(props) {
 function DisplayType() {
   var _a;
   const [displayType, setDisplayType] = react.useState((_a = document.getElementById(DISPLAY_STYLE_ID)) === null || _a === void 0 ? void 0 : _a.getAttribute('displayType'));
-  return react.createElement(react.Fragment, null, react.createElement(card, null, react.createElement(es_row, null, react.createElement(es_col, {
+  return react.createElement(react.Fragment, null, react.createElement(card, {
+    style: {
+      height: '100%'
+    }
+  }, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
   }, react.createElement(typography.Text, null, displayType)), react.createElement(es_col, {
     span: 10
@@ -49222,7 +49234,6 @@ function Box(props) {
   }), react.createElement(es_col, {
     span: 8
   }, react.createElement(es_button, {
-    size: "small",
     block: true,
     onClick: () => {
       mainRef.current.style.setProperty('display', 'none');
