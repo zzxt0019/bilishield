@@ -17,7 +17,7 @@ export function PageView(props: {
         setWorking(page.working);
     }
     return <>
-        <Card style={{height: '100%'}}>
+        <Card>
             <Row>
                 <Col span={14}>
                     <Typography.Text type={working ? 'success' : 'danger'}>

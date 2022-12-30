@@ -1,5 +1,5 @@
 import {Settings} from "@/config/setting/setting";
-import {Button, Col, Layout, Row, Tabs} from "antd";
+import {Button, Col, Row, Tabs} from "antd";
 import React from "react";
 import {Page} from "@/config/page/page";
 import {PageView} from "./page.view";
@@ -39,18 +39,16 @@ export function Box(props: {
             }}><>
                 {
                     [...pageMap.values()].filter(page => page.isCurrent()).length !== 0 &&
-                    <Layout>
-                        <Row>
-                            <Col span={14}>
-                                {  // 页面
-                                    [...pageMap.values()].filter(page => page.isCurrent()).map(page =>
-                                        <PageView page={page}/>)}
-                            </Col>
-                            <Col span={10}>
-                                <DisplayType></DisplayType>
-                            </Col>
-                        </Row>
-                    </Layout>
+                    <Row>
+                        <Col span={14}>
+                            {  // 页面
+                                [...pageMap.values()].filter(page => page.isCurrent()).map(page =>
+                                    <PageView page={page}/>)}
+                        </Col>
+                        <Col span={10}>
+                            <DisplayType></DisplayType>
+                        </Col>
+                    </Row>
                 }
                 <Tabs>
                     <Tabs.TabPane key="uid2username-tab" tab={<span>uid</span>}>
