@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672414178460
+// @version     1.1.1672418028931
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
 // @description bilibili屏蔽 更新时间: 12/30/2022
@@ -48622,6 +48622,9 @@ function DisplayType() {
       alignItems: 'center',
       height: '100%'
     }
+  }, react.createElement(es_tooltip, {
+    title: '切换至' + (displayType === 'hide' ? 'debug' : 'hide'),
+    getPopupContainer: target => target
   }, react.createElement(es_button, {
     style: {
       width: '100px'
@@ -48638,7 +48641,7 @@ function DisplayType() {
       }
       setDisplayType(displayType);
     }
-  }, displayType)));
+  }, displayType))));
 }
 ;// CONCATENATED MODULE: ./src/view/box.tsx
 
