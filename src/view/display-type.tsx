@@ -7,10 +7,9 @@ export function DisplayType() {
         document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') as string
     )
     return <>
-        <Card style={{height: '100%'}} bodyStyle={{display:'flex',alignItems:'center',height:'100%'}}>
-
-            {/*<Tooltip title={'切换至' + (displayType === 'hide' ? 'debug' : 'hide')}*/}
-            {/*         getPopupContainer={target => target}>*/}
+        <Card style={{height: '100%'}} bodyStyle={{display: 'flex', alignItems: 'center', height: '100%'}}>
+            <Tooltip title={'切换至' + (displayType === 'hide' ? 'debug' : 'hide')}
+                     getPopupContainer={target => target}>
                 <Button style={{
                     width: '100px'
                 }} onClick={() => {
@@ -26,7 +25,7 @@ export function DisplayType() {
                     }
                     setDisplayType(displayType)
                 }}>{displayType}</Button>
-            {/*</Tooltip>*/}
+            </Tooltip>
         </Card>
     </>
 }
