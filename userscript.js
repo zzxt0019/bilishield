@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672305931059
+// @version     1.1.1672414178460
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
-// @description bilibili屏蔽 更新时间: 12/29/2022
+// @description bilibili屏蔽 更新时间: 12/30/2022
 // @match       *://*.bilibili.com/*
 // @noframes
 // @grant       GM_setValue
@@ -6475,7 +6475,7 @@ function blockString({ comment, type, value }, ctx, onComment, onChompKeep) {
 }
 function plainString(item, ctx, onComment, onChompKeep) {
     const { type, value } = item;
-    const { actualString, implicitKey, indent, inFlow } = ctx;
+    const { actualString, implicitKey, indent, indentStep, inFlow } = ctx;
     if ((implicitKey && /[\n[\]{},]/.test(value)) ||
         (inFlow && /[[\]{},]/.test(value))) {
         return quotedString(value, ctx);
@@ -6499,9 +6499,14 @@ function plainString(item, ctx, onComment, onChompKeep) {
         // Where allowed & type not set explicitly, prefer block style for multiline strings
         return blockString(item, ctx, onComment, onChompKeep);
     }
-    if (indent === '' && containsDocumentMarker(value)) {
-        ctx.forceBlockIndent = true;
-        return blockString(item, ctx, onComment, onChompKeep);
+    if (containsDocumentMarker(value)) {
+        if (indent === '') {
+            ctx.forceBlockIndent = true;
+            return blockString(item, ctx, onComment, onChompKeep);
+        }
+        else if (implicitKey && indent === indentStep) {
+            return quotedString(value, ctx);
+        }
     }
     const str = value.replace(/\n+/g, `$&\n${indent}`);
     // Verify that output will be parsed as a string, as e.g. plain numbers and
@@ -12817,45 +12822,6 @@ function checkVersion() {
 }
 // EXTERNAL MODULE: ./node_modules/react-dom/client.js
 var client = __webpack_require__(745);
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-  for (var i = 0, arr2 = new Array(len); i < len; i++) {
-    arr2[i] = arr[i];
-  }
-  return arr2;
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
-
-function _arrayWithoutHoles(arr) {
-  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/iterableToArray.js
-function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
-
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
-function _nonIterableSpread() {
-  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
-
-
-
-
-function _toConsumableArray(arr) {
-  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
-}
 // EXTERNAL MODULE: ./node_modules/classnames/index.js
 var classnames = __webpack_require__(4184);
 var classnames_default = /*#__PURE__*/__webpack_require__.n(classnames);
@@ -12878,6 +12844,47 @@ const context_ConfigContext = /*#__PURE__*/react.createContext({
 const {
   Consumer: ConfigConsumer
 } = context_ConfigContext;
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/canUseDom.js
+function canUseDom() {
+  return !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/styleChecker.js
+
+
+const canUseDocElement = () => canUseDom() && window.document.documentElement;
+
+let flexGapSupported;
+const detectFlexGapSupported = () => {
+  if (!canUseDocElement()) {
+    return false;
+  }
+  if (flexGapSupported !== undefined) {
+    return flexGapSupported;
+  }
+  // create flex container with row-gap set
+  const flex = document.createElement('div');
+  flex.style.display = 'flex';
+  flex.style.flexDirection = 'column';
+  flex.style.rowGap = '1px';
+  // create two, elements inside it
+  flex.appendChild(document.createElement('div'));
+  flex.appendChild(document.createElement('div'));
+  // append to the DOM (needed to obtain scrollHeight)
+  document.body.appendChild(flex);
+  flexGapSupported = flex.scrollHeight === 1; // flex container should be 1px high from the row-gap
+  document.body.removeChild(flex);
+  return flexGapSupported;
+};
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/hooks/useFlexGapSupport.js
+
+
+/* harmony default export */ const useFlexGapSupport = (() => {
+  const [flexible, setFlexible] = react.useState(false);
+  react.useEffect(() => {
+    setFlexible(detectFlexGapSupported());
+  }, []);
+  return flexible;
+});
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/extends.js
 function _extends() {
   _extends = Object.assign ? Object.assign.bind() : function (target) {
@@ -12995,6 +13002,24 @@ function _iterableToArrayLimit(arr, i) {
     return _arr;
   }
 }
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayLikeToArray.js
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+  for (var i = 0, arr2 = new Array(len); i < len; i++) {
+    arr2[i] = arr[i];
+  }
+  return arr2;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/unsupportedIterableToArray.js
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/nonIterableRest.js
 function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
@@ -13007,9 +13032,26 @@ function _nonIterableRest() {
 function slicedToArray_slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
 }
-;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/canUseDom.js
-function canUseDom() {
-  return !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/arrayWithoutHoles.js
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/iterableToArray.js
+function _iterableToArray(iter) {
+  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/nonIterableSpread.js
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js
+
+
+
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/contains.js
 function contains(root, n) {
@@ -15149,126 +15191,8 @@ var transform = {
 
 
 
-;// CONCATENATED MODULE: ./node_modules/antd/es/style/index.js
-
-
-const textEllipsis = {
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-  textOverflow: 'ellipsis'
-};
-const resetComponent = token => ({
-  boxSizing: 'border-box',
-  margin: 0,
-  padding: 0,
-  color: token.colorText,
-  fontSize: token.fontSize,
-  // font-variant: @font-variant-base;
-  lineHeight: token.lineHeight,
-  listStyle: 'none',
-  // font-feature-settings: @font-feature-settings-base;
-  fontFamily: token.fontFamily
-});
-const resetIcon = () => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  color: 'inherit',
-  fontStyle: 'normal',
-  lineHeight: 0,
-  textAlign: 'center',
-  textTransform: 'none',
-  // for SVG icon, see https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
-  verticalAlign: '-0.125em',
-  textRendering: 'optimizeLegibility',
-  '-webkit-font-smoothing': 'antialiased',
-  '-moz-osx-font-smoothing': 'grayscale',
-  '> *': {
-    lineHeight: 1
-  },
-  svg: {
-    display: 'inline-block'
-  },
-  '& &-icon': {
-    display: 'block'
-  }
-});
-const clearFix = () => ({
-  // https://github.com/ant-design/ant-design/issues/21301#issuecomment-583955229
-  '&::before': {
-    display: 'table',
-    content: '""'
-  },
-  '&::after': {
-    // https://github.com/ant-design/ant-design/issues/21864
-    display: 'table',
-    clear: 'both',
-    content: '""'
-  }
-});
-const genLinkStyle = token => ({
-  a: {
-    color: token.colorLink,
-    textDecoration: token.linkDecoration,
-    backgroundColor: 'transparent',
-    outline: 'none',
-    cursor: 'pointer',
-    transition: `color ${token.motionDurationSlow}`,
-    '-webkit-text-decoration-skip': 'objects',
-    '&:hover': {
-      color: token.colorLinkHover
-    },
-    '&:active': {
-      color: token.colorLinkActive
-    },
-    [`&:active,
-  &:hover`]: {
-      textDecoration: token.linkHoverDecoration,
-      outline: 0
-    },
-    // https://github.com/ant-design/ant-design/issues/22503
-    '&:focus': {
-      textDecoration: token.linkFocusDecoration,
-      outline: 0
-    },
-    '&[disabled]': {
-      color: token.colorTextDisabled,
-      cursor: 'not-allowed'
-    }
-  }
-});
-const genCommonStyle = (token, componentPrefixCls) => {
-  const {
-    fontFamily,
-    fontSize
-  } = token;
-  const rootPrefixSelector = `[class^="${componentPrefixCls}"], [class*=" ${componentPrefixCls}"]`;
-  return {
-    [rootPrefixSelector]: {
-      fontFamily,
-      fontSize,
-      boxSizing: 'border-box',
-      '&::before, &::after': {
-        boxSizing: 'border-box'
-      },
-      [rootPrefixSelector]: {
-        boxSizing: 'border-box',
-        '&::before, &::after': {
-          boxSizing: 'border-box'
-        }
-      }
-    }
-  };
-};
-const genFocusOutline = token => ({
-  outline: `${token.lineWidth * 4}px solid ${token.colorPrimaryBorder}`,
-  outlineOffset: 1,
-  transition: 'outline-offset 0s, outline 0s'
-});
-const genFocusStyle = token => ({
-  '&:focus-visible': Object.assign({}, genFocusOutline(token))
-});
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.1.1');
+/* harmony default export */ const version = ('5.1.2');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -17276,6 +17200,226 @@ function useToken() {
   });
   return [mergedTheme, token, hashed ? hashId : ''];
 }
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/responsiveObserver.js
+
+
+const responsiveArray = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
+const getResponsiveMap = token => ({
+  xs: `(max-width: ${token.screenXSMax}px)`,
+  sm: `(min-width: ${token.screenSM}px)`,
+  md: `(min-width: ${token.screenMD}px)`,
+  lg: `(min-width: ${token.screenLG}px)`,
+  xl: `(min-width: ${token.screenXL}px)`,
+  xxl: `(min-width: ${token.screenXXL}px)`
+});
+/**
+ * Ensures that the breakpoints token are valid, in good order
+ * For each breakpoint : screenMin <= screen <= screenMax and screenMax <= nextScreenMin
+ */
+const validateBreakpoints = token => {
+  const indexableToken = token;
+  const revBreakpoints = [].concat(responsiveArray).reverse();
+  revBreakpoints.forEach((breakpoint, i) => {
+    const breakpointUpper = breakpoint.toUpperCase();
+    const screenMin = `screen${breakpointUpper}Min`;
+    const screen = `screen${breakpointUpper}`;
+    if (!(indexableToken[screenMin] <= indexableToken[screen])) {
+      throw new Error(`${screenMin}<=${screen} fails : !(${indexableToken[screenMin]}<=${indexableToken[screen]})`);
+    }
+    if (i < revBreakpoints.length - 1) {
+      const screenMax = `screen${breakpointUpper}Max`;
+      if (!(indexableToken[screen] <= indexableToken[screenMax])) {
+        throw new Error(`${screen}<=${screenMax} fails : !(${indexableToken[screen]}<=${indexableToken[screenMax]})`);
+      }
+      const nextBreakpointUpperMin = revBreakpoints[i + 1].toUpperCase();
+      const nextScreenMin = `screen${nextBreakpointUpperMin}Min`;
+      if (!(indexableToken[screenMax] <= indexableToken[nextScreenMin])) {
+        throw new Error(`${screenMax}<=${nextScreenMin} fails : !(${indexableToken[screenMax]}<=${indexableToken[nextScreenMin]})`);
+      }
+    }
+  });
+  return token;
+};
+function useResponsiveObserver() {
+  const [, token] = useToken();
+  const responsiveMap = getResponsiveMap(validateBreakpoints(token));
+  // To avoid repeat create instance, we add `useMemo` here.
+  return react.useMemo(() => {
+    const subscribers = new Map();
+    let subUid = -1;
+    let screens = {};
+    return {
+      matchHandlers: {},
+      dispatch(pointMap) {
+        screens = pointMap;
+        subscribers.forEach(func => func(screens));
+        return subscribers.size >= 1;
+      },
+      subscribe(func) {
+        if (!subscribers.size) this.register();
+        subUid += 1;
+        subscribers.set(subUid, func);
+        func(screens);
+        return subUid;
+      },
+      unsubscribe(paramToken) {
+        subscribers.delete(paramToken);
+        if (!subscribers.size) this.unregister();
+      },
+      unregister() {
+        Object.keys(responsiveMap).forEach(screen => {
+          const matchMediaQuery = responsiveMap[screen];
+          const handler = this.matchHandlers[matchMediaQuery];
+          handler === null || handler === void 0 ? void 0 : handler.mql.removeListener(handler === null || handler === void 0 ? void 0 : handler.listener);
+        });
+        subscribers.clear();
+      },
+      register() {
+        Object.keys(responsiveMap).forEach(screen => {
+          const matchMediaQuery = responsiveMap[screen];
+          const listener = _ref => {
+            let {
+              matches
+            } = _ref;
+            this.dispatch(Object.assign(Object.assign({}, screens), {
+              [screen]: matches
+            }));
+          };
+          const mql = window.matchMedia(matchMediaQuery);
+          mql.addListener(listener);
+          this.matchHandlers[matchMediaQuery] = {
+            mql,
+            listener
+          };
+          listener(mql);
+        });
+      },
+      responsiveMap
+    };
+  }, [token]);
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/grid/RowContext.js
+
+const RowContext = /*#__PURE__*/(0,react.createContext)({});
+/* harmony default export */ const grid_RowContext = (RowContext);
+;// CONCATENATED MODULE: ./node_modules/antd/es/style/index.js
+
+
+const textEllipsis = {
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis'
+};
+const resetComponent = token => ({
+  boxSizing: 'border-box',
+  margin: 0,
+  padding: 0,
+  color: token.colorText,
+  fontSize: token.fontSize,
+  // font-variant: @font-variant-base;
+  lineHeight: token.lineHeight,
+  listStyle: 'none',
+  // font-feature-settings: @font-feature-settings-base;
+  fontFamily: token.fontFamily
+});
+const resetIcon = () => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  color: 'inherit',
+  fontStyle: 'normal',
+  lineHeight: 0,
+  textAlign: 'center',
+  textTransform: 'none',
+  // for SVG icon, see https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
+  verticalAlign: '-0.125em',
+  textRendering: 'optimizeLegibility',
+  '-webkit-font-smoothing': 'antialiased',
+  '-moz-osx-font-smoothing': 'grayscale',
+  '> *': {
+    lineHeight: 1
+  },
+  svg: {
+    display: 'inline-block'
+  },
+  '& &-icon': {
+    display: 'block'
+  }
+});
+const clearFix = () => ({
+  // https://github.com/ant-design/ant-design/issues/21301#issuecomment-583955229
+  '&::before': {
+    display: 'table',
+    content: '""'
+  },
+  '&::after': {
+    // https://github.com/ant-design/ant-design/issues/21864
+    display: 'table',
+    clear: 'both',
+    content: '""'
+  }
+});
+const genLinkStyle = token => ({
+  a: {
+    color: token.colorLink,
+    textDecoration: token.linkDecoration,
+    backgroundColor: 'transparent',
+    outline: 'none',
+    cursor: 'pointer',
+    transition: `color ${token.motionDurationSlow}`,
+    '-webkit-text-decoration-skip': 'objects',
+    '&:hover': {
+      color: token.colorLinkHover
+    },
+    '&:active': {
+      color: token.colorLinkActive
+    },
+    [`&:active,
+  &:hover`]: {
+      textDecoration: token.linkHoverDecoration,
+      outline: 0
+    },
+    // https://github.com/ant-design/ant-design/issues/22503
+    '&:focus': {
+      textDecoration: token.linkFocusDecoration,
+      outline: 0
+    },
+    '&[disabled]': {
+      color: token.colorTextDisabled,
+      cursor: 'not-allowed'
+    }
+  }
+});
+const genCommonStyle = (token, componentPrefixCls) => {
+  const {
+    fontFamily,
+    fontSize
+  } = token;
+  const rootPrefixSelector = `[class^="${componentPrefixCls}"], [class*=" ${componentPrefixCls}"]`;
+  return {
+    [rootPrefixSelector]: {
+      fontFamily,
+      fontSize,
+      boxSizing: 'border-box',
+      '&::before, &::after': {
+        boxSizing: 'border-box'
+      },
+      [rootPrefixSelector]: {
+        boxSizing: 'border-box',
+        '&::before, &::after': {
+          boxSizing: 'border-box'
+        }
+      }
+    }
+  };
+};
+const genFocusOutline = token => ({
+  outline: `${token.lineWidth * 4}px solid ${token.colorPrimaryBorder}`,
+  outlineOffset: 1,
+  transition: 'outline-offset 0s, outline 0s'
+});
+const genFocusStyle = token => ({
+  '&:focus-visible': Object.assign({}, genFocusOutline(token))
+});
 ;// CONCATENATED MODULE: ./node_modules/antd/es/theme/util/statistic.js
 const enableStatistic =  false || typeof CSSINJS_STATISTIC !== 'undefined';
 let recording = true;
@@ -17396,980 +17540,6 @@ function genComponentStyleHook(component, styleFn, getDefaultToken) {
     }), hashId];
   };
 }
-;// CONCATENATED MODULE: ./node_modules/antd/es/layout/style/light.js
-const genLayoutLightStyle = token => {
-  const {
-    componentCls,
-    colorBgContainer,
-    colorBgBody,
-    colorText
-  } = token;
-  return {
-    [`${componentCls}-sider-light`]: {
-      background: colorBgContainer,
-      [`${componentCls}-sider-trigger`]: {
-        color: colorText,
-        background: colorBgContainer
-      },
-      [`${componentCls}-sider-zero-width-trigger`]: {
-        color: colorText,
-        background: colorBgContainer,
-        border: `1px solid ${colorBgBody}`,
-        borderInlineStart: 0
-      }
-    }
-  };
-};
-/* harmony default export */ const light = (genLayoutLightStyle);
-;// CONCATENATED MODULE: ./node_modules/antd/es/layout/style/index.js
-
-
-const genLayoutStyle = token => {
-  const {
-    antCls,
-    // .ant
-    componentCls,
-    // .ant-layout
-    colorText,
-    colorTextLightSolid,
-    colorBgHeader,
-    colorBgBody,
-    colorBgTrigger,
-    layoutHeaderHeight,
-    layoutHeaderPaddingInline,
-    layoutHeaderColor,
-    layoutFooterPadding,
-    layoutTriggerHeight,
-    layoutZeroTriggerSize,
-    motionDurationMid,
-    motionDurationSlow,
-    fontSize,
-    borderRadius
-  } = token;
-  return {
-    [componentCls]: Object.assign(Object.assign({
-      display: 'flex',
-      flex: 'auto',
-      flexDirection: 'column',
-      /* fix firefox can't set height smaller than content on flex item */
-      minHeight: 0,
-      background: colorBgBody,
-      '&, *': {
-        boxSizing: 'border-box'
-      },
-      [`&${componentCls}-has-sider`]: {
-        flexDirection: 'row',
-        [`> ${componentCls}, > ${componentCls}-content`]: {
-          // https://segmentfault.com/a/1190000019498300
-          width: 0
-        }
-      },
-      [`${componentCls}-header, &${componentCls}-footer`]: {
-        flex: '0 0 auto'
-      },
-      [`${componentCls}-header`]: {
-        height: layoutHeaderHeight,
-        paddingInline: layoutHeaderPaddingInline,
-        color: layoutHeaderColor,
-        lineHeight: `${layoutHeaderHeight}px`,
-        background: colorBgHeader,
-        // Other components/menu/style/index.less line:686
-        // Integration with header element so menu items have the same height
-        [`${antCls}-menu`]: {
-          lineHeight: 'inherit'
-        }
-      },
-      [`${componentCls}-footer`]: {
-        padding: layoutFooterPadding,
-        color: colorText,
-        fontSize,
-        background: colorBgBody
-      },
-      [`${componentCls}-content`]: {
-        flex: 'auto',
-        // fix firefox can't set height smaller than content on flex item
-        minHeight: 0
-      },
-      [`${componentCls}-sider`]: {
-        position: 'relative',
-        // fix firefox can't set width smaller than content on flex item
-        minWidth: 0,
-        background: colorBgHeader,
-        transition: `all ${motionDurationMid}`,
-        '&-children': {
-          height: '100%',
-          // Hack for fixing margin collapse bug
-          // https://github.com/ant-design/ant-design/issues/7967
-          // solution from https://stackoverflow.com/a/33132624/3040605
-          marginTop: -0.1,
-          paddingTop: 0.1,
-          [`${antCls}-menu${antCls}-menu-inline-collapsed`]: {
-            width: 'auto'
-          }
-        },
-        '&-has-trigger': {
-          paddingBottom: layoutTriggerHeight
-        },
-        '&-right': {
-          order: 1
-        },
-        '&-trigger': {
-          position: 'fixed',
-          bottom: 0,
-          zIndex: 1,
-          height: layoutTriggerHeight,
-          color: colorTextLightSolid,
-          lineHeight: `${layoutTriggerHeight}px`,
-          textAlign: 'center',
-          background: colorBgTrigger,
-          cursor: 'pointer',
-          transition: `all ${motionDurationMid}`
-        },
-        '&-zero-width': {
-          '> *': {
-            overflow: 'hidden'
-          },
-          '&-trigger': {
-            position: 'absolute',
-            top: layoutHeaderHeight,
-            insetInlineEnd: -layoutZeroTriggerSize,
-            zIndex: 1,
-            width: layoutZeroTriggerSize,
-            height: layoutZeroTriggerSize,
-            color: colorTextLightSolid,
-            fontSize: token.fontSizeXL,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: colorBgHeader,
-            borderStartStartRadius: 0,
-            borderStartEndRadius: borderRadius,
-            borderEndEndRadius: borderRadius,
-            borderEndStartRadius: 0,
-            cursor: 'pointer',
-            transition: `background ${motionDurationSlow} ease`,
-            '&::after': {
-              position: 'absolute',
-              inset: 0,
-              background: 'transparent',
-              transition: `all ${motionDurationSlow}`,
-              content: '""'
-            },
-            '&:hover::after': {
-              // FIXME: Hardcode, but seems no need to create a token for this
-              background: `rgba(255, 255, 255, 0.2)`
-            },
-            '&-right': {
-              insetInlineStart: -layoutZeroTriggerSize,
-              borderStartStartRadius: borderRadius,
-              borderStartEndRadius: 0,
-              borderEndEndRadius: 0,
-              borderEndStartRadius: borderRadius
-            }
-          }
-        }
-      }
-    }, light(token)), {
-      // RTL
-      '&-rtl': {
-        direction: 'rtl'
-      }
-    })
-  };
-};
-// ============================== Export ==============================
-/* harmony default export */ const style = (genComponentStyleHook('Layout', token => {
-  const {
-    colorText,
-    controlHeightSM,
-    controlHeight,
-    controlHeightLG,
-    marginXXS
-  } = token;
-  const layoutHeaderPaddingInline = controlHeightLG * 1.25;
-  const layoutToken = merge(token, {
-    // Layout
-    layoutHeaderHeight: controlHeight * 2,
-    layoutHeaderPaddingInline,
-    layoutHeaderColor: colorText,
-    layoutFooterPadding: `${controlHeightSM}px ${layoutHeaderPaddingInline}px`,
-    layoutTriggerHeight: controlHeightLG + marginXXS * 2,
-    layoutZeroTriggerSize: controlHeightLG
-  });
-  return [genLayoutStyle(layoutToken)];
-}, token => {
-  const {
-    colorBgLayout
-  } = token;
-  return {
-    colorBgHeader: '#001529',
-    colorBgBody: colorBgLayout,
-    colorBgTrigger: '#002140'
-  };
-}));
-;// CONCATENATED MODULE: ./node_modules/antd/es/layout/layout.js
-
-var layout_rest = undefined && undefined.__rest || function (s, e) {
-  var t = {};
-  for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0) t[p] = s[p];
-  if (s != null && typeof Object.getOwnPropertySymbols === "function") for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-    if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i])) t[p[i]] = s[p[i]];
-  }
-  return t;
-};
-
-
-
-
-const LayoutContext = /*#__PURE__*/react.createContext({
-  siderHook: {
-    addSider: () => null,
-    removeSider: () => null
-  }
-});
-function generator(_ref) {
-  let {
-    suffixCls,
-    tagName,
-    displayName
-  } = _ref;
-  return BasicComponent => {
-    const Adapter = /*#__PURE__*/react.forwardRef((props, ref) => {
-      const {
-        getPrefixCls
-      } = react.useContext(context_ConfigContext);
-      const {
-        prefixCls: customizePrefixCls
-      } = props;
-      const prefixCls = getPrefixCls(suffixCls, customizePrefixCls);
-      return /*#__PURE__*/react.createElement(BasicComponent, Object.assign({
-        ref: ref,
-        prefixCls: prefixCls,
-        tagName: tagName
-      }, props));
-    });
-    if (false) {}
-    return Adapter;
-  };
-}
-const Basic = /*#__PURE__*/react.forwardRef((props, ref) => {
-  const {
-      prefixCls,
-      className,
-      children,
-      tagName
-    } = props,
-    others = layout_rest(props, ["prefixCls", "className", "children", "tagName"]);
-  const classString = classnames_default()(prefixCls, className);
-  return /*#__PURE__*/react.createElement(tagName, Object.assign(Object.assign({
-    className: classString
-  }, others), {
-    ref
-  }), children);
-});
-const BasicLayout = /*#__PURE__*/react.forwardRef((props, ref) => {
-  const {
-    direction
-  } = react.useContext(context_ConfigContext);
-  const [siders, setSiders] = react.useState([]);
-  const {
-      prefixCls,
-      className,
-      children,
-      hasSider,
-      tagName: Tag
-    } = props,
-    others = layout_rest(props, ["prefixCls", "className", "children", "hasSider", "tagName"]);
-  const [wrapSSR, hashId] = style(prefixCls);
-  const classString = classnames_default()(prefixCls, {
-    [`${prefixCls}-has-sider`]: typeof hasSider === 'boolean' ? hasSider : siders.length > 0,
-    [`${prefixCls}-rtl`]: direction === 'rtl'
-  }, className, hashId);
-  const contextValue = react.useMemo(() => ({
-    siderHook: {
-      addSider: id => {
-        setSiders(prev => [].concat(_toConsumableArray(prev), [id]));
-      },
-      removeSider: id => {
-        setSiders(prev => prev.filter(currentId => currentId !== id));
-      }
-    }
-  }), []);
-  return wrapSSR( /*#__PURE__*/react.createElement(LayoutContext.Provider, {
-    value: contextValue
-  }, /*#__PURE__*/react.createElement(Tag, Object.assign({
-    ref: ref,
-    className: classString
-  }, others), children)));
-});
-const Layout = generator({
-  suffixCls: 'layout',
-  tagName: 'section',
-  displayName: 'Layout'
-})(BasicLayout);
-const Header = generator({
-  suffixCls: 'layout-header',
-  tagName: 'header',
-  displayName: 'Header'
-})(Basic);
-const Footer = generator({
-  suffixCls: 'layout-footer',
-  tagName: 'footer',
-  displayName: 'Footer'
-})(Basic);
-const Content = generator({
-  suffixCls: 'layout-content',
-  tagName: 'main',
-  displayName: 'Content'
-})(Basic);
-
-/* harmony default export */ const layout = (Layout);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/BarsOutlined.js
-// This icon file is generated automatically.
-var BarsOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "0 0 1024 1024", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M912 192H328c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h584c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 284H328c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h584c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 284H328c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h584c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM104 228a56 56 0 10112 0 56 56 0 10-112 0zm0 284a56 56 0 10112 0 56 56 0 10-112 0zm0 284a56 56 0 10112 0 56 56 0 10-112 0z" } }] }, "name": "bars", "theme": "outlined" };
-/* harmony default export */ const asn_BarsOutlined = (BarsOutlined);
-
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-  return target;
-}
-;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
-
-function objectWithoutProperties_objectWithoutProperties(source, excluded) {
-  if (source == null) return {};
-  var target = _objectWithoutPropertiesLoose(source, excluded);
-  var key, i;
-  if (Object.getOwnPropertySymbols) {
-    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-    for (i = 0; i < sourceSymbolKeys.length; i++) {
-      key = sourceSymbolKeys[i];
-      if (excluded.indexOf(key) >= 0) continue;
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/Context.js
-
-var IconContext = /*#__PURE__*/(0,react.createContext)({});
-/* harmony default export */ const Context = (IconContext);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/utils.js
-
-
-
-
-
-
-
-function utils_warning(valid, message) {
-  es_warning(valid, "[@ant-design/icons] ".concat(message));
-}
-function isIconDefinition(target) {
-  return typeof_typeof(target) === 'object' && typeof target.name === 'string' && typeof target.theme === 'string' && (typeof_typeof(target.icon) === 'object' || typeof target.icon === 'function');
-}
-function normalizeAttrs() {
-  var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  return Object.keys(attrs).reduce(function (acc, key) {
-    var val = attrs[key];
-    switch (key) {
-      case 'class':
-        acc.className = val;
-        delete acc.class;
-        break;
-      default:
-        acc[key] = val;
-    }
-    return acc;
-  }, {});
-}
-function utils_generate(node, key, rootProps) {
-  if (!rootProps) {
-    return /*#__PURE__*/react.createElement(node.tag, _objectSpread2({
-      key: key
-    }, normalizeAttrs(node.attrs)), (node.children || []).map(function (child, index) {
-      return utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
-    }));
-  }
-  return /*#__PURE__*/react.createElement(node.tag, _objectSpread2(_objectSpread2({
-    key: key
-  }, normalizeAttrs(node.attrs)), rootProps), (node.children || []).map(function (child, index) {
-    return utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
-  }));
-}
-function getSecondaryColor(primaryColor) {
-  // choose the second color
-  return generate(primaryColor)[0];
-}
-function normalizeTwoToneColors(twoToneColor) {
-  if (!twoToneColor) {
-    return [];
-  }
-  return Array.isArray(twoToneColor) ? twoToneColor : [twoToneColor];
-}
-// These props make sure that the SVG behaviours like general text.
-// Reference: https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
-var svgBaseProps = {
-  width: '1em',
-  height: '1em',
-  fill: 'currentColor',
-  'aria-hidden': 'true',
-  focusable: 'false'
-};
-var iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  font-style: normal;\n  line-height: 0;\n  text-align: center;\n  text-transform: none;\n  vertical-align: -0.125em;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\n.anticon > * {\n  line-height: 1;\n}\n\n.anticon svg {\n  display: inline-block;\n}\n\n.anticon::before {\n  display: none;\n}\n\n.anticon .anticon-icon {\n  display: block;\n}\n\n.anticon[tabindex] {\n  cursor: pointer;\n}\n\n.anticon-spin::before,\n.anticon-spin {\n  display: inline-block;\n  -webkit-animation: loadingCircle 1s infinite linear;\n  animation: loadingCircle 1s infinite linear;\n}\n\n@-webkit-keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n";
-var useInsertStyles = function useInsertStyles() {
-  var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : iconStyles;
-  var _useContext = (0,react.useContext)(Context),
-    csp = _useContext.csp;
-  (0,react.useEffect)(function () {
-    updateCSS(styleStr, '@ant-design-icons', {
-      prepend: true,
-      csp: csp
-    });
-  }, []);
-};
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/IconBase.js
-
-
-var IconBase_excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
-
-var twoToneColorPalette = {
-  primaryColor: '#333',
-  secondaryColor: '#E6E6E6',
-  calculated: false
-};
-function setTwoToneColors(_ref) {
-  var primaryColor = _ref.primaryColor,
-    secondaryColor = _ref.secondaryColor;
-  twoToneColorPalette.primaryColor = primaryColor;
-  twoToneColorPalette.secondaryColor = secondaryColor || getSecondaryColor(primaryColor);
-  twoToneColorPalette.calculated = !!secondaryColor;
-}
-function getTwoToneColors() {
-  return _objectSpread2({}, twoToneColorPalette);
-}
-var IconBase = function IconBase(props) {
-  var icon = props.icon,
-    className = props.className,
-    onClick = props.onClick,
-    style = props.style,
-    primaryColor = props.primaryColor,
-    secondaryColor = props.secondaryColor,
-    restProps = objectWithoutProperties_objectWithoutProperties(props, IconBase_excluded);
-  var colors = twoToneColorPalette;
-  if (primaryColor) {
-    colors = {
-      primaryColor: primaryColor,
-      secondaryColor: secondaryColor || getSecondaryColor(primaryColor)
-    };
-  }
-  useInsertStyles();
-  utils_warning(isIconDefinition(icon), "icon should be icon definiton, but got ".concat(icon));
-  if (!isIconDefinition(icon)) {
-    return null;
-  }
-  var target = icon;
-  if (target && typeof target.icon === 'function') {
-    target = _objectSpread2(_objectSpread2({}, target), {}, {
-      icon: target.icon(colors.primaryColor, colors.secondaryColor)
-    });
-  }
-  return utils_generate(target.icon, "svg-".concat(target.name), _objectSpread2({
-    className: className,
-    onClick: onClick,
-    style: style,
-    'data-icon': target.name,
-    width: '1em',
-    height: '1em',
-    fill: 'currentColor',
-    'aria-hidden': 'true'
-  }, restProps));
-};
-IconBase.displayName = 'IconReact';
-IconBase.getTwoToneColors = getTwoToneColors;
-IconBase.setTwoToneColors = setTwoToneColors;
-/* harmony default export */ const components_IconBase = (IconBase);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/twoTonePrimaryColor.js
-
-
-
-function setTwoToneColor(twoToneColor) {
-  var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
-    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
-    primaryColor = _normalizeTwoToneColo2[0],
-    secondaryColor = _normalizeTwoToneColo2[1];
-  return components_IconBase.setTwoToneColors({
-    primaryColor: primaryColor,
-    secondaryColor: secondaryColor
-  });
-}
-function getTwoToneColor() {
-  var colors = components_IconBase.getTwoToneColors();
-  if (!colors.calculated) {
-    return colors.primaryColor;
-  }
-  return [colors.primaryColor, colors.secondaryColor];
-}
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/AntdIcon.js
-
-
-
-
-var AntdIcon_excluded = ["className", "icon", "spin", "rotate", "tabIndex", "onClick", "twoToneColor"];
-
-
-
-
-
-
-// Initial setting
-// should move it to antd main repo?
-setTwoToneColor('#1890ff');
-var Icon = /*#__PURE__*/react.forwardRef(function (props, ref) {
-  var _classNames;
-  var className = props.className,
-    icon = props.icon,
-    spin = props.spin,
-    rotate = props.rotate,
-    tabIndex = props.tabIndex,
-    onClick = props.onClick,
-    twoToneColor = props.twoToneColor,
-    restProps = objectWithoutProperties_objectWithoutProperties(props, AntdIcon_excluded);
-  var _React$useContext = react.useContext(Context),
-    _React$useContext$pre = _React$useContext.prefixCls,
-    prefixCls = _React$useContext$pre === void 0 ? 'anticon' : _React$useContext$pre,
-    rootClassName = _React$useContext.rootClassName;
-  var classString = classnames_default()(rootClassName, prefixCls, (_classNames = {}, _defineProperty(_classNames, "".concat(prefixCls, "-").concat(icon.name), !!icon.name), _defineProperty(_classNames, "".concat(prefixCls, "-spin"), !!spin || icon.name === 'loading'), _classNames), className);
-  var iconTabIndex = tabIndex;
-  if (iconTabIndex === undefined && onClick) {
-    iconTabIndex = -1;
-  }
-  var svgStyle = rotate ? {
-    msTransform: "rotate(".concat(rotate, "deg)"),
-    transform: "rotate(".concat(rotate, "deg)")
-  } : undefined;
-  var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
-    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
-    primaryColor = _normalizeTwoToneColo2[0],
-    secondaryColor = _normalizeTwoToneColo2[1];
-  return /*#__PURE__*/react.createElement("span", _objectSpread2(_objectSpread2({
-    role: "img",
-    "aria-label": icon.name
-  }, restProps), {}, {
-    ref: ref,
-    tabIndex: iconTabIndex,
-    onClick: onClick,
-    className: classString
-  }), /*#__PURE__*/react.createElement(components_IconBase, {
-    icon: icon,
-    primaryColor: primaryColor,
-    secondaryColor: secondaryColor,
-    style: svgStyle
-  }));
-});
-Icon.displayName = 'AntdIcon';
-Icon.getTwoToneColor = getTwoToneColor;
-Icon.setTwoToneColor = setTwoToneColor;
-/* harmony default export */ const AntdIcon = (Icon);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/BarsOutlined.js
-
-// GENERATE BY ./scripts/generate.ts
-// DON NOT EDIT IT MANUALLY
-
-
-
-var BarsOutlined_BarsOutlined = function BarsOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
-    ref: ref,
-    icon: asn_BarsOutlined
-  }));
-};
-BarsOutlined_BarsOutlined.displayName = 'BarsOutlined';
-/* harmony default export */ const icons_BarsOutlined = (/*#__PURE__*/react.forwardRef(BarsOutlined_BarsOutlined));
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/LeftOutlined.js
-// This icon file is generated automatically.
-var LeftOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 000 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281 360-281.1c3.8-3 6.1-7.7 6.1-12.6z" } }] }, "name": "left", "theme": "outlined" };
-/* harmony default export */ const asn_LeftOutlined = (LeftOutlined);
-
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/LeftOutlined.js
-
-// GENERATE BY ./scripts/generate.ts
-// DON NOT EDIT IT MANUALLY
-
-
-
-var LeftOutlined_LeftOutlined = function LeftOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
-    ref: ref,
-    icon: asn_LeftOutlined
-  }));
-};
-LeftOutlined_LeftOutlined.displayName = 'LeftOutlined';
-/* harmony default export */ const icons_LeftOutlined = (/*#__PURE__*/react.forwardRef(LeftOutlined_LeftOutlined));
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/RightOutlined.js
-// This icon file is generated automatically.
-var RightOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z" } }] }, "name": "right", "theme": "outlined" };
-/* harmony default export */ const asn_RightOutlined = (RightOutlined);
-
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/RightOutlined.js
-
-// GENERATE BY ./scripts/generate.ts
-// DON NOT EDIT IT MANUALLY
-
-
-
-var RightOutlined_RightOutlined = function RightOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
-    ref: ref,
-    icon: asn_RightOutlined
-  }));
-};
-RightOutlined_RightOutlined.displayName = 'RightOutlined';
-/* harmony default export */ const icons_RightOutlined = (/*#__PURE__*/react.forwardRef(RightOutlined_RightOutlined));
-;// CONCATENATED MODULE: ./node_modules/rc-util/es/omit.js
-
-function omit_omit(obj, fields) {
-  var clone = _objectSpread2({}, obj);
-  if (Array.isArray(fields)) {
-    fields.forEach(function (key) {
-      delete clone[key];
-    });
-  }
-  return clone;
-}
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/isNumeric.js
-const isNumeric = value => !isNaN(parseFloat(value)) && isFinite(value);
-/* harmony default export */ const _util_isNumeric = (isNumeric);
-;// CONCATENATED MODULE: ./node_modules/antd/es/layout/Sider.js
-var Sider_rest = undefined && undefined.__rest || function (s, e) {
-  var t = {};
-  for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0) t[p] = s[p];
-  if (s != null && typeof Object.getOwnPropertySymbols === "function") for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-    if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i])) t[p[i]] = s[p[i]];
-  }
-  return t;
-};
-
-
-
-
-
-
-
-
-
-
-const dimensionMaxMap = {
-  xs: '479.98px',
-  sm: '575.98px',
-  md: '767.98px',
-  lg: '991.98px',
-  xl: '1199.98px',
-  xxl: '1599.98px'
-};
-const SiderContext = /*#__PURE__*/react.createContext({});
-const generateId = (() => {
-  let i = 0;
-  return function () {
-    let prefix = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    i += 1;
-    return `${prefix}${i}`;
-  };
-})();
-const Sider = /*#__PURE__*/react.forwardRef((_a, ref) => {
-  var {
-      prefixCls: customizePrefixCls,
-      className,
-      trigger,
-      children,
-      defaultCollapsed = false,
-      theme = 'dark',
-      style = {},
-      collapsible = false,
-      reverseArrow = false,
-      width = 200,
-      collapsedWidth = 80,
-      zeroWidthTriggerStyle,
-      breakpoint,
-      onCollapse,
-      onBreakpoint
-    } = _a,
-    props = Sider_rest(_a, ["prefixCls", "className", "trigger", "children", "defaultCollapsed", "theme", "style", "collapsible", "reverseArrow", "width", "collapsedWidth", "zeroWidthTriggerStyle", "breakpoint", "onCollapse", "onBreakpoint"]);
-  const {
-    siderHook
-  } = (0,react.useContext)(LayoutContext);
-  const [collapsed, setCollapsed] = (0,react.useState)('collapsed' in props ? props.collapsed : defaultCollapsed);
-  const [below, setBelow] = (0,react.useState)(false);
-  (0,react.useEffect)(() => {
-    if ('collapsed' in props) {
-      setCollapsed(props.collapsed);
-    }
-  }, [props.collapsed]);
-  const handleSetCollapsed = (value, type) => {
-    if (!('collapsed' in props)) {
-      setCollapsed(value);
-    }
-    onCollapse === null || onCollapse === void 0 ? void 0 : onCollapse(value, type);
-  };
-  // ========================= Responsive =========================
-  const responsiveHandlerRef = (0,react.useRef)();
-  responsiveHandlerRef.current = mql => {
-    setBelow(mql.matches);
-    onBreakpoint === null || onBreakpoint === void 0 ? void 0 : onBreakpoint(mql.matches);
-    if (collapsed !== mql.matches) {
-      handleSetCollapsed(mql.matches, 'responsive');
-    }
-  };
-  (0,react.useEffect)(() => {
-    function responsiveHandler(mql) {
-      return responsiveHandlerRef.current(mql);
-    }
-    let mql;
-    if (typeof window !== 'undefined') {
-      const {
-        matchMedia
-      } = window;
-      if (matchMedia && breakpoint && breakpoint in dimensionMaxMap) {
-        mql = matchMedia(`(max-width: ${dimensionMaxMap[breakpoint]})`);
-        try {
-          mql.addEventListener('change', responsiveHandler);
-        } catch (error) {
-          mql.addListener(responsiveHandler);
-        }
-        responsiveHandler(mql);
-      }
-    }
-    return () => {
-      try {
-        mql === null || mql === void 0 ? void 0 : mql.removeEventListener('change', responsiveHandler);
-      } catch (error) {
-        mql === null || mql === void 0 ? void 0 : mql.removeListener(responsiveHandler);
-      }
-    };
-  }, [breakpoint]); // in order to accept dynamic 'breakpoint' property, we need to add 'breakpoint' into dependency array.
-  (0,react.useEffect)(() => {
-    const uniqueId = generateId('ant-sider-');
-    siderHook.addSider(uniqueId);
-    return () => siderHook.removeSider(uniqueId);
-  }, []);
-  const toggle = () => {
-    handleSetCollapsed(!collapsed, 'clickTrigger');
-  };
-  const {
-    getPrefixCls
-  } = (0,react.useContext)(context_ConfigContext);
-  const renderSider = () => {
-    const prefixCls = getPrefixCls('layout-sider', customizePrefixCls);
-    const divProps = omit_omit(props, ['collapsed']);
-    const rawWidth = collapsed ? collapsedWidth : width;
-    // use "px" as fallback unit for width
-    const siderWidth = _util_isNumeric(rawWidth) ? `${rawWidth}px` : String(rawWidth);
-    // special trigger when collapsedWidth == 0
-    const zeroWidthTrigger = parseFloat(String(collapsedWidth || 0)) === 0 ? /*#__PURE__*/react.createElement("span", {
-      onClick: toggle,
-      className: classnames_default()(`${prefixCls}-zero-width-trigger`, `${prefixCls}-zero-width-trigger-${reverseArrow ? 'right' : 'left'}`),
-      style: zeroWidthTriggerStyle
-    }, trigger || /*#__PURE__*/react.createElement(icons_BarsOutlined, null)) : null;
-    const iconObj = {
-      expanded: reverseArrow ? /*#__PURE__*/react.createElement(icons_RightOutlined, null) : /*#__PURE__*/react.createElement(icons_LeftOutlined, null),
-      collapsed: reverseArrow ? /*#__PURE__*/react.createElement(icons_LeftOutlined, null) : /*#__PURE__*/react.createElement(icons_RightOutlined, null)
-    };
-    const status = collapsed ? 'collapsed' : 'expanded';
-    const defaultTrigger = iconObj[status];
-    const triggerDom = trigger !== null ? zeroWidthTrigger || /*#__PURE__*/react.createElement("div", {
-      className: `${prefixCls}-trigger`,
-      onClick: toggle,
-      style: {
-        width: siderWidth
-      }
-    }, trigger || defaultTrigger) : null;
-    const divStyle = Object.assign(Object.assign({}, style), {
-      flex: `0 0 ${siderWidth}`,
-      maxWidth: siderWidth,
-      minWidth: siderWidth,
-      width: siderWidth
-    });
-    const siderCls = classnames_default()(prefixCls, `${prefixCls}-${theme}`, {
-      [`${prefixCls}-collapsed`]: !!collapsed,
-      [`${prefixCls}-has-trigger`]: collapsible && trigger !== null && !zeroWidthTrigger,
-      [`${prefixCls}-below`]: !!below,
-      [`${prefixCls}-zero-width`]: parseFloat(siderWidth) === 0
-    }, className);
-    return /*#__PURE__*/react.createElement("aside", Object.assign({
-      className: siderCls
-    }, divProps, {
-      style: divStyle,
-      ref: ref
-    }), /*#__PURE__*/react.createElement("div", {
-      className: `${prefixCls}-children`
-    }, children), collapsible || below && zeroWidthTrigger ? triggerDom : null);
-  };
-  const contextValue = react.useMemo(() => ({
-    siderCollapsed: collapsed
-  }), [collapsed]);
-  return /*#__PURE__*/react.createElement(SiderContext.Provider, {
-    value: contextValue
-  }, renderSider());
-});
-if (false) {}
-/* harmony default export */ const layout_Sider = (Sider);
-;// CONCATENATED MODULE: ./node_modules/antd/es/layout/index.js
-
-
-const layout_Layout = layout;
-layout_Layout.Header = Header;
-layout_Layout.Footer = Footer;
-layout_Layout.Content = Content;
-layout_Layout.Sider = layout_Sider;
-/* harmony default export */ const es_layout = (layout_Layout);
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/styleChecker.js
-
-
-const canUseDocElement = () => canUseDom() && window.document.documentElement;
-
-let flexGapSupported;
-const detectFlexGapSupported = () => {
-  if (!canUseDocElement()) {
-    return false;
-  }
-  if (flexGapSupported !== undefined) {
-    return flexGapSupported;
-  }
-  // create flex container with row-gap set
-  const flex = document.createElement('div');
-  flex.style.display = 'flex';
-  flex.style.flexDirection = 'column';
-  flex.style.rowGap = '1px';
-  // create two, elements inside it
-  flex.appendChild(document.createElement('div'));
-  flex.appendChild(document.createElement('div'));
-  // append to the DOM (needed to obtain scrollHeight)
-  document.body.appendChild(flex);
-  flexGapSupported = flex.scrollHeight === 1; // flex container should be 1px high from the row-gap
-  document.body.removeChild(flex);
-  return flexGapSupported;
-};
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/hooks/useFlexGapSupport.js
-
-
-/* harmony default export */ const useFlexGapSupport = (() => {
-  const [flexible, setFlexible] = react.useState(false);
-  react.useEffect(() => {
-    setFlexible(detectFlexGapSupported());
-  }, []);
-  return flexible;
-});
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/responsiveObserver.js
-
-
-const responsiveArray = ['xxl', 'xl', 'lg', 'md', 'sm', 'xs'];
-const getResponsiveMap = token => ({
-  xs: `(max-width: ${token.screenXSMax}px)`,
-  sm: `(min-width: ${token.screenSM}px)`,
-  md: `(min-width: ${token.screenMD}px)`,
-  lg: `(min-width: ${token.screenLG}px)`,
-  xl: `(min-width: ${token.screenXL}px)`,
-  xxl: `(min-width: ${token.screenXXL}px)`
-});
-/**
- * Ensures that the breakpoints token are valid, in good order
- * For each breakpoint : screenMin <= screen <= screenMax and screenMax <= nextScreenMin
- */
-const validateBreakpoints = token => {
-  const indexableToken = token;
-  const revBreakpoints = [].concat(responsiveArray).reverse();
-  revBreakpoints.forEach((breakpoint, i) => {
-    const breakpointUpper = breakpoint.toUpperCase();
-    const screenMin = `screen${breakpointUpper}Min`;
-    const screen = `screen${breakpointUpper}`;
-    if (!(indexableToken[screenMin] <= indexableToken[screen])) {
-      throw new Error(`${screenMin}<=${screen} fails : !(${indexableToken[screenMin]}<=${indexableToken[screen]})`);
-    }
-    if (i < revBreakpoints.length - 1) {
-      const screenMax = `screen${breakpointUpper}Max`;
-      if (!(indexableToken[screen] <= indexableToken[screenMax])) {
-        throw new Error(`${screen}<=${screenMax} fails : !(${indexableToken[screen]}<=${indexableToken[screenMax]})`);
-      }
-      const nextBreakpointUpperMin = revBreakpoints[i + 1].toUpperCase();
-      const nextScreenMin = `screen${nextBreakpointUpperMin}Min`;
-      if (!(indexableToken[screenMax] <= indexableToken[nextScreenMin])) {
-        throw new Error(`${screenMax}<=${nextScreenMin} fails : !(${indexableToken[screenMax]}<=${indexableToken[nextScreenMin]})`);
-      }
-    }
-  });
-  return token;
-};
-function useResponsiveObserver() {
-  const [, token] = useToken();
-  const responsiveMap = getResponsiveMap(validateBreakpoints(token));
-  // To avoid repeat create instance, we add `useMemo` here.
-  return react.useMemo(() => {
-    const subscribers = new Map();
-    let subUid = -1;
-    let screens = {};
-    return {
-      matchHandlers: {},
-      dispatch(pointMap) {
-        screens = pointMap;
-        subscribers.forEach(func => func(screens));
-        return subscribers.size >= 1;
-      },
-      subscribe(func) {
-        if (!subscribers.size) this.register();
-        subUid += 1;
-        subscribers.set(subUid, func);
-        func(screens);
-        return subUid;
-      },
-      unsubscribe(paramToken) {
-        subscribers.delete(paramToken);
-        if (!subscribers.size) this.unregister();
-      },
-      unregister() {
-        Object.keys(responsiveMap).forEach(screen => {
-          const matchMediaQuery = responsiveMap[screen];
-          const handler = this.matchHandlers[matchMediaQuery];
-          handler === null || handler === void 0 ? void 0 : handler.mql.removeListener(handler === null || handler === void 0 ? void 0 : handler.listener);
-        });
-        subscribers.clear();
-      },
-      register() {
-        Object.keys(responsiveMap).forEach(screen => {
-          const matchMediaQuery = responsiveMap[screen];
-          const listener = _ref => {
-            let {
-              matches
-            } = _ref;
-            this.dispatch(Object.assign(Object.assign({}, screens), {
-              [screen]: matches
-            }));
-          };
-          const mql = window.matchMedia(matchMediaQuery);
-          mql.addListener(listener);
-          this.matchHandlers[matchMediaQuery] = {
-            mql,
-            listener
-          };
-          listener(mql);
-        });
-      },
-      responsiveMap
-    };
-  }, [token]);
-}
-;// CONCATENATED MODULE: ./node_modules/antd/es/grid/RowContext.js
-
-const RowContext = /*#__PURE__*/(0,react.createContext)({});
-/* harmony default export */ const grid_RowContext = (RowContext);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/grid/style/index.js
 
 // ============================== Row-Shared ==============================
@@ -18776,6 +17946,257 @@ if (false) {}
 var CloseOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M563.8 512l262.5-312.9c4.4-5.2.7-13.1-6.1-13.1h-79.8c-4.7 0-9.2 2.1-12.3 5.7L511.6 449.8 295.1 191.7c-3-3.6-7.5-5.7-12.3-5.7H203c-6.8 0-10.5 7.9-6.1 13.1L459.4 512 196.9 824.9A7.95 7.95 0 00203 838h79.8c4.7 0 9.2-2.1 12.3-5.7l216.5-258.1 216.5 258.1c3 3.6 7.5 5.7 12.3 5.7h79.8c6.8 0 10.5-7.9 6.1-13.1L563.8 512z" } }] }, "name": "close", "theme": "outlined" };
 /* harmony default export */ const asn_CloseOutlined = (CloseOutlined);
 
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+  return target;
+}
+;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js
+
+function objectWithoutProperties_objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+  var key, i;
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/Context.js
+
+var IconContext = /*#__PURE__*/(0,react.createContext)({});
+/* harmony default export */ const Context = (IconContext);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/utils.js
+
+
+
+
+
+
+
+function utils_warning(valid, message) {
+  es_warning(valid, "[@ant-design/icons] ".concat(message));
+}
+function isIconDefinition(target) {
+  return typeof_typeof(target) === 'object' && typeof target.name === 'string' && typeof target.theme === 'string' && (typeof_typeof(target.icon) === 'object' || typeof target.icon === 'function');
+}
+function normalizeAttrs() {
+  var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  return Object.keys(attrs).reduce(function (acc, key) {
+    var val = attrs[key];
+    switch (key) {
+      case 'class':
+        acc.className = val;
+        delete acc.class;
+        break;
+      default:
+        acc[key] = val;
+    }
+    return acc;
+  }, {});
+}
+function utils_generate(node, key, rootProps) {
+  if (!rootProps) {
+    return /*#__PURE__*/react.createElement(node.tag, _objectSpread2({
+      key: key
+    }, normalizeAttrs(node.attrs)), (node.children || []).map(function (child, index) {
+      return utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
+    }));
+  }
+  return /*#__PURE__*/react.createElement(node.tag, _objectSpread2(_objectSpread2({
+    key: key
+  }, normalizeAttrs(node.attrs)), rootProps), (node.children || []).map(function (child, index) {
+    return utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
+  }));
+}
+function getSecondaryColor(primaryColor) {
+  // choose the second color
+  return generate(primaryColor)[0];
+}
+function normalizeTwoToneColors(twoToneColor) {
+  if (!twoToneColor) {
+    return [];
+  }
+  return Array.isArray(twoToneColor) ? twoToneColor : [twoToneColor];
+}
+// These props make sure that the SVG behaviours like general text.
+// Reference: https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
+var svgBaseProps = {
+  width: '1em',
+  height: '1em',
+  fill: 'currentColor',
+  'aria-hidden': 'true',
+  focusable: 'false'
+};
+var iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  font-style: normal;\n  line-height: 0;\n  text-align: center;\n  text-transform: none;\n  vertical-align: -0.125em;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\n.anticon > * {\n  line-height: 1;\n}\n\n.anticon svg {\n  display: inline-block;\n}\n\n.anticon::before {\n  display: none;\n}\n\n.anticon .anticon-icon {\n  display: block;\n}\n\n.anticon[tabindex] {\n  cursor: pointer;\n}\n\n.anticon-spin::before,\n.anticon-spin {\n  display: inline-block;\n  -webkit-animation: loadingCircle 1s infinite linear;\n  animation: loadingCircle 1s infinite linear;\n}\n\n@-webkit-keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n";
+var useInsertStyles = function useInsertStyles() {
+  var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : iconStyles;
+  var _useContext = (0,react.useContext)(Context),
+    csp = _useContext.csp;
+  (0,react.useEffect)(function () {
+    updateCSS(styleStr, '@ant-design-icons', {
+      prepend: true,
+      csp: csp
+    });
+  }, []);
+};
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/IconBase.js
+
+
+var IconBase_excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
+
+var twoToneColorPalette = {
+  primaryColor: '#333',
+  secondaryColor: '#E6E6E6',
+  calculated: false
+};
+function setTwoToneColors(_ref) {
+  var primaryColor = _ref.primaryColor,
+    secondaryColor = _ref.secondaryColor;
+  twoToneColorPalette.primaryColor = primaryColor;
+  twoToneColorPalette.secondaryColor = secondaryColor || getSecondaryColor(primaryColor);
+  twoToneColorPalette.calculated = !!secondaryColor;
+}
+function getTwoToneColors() {
+  return _objectSpread2({}, twoToneColorPalette);
+}
+var IconBase = function IconBase(props) {
+  var icon = props.icon,
+    className = props.className,
+    onClick = props.onClick,
+    style = props.style,
+    primaryColor = props.primaryColor,
+    secondaryColor = props.secondaryColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, IconBase_excluded);
+  var colors = twoToneColorPalette;
+  if (primaryColor) {
+    colors = {
+      primaryColor: primaryColor,
+      secondaryColor: secondaryColor || getSecondaryColor(primaryColor)
+    };
+  }
+  useInsertStyles();
+  utils_warning(isIconDefinition(icon), "icon should be icon definiton, but got ".concat(icon));
+  if (!isIconDefinition(icon)) {
+    return null;
+  }
+  var target = icon;
+  if (target && typeof target.icon === 'function') {
+    target = _objectSpread2(_objectSpread2({}, target), {}, {
+      icon: target.icon(colors.primaryColor, colors.secondaryColor)
+    });
+  }
+  return utils_generate(target.icon, "svg-".concat(target.name), _objectSpread2({
+    className: className,
+    onClick: onClick,
+    style: style,
+    'data-icon': target.name,
+    width: '1em',
+    height: '1em',
+    fill: 'currentColor',
+    'aria-hidden': 'true'
+  }, restProps));
+};
+IconBase.displayName = 'IconReact';
+IconBase.getTwoToneColors = getTwoToneColors;
+IconBase.setTwoToneColors = setTwoToneColors;
+/* harmony default export */ const components_IconBase = (IconBase);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/twoTonePrimaryColor.js
+
+
+
+function setTwoToneColor(twoToneColor) {
+  var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
+  return components_IconBase.setTwoToneColors({
+    primaryColor: primaryColor,
+    secondaryColor: secondaryColor
+  });
+}
+function getTwoToneColor() {
+  var colors = components_IconBase.getTwoToneColors();
+  if (!colors.calculated) {
+    return colors.primaryColor;
+  }
+  return [colors.primaryColor, colors.secondaryColor];
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/AntdIcon.js
+
+
+
+
+var AntdIcon_excluded = ["className", "icon", "spin", "rotate", "tabIndex", "onClick", "twoToneColor"];
+
+
+
+
+
+
+// Initial setting
+// should move it to antd main repo?
+setTwoToneColor('#1890ff');
+var Icon = /*#__PURE__*/react.forwardRef(function (props, ref) {
+  var _classNames;
+  var className = props.className,
+    icon = props.icon,
+    spin = props.spin,
+    rotate = props.rotate,
+    tabIndex = props.tabIndex,
+    onClick = props.onClick,
+    twoToneColor = props.twoToneColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, AntdIcon_excluded);
+  var _React$useContext = react.useContext(Context),
+    _React$useContext$pre = _React$useContext.prefixCls,
+    prefixCls = _React$useContext$pre === void 0 ? 'anticon' : _React$useContext$pre,
+    rootClassName = _React$useContext.rootClassName;
+  var classString = classnames_default()(rootClassName, prefixCls, (_classNames = {}, _defineProperty(_classNames, "".concat(prefixCls, "-").concat(icon.name), !!icon.name), _defineProperty(_classNames, "".concat(prefixCls, "-spin"), !!spin || icon.name === 'loading'), _classNames), className);
+  var iconTabIndex = tabIndex;
+  if (iconTabIndex === undefined && onClick) {
+    iconTabIndex = -1;
+  }
+  var svgStyle = rotate ? {
+    msTransform: "rotate(".concat(rotate, "deg)"),
+    transform: "rotate(".concat(rotate, "deg)")
+  } : undefined;
+  var _normalizeTwoToneColo = normalizeTwoToneColors(twoToneColor),
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
+  return /*#__PURE__*/react.createElement("span", _objectSpread2(_objectSpread2({
+    role: "img",
+    "aria-label": icon.name
+  }, restProps), {}, {
+    ref: ref,
+    tabIndex: iconTabIndex,
+    onClick: onClick,
+    className: classString
+  }), /*#__PURE__*/react.createElement(components_IconBase, {
+    icon: icon,
+    primaryColor: primaryColor,
+    secondaryColor: secondaryColor,
+    style: svgStyle
+  }));
+});
+Icon.displayName = 'AntdIcon';
+Icon.getTwoToneColor = getTwoToneColor;
+Icon.setTwoToneColor = setTwoToneColor;
+/* harmony default export */ const AntdIcon = (Icon);
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/CloseOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
@@ -18965,6 +18386,7 @@ function useMergedState(defaultStateValue, option) {
 }
 // EXTERNAL MODULE: ./node_modules/react-dom/index.js
 var react_dom = __webpack_require__(3935);
+var react_dom_namespaceObject = /*#__PURE__*/__webpack_require__.t(react_dom, 2);
 ;// CONCATENATED MODULE: ./node_modules/rc-util/es/Dom/findDOMNode.js
 
 /**
@@ -19068,12 +18490,12 @@ function getVendorPrefixes(domSupport, win) {
   return prefixes;
 }
 var vendorPrefixes = getVendorPrefixes(canUseDom(), typeof window !== 'undefined' ? window : {});
-var motion_style = {};
+var style = {};
 
 if (canUseDom()) {
   var _document$createEleme = document.createElement('div');
 
-  motion_style = _document$createEleme.style;
+  style = _document$createEleme.style;
 }
 
 var prefixedEventNames = {};
@@ -19091,7 +18513,7 @@ function getVendorPrefixedEventName(eventName) {
     for (var i = 0; i < len; i += 1) {
       var styleProp = stylePropList[i];
 
-      if (Object.prototype.hasOwnProperty.call(prefixMap, styleProp) && styleProp in motion_style) {
+      if (Object.prototype.hasOwnProperty.call(prefixMap, styleProp) && styleProp in style) {
         prefixedEventNames[eventName] = prefixMap[styleProp];
         return prefixedEventNames[eventName];
       }
@@ -27015,6 +26437,17 @@ function useUUID(id) {
   }, []);
   return uuid;
 }
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/omit.js
+
+function omit_omit(obj, fields) {
+  var clone = _objectSpread2({}, obj);
+  if (Array.isArray(fields)) {
+    fields.forEach(function (key) {
+      delete clone[key];
+    });
+  }
+  return clone;
+}
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useActive.js
 
 
@@ -30935,120 +30368,139 @@ function replaceElement(element, replacement, props) {
 function cloneElement(element, props) {
   return replaceElement(element, element, props);
 }
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/raf.js
-
-let id = 0;
-const ids = {};
-// Support call raf with delay specified frame
-function raf_wrapperRaf(callback) {
-  let delayFrames = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-  const myId = id++;
-  let restFrames = delayFrames;
-  function internalCallback() {
-    restFrames -= 1;
-    if (restFrames <= 0) {
-      callback();
-      delete ids[myId];
-    } else {
-      ids[myId] = es_raf(internalCallback);
-    }
-  }
-  ids[myId] = es_raf(internalCallback);
-  return myId;
-}
-raf_wrapperRaf.cancel = function cancel(pid) {
-  if (pid === undefined) return;
-  es_raf.cancel(ids[pid]);
-  delete ids[pid];
-};
-raf_wrapperRaf.ids = ids; // export this for test usage
 ;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/style.js
 
-
-
-
 const genWaveStyle = token => {
-  const waveEffect = new Keyframes('waveEffect', {
-    '100%': {
-      boxShadow: `0 0 0 6px var(--antd-wave-shadow-color)`
-    }
-  });
-  const fadeEffect = new Keyframes('fadeEffect', {
-    '100%': {
-      opacity: 0
-    }
-  });
-  return [{
-    [`${token.clickAnimatingWithoutExtraNodeTrue},
-      ${token.clickAnimatingTrue}`]: {
-      '--antd-wave-shadow-color': token.colorPrimary,
-      '--scroll-bar': 0,
-      position: 'relative'
-    },
-    [`${token.clickAnimatingWithoutExtraNodeTrueAfter},
-      & ${token.clickAnimatingNode}`]: {
-      position: 'absolute',
-      top: 0,
-      insetInlineStart: 0,
-      insetInlineEnd: 0,
-      bottom: 0,
-      display: 'block',
-      borderRadius: 'inherit',
-      boxShadow: `0 0 0 0 var(--antd-wave-shadow-color)`,
-      opacity: 0.2,
-      animation: {
-        _skip_check_: true,
-        value: `${fadeEffect.getName(token.hashId)} 2s ${token.motionEaseOutCirc}, ${waveEffect.getName(token.hashId)} 0.4s ${token.motionEaseOutCirc}`
-      },
-      animationFillMode: 'forwards',
-      content: '""',
-      pointerEvents: 'none'
-    }
-  }, {}, waveEffect, fadeEffect];
-};
-/* harmony default export */ const wave_style = (() => {
-  const [theme, token, hashId] = useToken();
   const {
-    getPrefixCls
-  } = (0,react.useContext)(context_ConfigContext);
-  const rootPrefixCls = getPrefixCls();
-  const clickAnimatingTrue = `[${rootPrefixCls}-click-animating='true']`;
-  const clickAnimatingWithoutExtraNodeTrue = `[${rootPrefixCls}-click-animating-without-extra-node='true']`;
-  const clickAnimatingNode = `.${rootPrefixCls}-click-animating-node`;
-  const waveToken = Object.assign(Object.assign({}, token), {
-    hashId,
-    clickAnimatingNode,
-    clickAnimatingTrue,
-    clickAnimatingWithoutExtraNodeTrue,
-    clickAnimatingWithoutExtraNodeTrueAfter: `${clickAnimatingWithoutExtraNodeTrue}::after`
-  });
-  return [useStyleRegister({
-    theme,
-    token,
-    hashId,
-    path: ['wave']
-  }, () => [genWaveStyle(waveToken)]), hashId];
-});
-;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/index.js
+    componentCls,
+    colorPrimary
+  } = token;
+  return {
+    [componentCls]: {
+      position: 'fixed',
+      background: 'transparent',
+      pointerEvents: 'none',
+      boxSizing: 'border-box',
+      color: `var(--wave-color, ${colorPrimary})`,
+      boxShadow: `0 0 0 0 currentcolor`,
+      opacity: 0.2,
+      // =================== Motion ===================
+      '&.wave-motion-appear': {
+        transition: [`box-shadow 0.4s ${token.motionEaseOutCirc}`, `opacity 2s ${token.motionEaseOutCirc}`].join(','),
+        '&-active': {
+          boxShadow: `0 0 0 calc(6px * var(--wave-scale)) currentcolor`,
+          opacity: 0
+        }
+      }
+    }
+  };
+};
+/* harmony default export */ const wave_style = (genComponentStyleHook('Wave', token => [genWaveStyle(token)]));
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/React/render.js
 
 
 
 
 
-
-
-
-
-
-
-
-
-let styleForPseudo;
-// Where el is the DOM element you'd like to test for visibility
-function isHidden(element) {
-  if (false) {}
-  return !element || element.offsetParent === null || element.hidden;
+// Let compiler not to search module usage
+var fullClone = _objectSpread2({}, react_dom_namespaceObject);
+var render_version = fullClone.version,
+  reactRender = fullClone.render,
+  unmountComponentAtNode = fullClone.unmountComponentAtNode;
+var createRoot;
+try {
+  var mainVersion = Number((render_version || '').split('.')[0]);
+  if (mainVersion >= 18) {
+    createRoot = fullClone.createRoot;
+  }
+} catch (e) {
+  // Do nothing;
 }
+function toggleWarning(skip) {
+  var __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = fullClone.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  if (__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED && typeof_typeof(__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED) === 'object') {
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.usingClientEntryPoint = skip;
+  }
+}
+var MARK = '__rc_react_root__';
+function modernRender(node, container) {
+  toggleWarning(true);
+  var root = container[MARK] || createRoot(container);
+  toggleWarning(false);
+  root.render(node);
+  container[MARK] = root;
+}
+function legacyRender(node, container) {
+  reactRender(node, container);
+}
+/** @private Test usage. Not work in prod */
+function _r(node, container) {
+  if (false) {}
+}
+function render(node, container) {
+  if (createRoot) {
+    modernRender(node, container);
+    return;
+  }
+  legacyRender(node, container);
+}
+// ========================= Unmount ==========================
+function modernUnmount(_x) {
+  return _modernUnmount.apply(this, arguments);
+}
+function _modernUnmount() {
+  _modernUnmount = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(container) {
+    return _regeneratorRuntime().wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            return _context.abrupt("return", Promise.resolve().then(function () {
+              var _container$MARK;
+              (_container$MARK = container[MARK]) === null || _container$MARK === void 0 ? void 0 : _container$MARK.unmount();
+              delete container[MARK];
+            }));
+          case 1:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+  return _modernUnmount.apply(this, arguments);
+}
+function legacyUnmount(container) {
+  unmountComponentAtNode(container);
+}
+/** @private Test usage. Not work in prod */
+function _u(container) {
+  if (false) {}
+}
+function unmount(_x2) {
+  return _unmount.apply(this, arguments);
+}
+function _unmount() {
+  _unmount = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(container) {
+    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            if (!(createRoot !== undefined)) {
+              _context2.next = 2;
+              break;
+            }
+            return _context2.abrupt("return", modernUnmount(container));
+          case 2:
+            legacyUnmount(container);
+          case 3:
+          case "end":
+            return _context2.stop();
+        }
+      }
+    }, _callee2);
+  }));
+  return _unmount.apply(this, arguments);
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/util.js
 function getValidateContainer(nodeRoot) {
   if (nodeRoot instanceof Document) {
     return nodeRoot.body;
@@ -31069,199 +30521,180 @@ function isValidWaveColor(color) {
   color !== 'transparent';
 }
 function getTargetWaveColor(node) {
-  const computedStyle = getComputedStyle(node);
-  const borderTopColor = computedStyle.getPropertyValue('border-top-color');
-  const borderColor = computedStyle.getPropertyValue('border-color');
-  const backgroundColor = computedStyle.getPropertyValue('background-color');
+  const {
+    borderTopColor,
+    borderColor,
+    backgroundColor
+  } = getComputedStyle(node);
   if (isValidWaveColor(borderTopColor)) {
     return borderTopColor;
   }
   if (isValidWaveColor(borderColor)) {
     return borderColor;
   }
-  return backgroundColor;
+  if (isValidWaveColor(backgroundColor)) {
+    return backgroundColor;
+  }
+  return null;
 }
-let InternalWave = /*#__PURE__*/function (_React$Component) {
-  _inherits(InternalWave, _React$Component);
-  var _super = _createSuper(InternalWave);
-  function InternalWave() {
-    var _this;
-    _classCallCheck(this, InternalWave);
-    _this = _super.apply(this, arguments);
-    _this.containerRef = /*#__PURE__*/react.createRef();
-    _this.animationStart = false;
-    _this.destroyed = false;
-    _this.onClick = (node, waveColor) => {
-      var _a, _b;
-      const {
-        insertExtraNode,
-        disabled
-      } = _this.props;
-      if (disabled || !node || isHidden(node) || node.className.includes('-leave')) {
-        return;
-      }
-      _this.extraNode = document.createElement('div');
-      const {
-        extraNode
-      } = _assertThisInitialized(_this);
-      const {
-        getPrefixCls
-      } = _this.context;
-      extraNode.className = `${getPrefixCls('')}-click-animating-node`;
-      const attributeName = _this.getAttributeName();
-      node.setAttribute(attributeName, 'true');
-      // Not white or transparent or grey
-      if (isValidWaveColor(waveColor)) {
-        extraNode.style.borderColor = waveColor;
-        const nodeRoot = ((_a = node.getRootNode) === null || _a === void 0 ? void 0 : _a.call(node)) || node.ownerDocument;
-        const nodeBody = (_b = getValidateContainer(nodeRoot)) !== null && _b !== void 0 ? _b : nodeRoot;
-        styleForPseudo = updateCSS(`
-      [${getPrefixCls('')}-click-animating-without-extra-node='true']::after, .${getPrefixCls('')}-click-animating-node {
-        --antd-wave-shadow-color: ${waveColor};
-      }`, 'antd-wave', {
-          csp: _this.csp,
-          attachTo: nodeBody
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/WaveEffect.js
+
+
+
+
+
+const WaveEffect = props => {
+  const {
+    className,
+    left,
+    top,
+    width,
+    height,
+    color,
+    borderRadius,
+    scale
+  } = props;
+  const divRef = react.useRef(null);
+  const waveStyle = {
+    left,
+    top,
+    width,
+    height,
+    borderRadius: borderRadius.map(radius => `${radius}px`).join(' '),
+    '--wave-scale': scale
+  };
+  if (color) {
+    waveStyle['--wave-color'] = color;
+  }
+  return /*#__PURE__*/react.createElement(es, {
+    visible: true,
+    motionAppear: true,
+    motionName: "wave-motion",
+    motionDeadline: 5000,
+    onAppearEnd: (_, event) => {
+      var _a;
+      if (event.deadline || event.propertyName === 'opacity') {
+        const holder = (_a = divRef.current) === null || _a === void 0 ? void 0 : _a.parentElement;
+        unmount(holder).then(() => {
+          var _a;
+          (_a = holder.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(holder);
         });
       }
-      if (insertExtraNode) {
-        node.appendChild(extraNode);
-      }
-      ['transition', 'animation'].forEach(name => {
-        node.addEventListener(`${name}start`, _this.onTransitionStart);
-        node.addEventListener(`${name}end`, _this.onTransitionEnd);
-      });
-    };
-    _this.onTransitionStart = e => {
-      if (_this.destroyed) {
-        return;
-      }
-      const node = _this.containerRef.current;
-      if (!e || e.target !== node || _this.animationStart) {
-        return;
-      }
-      _this.resetEffect(node);
-    };
-    _this.onTransitionEnd = e => {
-      if (!e || e.animationName !== 'fadeEffect') {
-        return;
-      }
-      _this.resetEffect(e.target);
-    };
-    _this.bindAnimationEvent = node => {
-      if (!node || !node.getAttribute || node.getAttribute('disabled') || node.className.includes('disabled')) {
-        return;
-      }
-      const onClick = e => {
-        // Fix radio button click twice
-        if (e.target.tagName === 'INPUT' || isHidden(e.target)) {
-          return;
-        }
-        _this.resetEffect(node);
-        // Get wave color from target
-        const waveColor = getTargetWaveColor(node);
-        _this.clickWaveTimeoutId = window.setTimeout(() => _this.onClick(node, waveColor), 0);
-        raf_wrapperRaf.cancel(_this.animationStartId);
-        _this.animationStart = true;
-        // Render to trigger transition event cost 3 frames. Let's delay 10 frames to reset this.
-        _this.animationStartId = raf_wrapperRaf(() => {
-          _this.animationStart = false;
-        }, 10);
-      };
-      node.addEventListener('click', onClick, true);
-      return {
-        cancel: () => {
-          node.removeEventListener('click', onClick, true);
-        }
-      };
-    };
-    _this.renderWave = _ref => {
-      let {
-        csp
-      } = _ref;
-      const {
-        children
-      } = _this.props;
-      _this.csp = csp;
-      if (! /*#__PURE__*/react.isValidElement(children)) return children;
-      let ref = _this.containerRef;
-      if (supportRef(children)) {
-        ref = composeRef(children.ref, _this.containerRef);
-      }
-      return cloneElement(children, {
-        ref
-      });
-    };
-    return _this;
+      return false;
+    }
+  }, _ref => {
+    let {
+      className: motionClassName
+    } = _ref;
+    return /*#__PURE__*/react.createElement("div", {
+      ref: divRef,
+      className: classnames_default()(className, motionClassName),
+      style: waveStyle
+    });
+  });
+};
+function validateNum(value) {
+  return Number.isNaN(value) ? 0 : value;
+}
+function showWaveEffect(container, node, className) {
+  const nodeStyle = getComputedStyle(node);
+  const nodeRect = node.getBoundingClientRect();
+  // Get wave color from target
+  const waveColor = getTargetWaveColor(node);
+  // Get border radius
+  const {
+    borderTopLeftRadius,
+    borderTopRightRadius,
+    borderBottomLeftRadius,
+    borderBottomRightRadius
+  } = nodeStyle;
+  // Do scale calc
+  const {
+    offsetWidth
+  } = node;
+  const scale = validateNum(nodeRect.width / offsetWidth);
+  // Create holder
+  const holder = document.createElement('div');
+  getValidateContainer(container).appendChild(holder);
+  render( /*#__PURE__*/react.createElement(WaveEffect, {
+    left: nodeRect.left,
+    top: nodeRect.top,
+    width: nodeRect.width,
+    height: nodeRect.height,
+    color: waveColor,
+    className: className,
+    scale: scale,
+    borderRadius: [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius].map(radius => validateNum(parseFloat(radius) * scale))
+  }), holder);
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/useWave.js
+
+function useWave(nodeRef, className) {
+  function showWave() {
+    var _a;
+    const node = nodeRef.current;
+    // Skip if not exist doc
+    const container = ((_a = node.getRootNode) === null || _a === void 0 ? void 0 : _a.call(node)) || (node === null || node === void 0 ? void 0 : node.ownerDocument);
+    if (container) {
+      showWaveEffect(container, node, className);
+    }
   }
-  _createClass(InternalWave, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      this.destroyed = false;
-      const node = this.containerRef.current;
-      if (!node || node.nodeType !== 1) {
+  return showWave;
+}
+;// CONCATENATED MODULE: ./node_modules/antd/es/_util/wave/index.js
+
+
+
+
+
+
+
+
+const Wave = props => {
+  const {
+    children,
+    disabled
+  } = props;
+  const {
+    getPrefixCls
+  } = (0,react.useContext)(context_ConfigContext);
+  const containerRef = (0,react.useRef)(null);
+  // ============================== Style ===============================
+  const prefixCls = getPrefixCls('wave');
+  const [, hashId] = wave_style(prefixCls);
+  // =============================== Wave ===============================
+  const showWave = useWave(containerRef, classnames_default()(prefixCls, hashId));
+  // ============================== Effect ==============================
+  react.useEffect(() => {
+    const node = containerRef.current;
+    if (!node || node.nodeType !== 1 || disabled) {
+      return;
+    }
+    // Click handler
+    const onClick = e => {
+      // Fix radio button click twice
+      if (e.target.tagName === 'INPUT' || !isVisible(e.target) ||
+      // No need wave
+      !node.getAttribute || node.getAttribute('disabled') || node.disabled || node.className.includes('disabled') || node.className.includes('-leave')) {
         return;
       }
-      this.instance = this.bindAnimationEvent(node);
-    }
-  }, {
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      if (this.instance) {
-        this.instance.cancel();
-      }
-      if (this.clickWaveTimeoutId) {
-        clearTimeout(this.clickWaveTimeoutId);
-      }
-      this.destroyed = true;
-    }
-  }, {
-    key: "getAttributeName",
-    value: function getAttributeName() {
-      const {
-        getPrefixCls
-      } = this.context;
-      const {
-        insertExtraNode
-      } = this.props;
-      return insertExtraNode ? `${getPrefixCls('')}-click-animating` : `${getPrefixCls('')}-click-animating-without-extra-node`;
-    }
-  }, {
-    key: "resetEffect",
-    value: function resetEffect(node) {
-      if (!node || node === this.extraNode || !(node instanceof Element)) {
-        return;
-      }
-      const {
-        insertExtraNode
-      } = this.props;
-      const attributeName = this.getAttributeName();
-      node.setAttribute(attributeName, 'false'); // edge has bug on `removeAttribute` #14466
-      if (styleForPseudo) {
-        styleForPseudo.innerHTML = '';
-      }
-      if (insertExtraNode && this.extraNode && node.contains(this.extraNode)) {
-        node.removeChild(this.extraNode);
-      }
-      ['transition', 'animation'].forEach(name => {
-        node.removeEventListener(`${name}start`, this.onTransitionStart);
-        node.removeEventListener(`${name}end`, this.onTransitionEnd);
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return /*#__PURE__*/react.createElement(ConfigConsumer, null, this.renderWave);
-    }
-  }]);
-  return InternalWave;
-}(react.Component);
-InternalWave.contextType = context_ConfigContext;
-const Wave = /*#__PURE__*/(0,react.forwardRef)((props, ref) => {
-  wave_style();
-  return /*#__PURE__*/react.createElement(InternalWave, Object.assign({
-    ref: ref
-  }, props));
-});
+      showWave();
+    };
+    // Bind events
+    node.addEventListener('click', onClick, true);
+    return () => {
+      node.removeEventListener('click', onClick, true);
+    };
+  }, [disabled]);
+  // ============================== Render ==============================
+  if (! /*#__PURE__*/react.isValidElement(children)) {
+    return children !== null && children !== void 0 ? children : null;
+  }
+  const ref = supportRef(children) ? composeRef(children.ref, containerRef) : containerRef;
+  return cloneElement(children, {
+    ref
+  });
+};
 /* harmony default export */ const wave = (Wave);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/button/button-group.js
 var button_group_rest = undefined && undefined.__rest || function (s, e) {
@@ -34674,7 +34107,7 @@ const genTooltipStyle = token => {
       tooltipBg: colorBgDefault,
       tooltipRadiusOuter: borderRadiusOuter > 4 ? 4 : borderRadiusOuter
     });
-    return [genTooltipStyle(TooltipToken), initZoomMotion(token, 'zoom-big-fast'), initZoomMotion(token, 'zoom-down')];
+    return [genTooltipStyle(TooltipToken), initZoomMotion(token, 'zoom-big-fast')];
   }, _ref => {
     let {
       zIndexPopupBase,
@@ -39919,6 +39352,7 @@ const genInputGroupStyle = token => {
         border: `${token.lineWidth}px ${token.lineType} ${token.colorBorder}`,
         borderRadius: token.borderRadius,
         transition: `all ${token.motionDurationSlow}`,
+        lineHeight: 1,
         // Reset Select's style in addon
         [`${antCls}-select`]: {
           margin: `-${token.inputPaddingVertical + 1}px -${token.inputPaddingHorizontal}px`,
@@ -42144,11 +41578,7 @@ function PageView(props) {
     }
     setWorking(page.working);
   };
-  return react.createElement(react.Fragment, null, react.createElement(card, {
-    style: {
-      height: '100%'
-    }
-  }, react.createElement(es_row, null, react.createElement(es_col, {
+  return react.createElement(react.Fragment, null, react.createElement(card, null, react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
   }, react.createElement(typography.Text, {
     type: working ? 'success' : 'danger'
@@ -48401,6 +47831,61 @@ function registerTheme(globalPrefixCls, theme) {
      false ? 0 : void 0;
   }
 }
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/isEqual.js
+
+
+/**
+ * Deeply compares two object literals.
+ * @param obj1 object 1
+ * @param obj2 object 2
+ * @param shallow shallow compare
+ * @returns
+ */
+function isEqual_isEqual(obj1, obj2) {
+  var shallow = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  // https://github.com/mapbox/mapbox-gl-js/pull/5979/files#diff-fde7145050c47cc3a306856efd5f9c3016e86e859de9afbd02c879be5067e58f
+  var refSet = new Set();
+  function deepEqual(a, b) {
+    var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+    var circular = refSet.has(a);
+    es_warning(!circular, 'Warning: There may be circular references');
+    if (circular) {
+      return false;
+    }
+    if (a === b) {
+      return true;
+    }
+    if (shallow && level > 1) {
+      return false;
+    }
+    refSet.add(a);
+    var newLevel = level + 1;
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) {
+        return false;
+      }
+      for (var i = 0; i < a.length; i++) {
+        if (!deepEqual(a[i], b[i], newLevel)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    if (a && b && typeof_typeof(a) === 'object' && typeof_typeof(b) === 'object') {
+      var keys = Object.keys(a);
+      if (keys.length !== Object.keys(b).length) {
+        return false;
+      }
+      return keys.every(function (key) {
+        return deepEqual(a[key], b[key], newLevel);
+      });
+    }
+    // other
+    return false;
+  }
+  return deepEqual(obj1, obj2);
+}
+/* harmony default export */ const es_isEqual = (isEqual_isEqual);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/config-provider/hooks/useTheme.js
 
 
@@ -48424,7 +47909,7 @@ function useTheme(theme, parentTheme) {
     });
   }, [themeConfig, parentThemeConfig], (prev, next) => prev.some((prevTheme, index) => {
     const nextTheme = next[index];
-    return !shallowequal_default()(prevTheme, nextTheme);
+    return !es_isEqual(prevTheme, nextTheme, true);
   }));
   return mergedTheme;
 }
@@ -49131,12 +48616,16 @@ function DisplayType() {
   return react.createElement(react.Fragment, null, react.createElement(card, {
     style: {
       height: '100%'
+    },
+    bodyStyle: {
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%'
     }
-  }, react.createElement(es_row, null, react.createElement(es_col, {
-    span: 14
-  }, react.createElement(typography.Text, null, displayType)), react.createElement(es_col, {
-    span: 10
   }, react.createElement(es_button, {
+    style: {
+      width: '100px'
+    },
     onClick: () => {
       let element = document.getElementById(DISPLAY_STYLE_ID);
       const displayType = element.getAttribute('displayType') === 'hide' ? 'debug' : 'hide';
@@ -49149,7 +48638,7 @@ function DisplayType() {
       }
       setDisplayType(displayType);
     }
-  }, "\u6362")))));
+  }, displayType)));
 }
 ;// CONCATENATED MODULE: ./src/view/box.tsx
 
@@ -49191,7 +48680,7 @@ function Box(props) {
       border: '5px groove pink',
       width: '350px'
     }
-  }, react.createElement(react.Fragment, null, [...pageMap.values()].filter(page => page.isCurrent()).length !== 0 && react.createElement(es_layout, null, react.createElement(es_row, null, react.createElement(es_col, {
+  }, react.createElement(react.Fragment, null, [...pageMap.values()].filter(page => page.isCurrent()).length !== 0 && react.createElement(es_row, null, react.createElement(es_col, {
     span: 14
   },
   // 页面
@@ -49199,7 +48688,7 @@ function Box(props) {
     page: page
   }))), react.createElement(es_col, {
     span: 10
-  }, react.createElement(DisplayType, null)))), react.createElement(es_tabs, null, react.createElement(es_tabs.TabPane, {
+  }, react.createElement(DisplayType, null))), react.createElement(es_tabs, null, react.createElement(es_tabs.TabPane, {
     key: "uid2username-tab",
     tab: react.createElement("span", null, "uid")
   }, react.createElement(UidUsernameView, {
