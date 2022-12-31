@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        bilibili屏蔽
-// @version     1.1.1672418028931
+// @version     1.1.1672457079504
 // @author      zzxt0019
 // @icon        https://zzxt0019.github.io/bilishield/Elysia.png
-// @description bilibili屏蔽 更新时间: 12/30/2022
+// @description bilibili屏蔽 更新时间: 12/31/2022
 // @match       *://*.bilibili.com/*
 // @noframes
 // @grant       GM_setValue
@@ -48436,6 +48436,7 @@ function UidUsernameView(props) {
     return username;
   });
   const updateHideSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+    console.log(123123123);
     setHideSettings(yield Settings.getSettingValue('uid.hide'));
   });
   react.useEffect(() => {
@@ -48457,11 +48458,11 @@ function UidUsernameView(props) {
       Settings.addSettingValue('uid.hide', item.uid);
       yield updateHideSettings();
     }),
-    onClose: () => {
+    onClose: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
       uu.del('uid')(item.uid);
-      updateSettings();
+      yield updateSettings();
       updateBox();
-    },
+    }),
     key: item.username
   }, item.username))), !hide && settings.filter(item => hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
     title: item.uid,
@@ -48479,11 +48480,13 @@ function UidUsernameView(props) {
       Settings.delSettingValue('uid.hide', item.uid);
       yield updateHideSettings();
     }),
-    onClose: () => {
+    onClose: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
       uu.del('uid')(item.uid);
-      updateSettings();
+      Settings.delSettingValue('uid.hide', item.uid);
+      yield updateSettings();
+      yield updateHideSettings();
       updateBox();
-    },
+    }),
     key: item.username
   }, item.username)))), react.createElement(es_row, null, react.createElement(es_col, {
     span: 18
@@ -48567,7 +48570,7 @@ function UidUsernameView(props) {
     block: true,
     disabled: !inputUsername,
     icon: react.createElement(icons_PlusOutlined, null),
-    onClick: () => {
+    onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
       if (inputUid && inputUsername) {
         uu.add('uid')(inputUid);
       }
@@ -48576,9 +48579,9 @@ function UidUsernameView(props) {
       if (searched.length === 0) {
         setInputUsername(undefined);
       }
-      updateSettings();
+      yield updateSettings();
       updateBox();
-    }
+    })
   })), react.createElement(es_col, {
     span: 2
   }, react.createElement(es_button, {
@@ -48591,7 +48594,7 @@ function UidUsernameView(props) {
     icon: react.createElement(icons_SyncOutlined, null),
     onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
       GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
-      updateSettings();
+      yield updateSettings();
     })
   })), react.createElement(es_col, {
     span: 2
