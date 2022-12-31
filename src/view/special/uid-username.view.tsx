@@ -34,6 +34,7 @@ export function UidUsernameView(props: {
         return username;
     }
     const updateHideSettings = async () => {
+        console.log(123123123)
         setHideSettings(await Settings.getSettingValue('uid.hide'));
     }
     React.useEffect(() => {
@@ -50,9 +51,9 @@ export function UidUsernameView(props: {
                              Settings.addSettingValue('uid.hide', item.uid);
                              await updateHideSettings();
                          }}
-                         onClose={() => {
+                         onClose={async () => {
                              uu.del('uid')(item.uid)
-                             updateSettings()
+                             await updateSettings()
                              updateBox()
                          }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
@@ -66,9 +67,11 @@ export function UidUsernameView(props: {
                              Settings.delSettingValue('uid.hide', item.uid);
                              await updateHideSettings();
                          }}
-                         onClose={() => {
-                             uu.del('uid')(item.uid)
-                             updateSettings()
+                         onClose={async () => {
+                             uu.del('uid')(item.uid);
+                             Settings.delSettingValue('uid.hide', item.uid);
+                             await updateSettings();
+                             await updateHideSettings();
                              updateBox()
                          }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
@@ -149,7 +152,7 @@ export function UidUsernameView(props: {
                     block
                     disabled={!inputUsername}
                     icon={<PlusOutlined/>}
-                    onClick={() => {
+                    onClick={async () => {
                         if (inputUid && inputUsername) {
                             uu.add('uid')(inputUid)
                         }
@@ -158,7 +161,7 @@ export function UidUsernameView(props: {
                         if (searched.length === 0) {
                             setInputUsername(undefined);
                         }
-                        updateSettings()
+                        await updateSettings();
                         updateBox()
                     }}></Button>
             </Col>
@@ -172,7 +175,7 @@ export function UidUsernameView(props: {
                         GM_listValues()
                             .filter(item => item.startsWith('uid_'))
                             .forEach(item => GM_deleteValue(item))
-                        updateSettings()
+                        await updateSettings()
                     }}></Button>
             </Col>
             <Col span={2}>
