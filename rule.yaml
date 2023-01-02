@@ -229,6 +229,13 @@ bilibili_live_roll_word:
   checker:
     setting: bilibili_match
     innerHTML: true
+bilibili_live_adv:
+  name: 直播页面广告栏
+  page: bilibili_live
+  mainSelector: .item-wrapper
+  checker:
+    setting: bilibili_match
+    attribute: title
 
 # 比例视频页
 bilibili_video_right_word:
