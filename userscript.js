@@ -1,19 +1,22 @@
 // ==UserScript==
-// @name        bilibili屏蔽
-// @version     1.1.1672457079504
-// @author      zzxt0019
-// @icon        https://zzxt0019.github.io/bilishield/Elysia.png
-// @description bilibili屏蔽 更新时间: 12/31/2022
-// @match       *://*.bilibili.com/*
+// @name            bilibili屏蔽
+// @version         1.1.1672651900074
+// @author          zzxt0019
+// @icon64          https://zzxt0019.github.io/bilishield/Elysia.png
+// @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
+// @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
+// @description     bilibili屏蔽 更新时间: 1/2/2023
+
+// @match           *://*.bilibili.com/*
 // @noframes
-// @grant       GM_setValue
-// @grant       GM_getValue
-// @grant       GM_deleteValue
-// @grant       GM_listValues
-// @grant       GM_registerMenuCommand
-// @grant       GM_xmlhttpRequest
-// @grant       GM_info
-// @connect     *
+// @grant           GM_setValue
+// @grant           GM_getValue
+// @grant           GM_deleteValue
+// @grant           GM_listValues
+// @grant           GM_registerMenuCommand
+// @grant           GM_xmlhttpRequest
+// @grant           GM_info
+// @connect         *
 // ==/UserScript==
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -12805,7 +12808,7 @@ function checkVersion() {
       let promises = [];
       configs.forEach(key => {
         var _a;
-        promises.push(fetch(((_a = GM_info.script.icon) === null || _a === void 0 ? void 0 : _a.substring(0, 38)) + key + '.yaml'));
+        promises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 38)) + key + '.yaml'));
       });
       let responses = yield Promise.all(promises);
       for (let i = 0; i < configs.length; i++) {
@@ -48436,7 +48439,6 @@ function UidUsernameView(props) {
     return username;
   });
   const updateHideSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
-    console.log(123123123);
     setHideSettings(yield Settings.getSettingValue('uid.hide'));
   });
   react.useEffect(() => {
