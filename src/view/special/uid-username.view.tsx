@@ -34,7 +34,6 @@ export function UidUsernameView(props: {
         return username;
     }
     const updateHideSettings = async () => {
-        console.log(123123123)
         setHideSettings(await Settings.getSettingValue('uid.hide'));
     }
     React.useEffect(() => {
