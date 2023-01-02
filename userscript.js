@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1672651900074
+// @version         1.1.1672652014531
 // @author          zzxt0019
 // @icon64          https://zzxt0019.github.io/bilishield/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
