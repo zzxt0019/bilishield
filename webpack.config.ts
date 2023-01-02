@@ -28,7 +28,7 @@ const config: Configuration = {
                 target: 'es2016',
                 banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
                     .replace('${timestamp}', String(new Date().getTime()))
-                    .replace('${date}', String(new Date().toLocaleDateString()))
+                    .replace('${date}', String(new Date(Date.now() + 8 * 3600_000 - new Date().getTimezoneOffset() * 60_000).toLocaleString()))
                     .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
                 include: /min/
             })
