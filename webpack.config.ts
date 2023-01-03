@@ -22,7 +22,7 @@ const config: Configuration = {
         'userscript.min': './src/main.tsx',
     },
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, 'dist/script'),
         filename: '[name].js',
     },
 

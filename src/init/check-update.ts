@@ -6,7 +6,7 @@ export async function checkVersion() {
     if (GM_info.script.version > version) {  // 存储版本 < 当前版本 => 更新配置
         let promises: Promise<Response>[] = [];
         configs.forEach(key => {
-            promises.push(fetch(GM_info.script.icon64?.substring(0, 38) + key + '.yaml'));
+            promises.push(fetch(GM_info.script.icon64?.substring(0, 38) + 'yaml/' + key + '.yaml'));
         })
         let responses = await Promise.all(promises);
         for (let i = 0; i < configs.length; i++) {
