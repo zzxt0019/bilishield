@@ -1,6 +1,6 @@
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined, SyncOutlined} from '@ant-design/icons';
-import {Button, Card, Col, Input, Row, Select, Tag, Tooltip} from "antd";
+import {AutoComplete, Button, Card, Col, Input, Row, Select, Tag, Tooltip} from "antd";
 import React from "react";
 import {Settings} from "@/config/setting/setting";
 
@@ -104,6 +104,9 @@ export function UidUsernameView(props: {
                            }}></Input>
                 </Row>
                 <Row>
+                    <AutoComplete size={'small'} style={{width: '100%'}} showSearch={true} placeholder={'username'}>
+
+                    </AutoComplete>
                     <Select size={'small'} style={{width: '100%'}} showSearch={true} allowClear={true}
                             placeholder={'username'} showArrow={false}
                             disabled={inputUid !== '' && searched.length === 0}
