@@ -32,7 +32,7 @@ const config: Configuration = {
             new ESBuildMinifyPlugin({
                 target: 'es2016',
                 banner,
-                include: /min/
+                include: /\.min/
             })
         ]
     },
@@ -56,7 +56,7 @@ const config: Configuration = {
             patterns: [{
                 from: __dirname + '/public/',
                 to: __dirname + '/dist/',
-            }]
+            }],
         })
     ]
 };

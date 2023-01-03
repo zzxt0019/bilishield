@@ -6,7 +6,12 @@
 </head>
 <body>
 </body>
+<link rel="stylesheet" type="text/css" href="gh-pages/github.min.css">
+<script src="gh-pages/marked.min.js"></script>
+<script src="gh-pages/highlight.min.js"></script>
+
 <script>
+    hljs.initHighlighting();
     let data = document.domain === 'zzxt0019.github.io' ? [
         './script/userscript.js',
         './script/userscript.min.js',
@@ -47,7 +52,19 @@
             fetch(path).then(res => {
                 res.blob().then(blob => {
                     a2.innerText = (blob.size / 1024).toFixed(2) + 'KB';
-                    blob.arrayBuffer().then(res => div.innerText = new TextDecoder('utf-8').decode(res));
+                    blob.arrayBuffer().then(res => {
+                        let text = new TextDecoder('utf-8').decode(res);
+                        marked.setOptions({
+                            highlight: function (code) {
+                                return hljs.highlightAuto(code).value;
+                            }
+                        })
+                        if (!a1.innerHTML.includes('min')) {
+                            div.innerHTML = marked.parse('```' + path.substring(path.lastIndexOf('.') + 1) + '\n' + text + '\n```');
+                        } else {
+                            div.innerText = text;
+                        }
+                    });
                 });
             });
         })
