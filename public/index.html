@@ -8,17 +8,17 @@
 </body>
 <script>
     let data = document.domain === 'zzxt0019.github.io' ? [
-        './userscript.js',
-        './userscript.min.js',
-        './page.yaml',
-        './rule.yaml',
-        './setting.yaml',
+        './script/userscript.js',
+        './script/userscript.min.js',
+        './yaml/page.yaml',
+        './yaml/rule.yaml',
+        './yaml/setting.yaml',
     ] : [
-        '../dist/userscript.js',
-        '../dist/userscript.min.js',
-        '../dist/page.yaml',
-        '../dist/rule.yaml',
-        '../dist/setting.yaml',
+        '../dist/script/userscript.js',
+        '../dist/script/userscript.min.js',
+        '../dist/yaml/page.yaml',
+        '../dist/yaml/rule.yaml',
+        '../dist/yaml/setting.yaml',
     ];
     window.onload = () => {
         let table = document.body.appendChild(document.createElement('table'));
