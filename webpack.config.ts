@@ -4,6 +4,11 @@ import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
 import CopyPlugin from "copy-webpack-plugin";
 
+const banner = fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
+    .replace('${timestamp}', String(new Date().getTime()))
+    .replace('${date}', String(new Date(Date.now() + 8 * 3600_000 + new Date().getTimezoneOffset() * 60_000).toLocaleString()))
+    .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
+
 const config: Configuration = {
     resolve: {
         alias: {
@@ -26,10 +31,7 @@ const config: Configuration = {
         minimizer: [
             new ESBuildMinifyPlugin({
                 target: 'es2016',
-                banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
-                    .replace('${timestamp}', String(new Date().getTime()))
-                    .replace('${date}', String(new Date(Date.now() + 8 * 3600_000 - new Date().getTimezoneOffset() * 60_000).toLocaleString()))
-                    .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
+                banner,
                 include: /min/
             })
         ]
@@ -48,10 +50,7 @@ const config: Configuration = {
         new BannerPlugin({
             raw: true,
             include: 'userscript.js',
-            banner: fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
-                .replace('${timestamp}', String(new Date().getTime()))
-                .replace('${date}', String(new Date().toLocaleDateString()))
-                .replace(/(==\/UserScript==)[\s\S]+$/, '$1'),
+            banner,
         }),
         new CopyPlugin({
             patterns: [{
