@@ -2,7 +2,7 @@ import React from "react";
 import {Button, Card, Tooltip} from "antd";
 import {CSS_INNER_HTML, DISPLAY_STYLE_ID} from "@/main-static";
 
-export function DisplayType() {
+export function DisplayTypeView() {
     const [displayType, setDisplayType] = React.useState(
         document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') as string
     )

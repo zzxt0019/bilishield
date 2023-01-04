@@ -5,7 +5,7 @@ import {Page} from "@/config/page/page";
 import {PageView} from "./page.view";
 import {SettingView} from "./setting.view";
 import {UidUsernameView} from "./special/uid-username.view";
-import {DisplayType} from "@/view/display-type";
+import {DisplayTypeView} from "@/view/display-type";
 
 export function Box(props: {
     pageMap: Map<string, Page>
@@ -44,7 +44,7 @@ export function Box(props: {
                                     <PageView page={page}/>)}
                         </Col>
                         <Col span={10}>
-                            <DisplayType></DisplayType>
+                            <DisplayTypeView></DisplayTypeView>
                         </Col>
                     </Row>
                 }
