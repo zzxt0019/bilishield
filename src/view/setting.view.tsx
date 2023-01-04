@@ -7,16 +7,16 @@ export function SettingView(props: {
     setting: Setting,
     updateBox: () => void
 }) {
-    const {setting, updateBox} = props
+    const {setting, updateBox} = props;
     const [settings, setSettings] = React.useState<string[]>([]);
     const [inputValue, setInputValue] = React.useState('');
-    const updateSettings = async () => {
-        setSettings(await Settings.getSettingValue(setting));
-    };
     const [hide, setHide] = React.useState(true);
     const [hideSettings, setHideSettings] = React.useState<string[]>([]);
-    const updateHideSettings = async () => {
-        setHideSettings(await Settings.getSettingValue(setting.key + '.hide'));
+    const updateSettings = () => {
+        Settings.getSettingValue(setting).then(setSettings);
+    };
+    const updateHideSettings = () => {
+        Settings.getSettingValue(setting.key + '.hide').then(setHideSettings);
     }
     React.useEffect(() => {
         updateSettings();
@@ -26,26 +26,26 @@ export function SettingView(props: {
         <Card>
             {settings.filter(setting => !hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
-                     onDoubleClick={async (e) => {
+                     onDoubleClick={(e) => {
                          Settings.addSettingValue(props.setting.key + '.hide', (e.target as any).textContent);
-                         await updateHideSettings();
+                         updateHideSettings();
                      }}
-                     onClose={async () => {
+                     onClose={() => {
                          Settings.delSettingValue(props.setting, setting)
-                         await updateSettings()
+                         updateSettings()
                          updateBox()
                      }}>{setting}</Tag>
             )}
             {!hide && settings.filter(setting => hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
                      color={'#00000080'}
-                     onDoubleClick={async () => {
+                     onDoubleClick={() => {
                          Settings.delSettingValue(props.setting.key + '.hide', setting);
-                         await updateHideSettings();
+                         updateHideSettings();
                      }}
-                     onClose={async () => {
+                     onClose={() => {
                          Settings.delSettingValue(props.setting, setting)
-                         await updateSettings()
+                         updateSettings()
                          updateBox()
                      }}>{setting}</Tag>
             )}
@@ -63,13 +63,13 @@ export function SettingView(props: {
                     icon={<PlusOutlined/>}
                     // 输入框为空 或者 输入框与已有配置相同  disabled
                     disabled={!inputValue || settings.filter(setting => setting === inputValue).length > 0}
-                    onClick={async () => {
+                    onClick={() => {
                         // 添加 保存到GM
                         if (inputValue) {
                             Settings.addSettingValue(setting, inputValue)
                         }
                         setInputValue('')
-                        await updateSettings()
+                        updateSettings()
                         updateBox()
                     }}></Button>
             </Col>

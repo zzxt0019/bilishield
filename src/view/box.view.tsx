@@ -5,9 +5,9 @@ import {Page} from "@/config/page/page";
 import {PageView} from "./page.view";
 import {SettingView} from "./setting.view";
 import {UidUsernameView} from "./special/uid-username.view";
-import {DisplayTypeView} from "@/view/display-type";
+import {DisplayTypeView} from "@/view/display-type.view";
 
-export function Box(props: {
+export function BoxView(props: {
     pageMap: Map<string, Page>
 }) {
     const {pageMap} = props

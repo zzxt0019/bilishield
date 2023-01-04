@@ -1,7 +1,7 @@
 import {Page} from "@/config/page/page";
 import {createRoot, Root} from "react-dom/client";
 import * as STATIC from "@/main-static";
-import {Box} from "@/view/box";
+import {BoxView} from "@/view/box.view";
 import React from "react";
 
 /**
@@ -23,7 +23,7 @@ export function createBox(pageMap: Map<string, Page>, root: { root?: Root } = {r
         document.body.appendChild(div);
     }
     root.root = createRoot(document.getElementById(STATIC.APP_ID) as Element)
-    root.root.render(<Box pageMap={pageMap}/>)
+    root.root.render(<BoxView pageMap={pageMap}/>)
     return () => {
         document.leave('#' + STATIC.APP_ID, {
             fireOnAttributesModification: true,
