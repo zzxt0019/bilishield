@@ -6,8 +6,11 @@ import {checkVersion} from "@/init/check-update";
 import {createBox} from "@/init/create-box";
 import {createDisplayStyle} from "@/init/create-display-style";
 import {iframes} from "@/init/iframes";
+import {globalInit} from "@/init/global";
 
 (async () => {
+    // 全局配置
+    globalInit();
     // 检查版本是否更新 更新配置
     await checkVersion();
     // 读取配置生成 PageMap
