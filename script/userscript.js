@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1672733187725
+// @version         1.1.1672818605809
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/script/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/script/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/3/2023, 4:06:27 PM
+// @description     bilibili屏蔽 更新时间: 1/4/2023, 3:50:05 PM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -4486,7 +4486,7 @@ class UidUsername extends SpecialSetting {
       }).catch(() => Promise.resolve(''));
     });
   }
-  username2uid(username, page = 1) {
+  username2infos(username, page = 1) {
     return __awaiter(this, void 0, void 0, function* () {
       return new Promise((res, rej) => {
         GM_xmlhttpRequest({
@@ -42245,33 +42245,6 @@ es_input_Input.TextArea = input_TextArea;
 es_input_Input.Password = input_Password;
 /* harmony default export */ const input = (es_input_Input);
 ;// CONCATENATED MODULE: ./src/view/setting.view.tsx
-var setting_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
@@ -42283,14 +42256,14 @@ function SettingView(props) {
   } = props;
   const [settings, setSettings] = react.useState([]);
   const [inputValue, setInputValue] = react.useState('');
-  const updateSettings = () => setting_view_awaiter(this, void 0, void 0, function* () {
-    setSettings(yield Settings.getSettingValue(setting));
-  });
   const [hide, setHide] = react.useState(true);
   const [hideSettings, setHideSettings] = react.useState([]);
-  const updateHideSettings = () => setting_view_awaiter(this, void 0, void 0, function* () {
-    setHideSettings(yield Settings.getSettingValue(setting.key + '.hide'));
-  });
+  const updateSettings = () => {
+    Settings.getSettingValue(setting).then(setSettings);
+  };
+  const updateHideSettings = () => {
+    Settings.getSettingValue(setting.key + '.hide').then(setHideSettings);
+  };
   react.useEffect(() => {
     updateSettings();
     updateHideSettings();
@@ -42301,15 +42274,15 @@ function SettingView(props) {
     style: {
       userSelect: 'none'
     },
-    onDoubleClick: e => setting_view_awaiter(this, void 0, void 0, function* () {
+    onDoubleClick: e => {
       Settings.addSettingValue(props.setting.key + '.hide', e.target.textContent);
-      yield updateHideSettings();
-    }),
-    onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
+      updateHideSettings();
+    },
+    onClose: () => {
       Settings.delSettingValue(props.setting, setting);
-      yield updateSettings();
+      updateSettings();
       updateBox();
-    })
+    }
   }, setting)), !hide && settings.filter(setting => hideSettings.includes(setting)).map(setting => react.createElement(tag, {
     closable: true,
     key: setting,
@@ -42317,15 +42290,15 @@ function SettingView(props) {
       userSelect: 'none'
     },
     color: '#00000080',
-    onDoubleClick: () => setting_view_awaiter(this, void 0, void 0, function* () {
+    onDoubleClick: () => {
       Settings.delSettingValue(props.setting.key + '.hide', setting);
-      yield updateHideSettings();
-    }),
-    onClose: () => setting_view_awaiter(this, void 0, void 0, function* () {
+      updateHideSettings();
+    },
+    onClose: () => {
       Settings.delSettingValue(props.setting, setting);
-      yield updateSettings();
+      updateSettings();
       updateBox();
-    })
+    }
   }, setting))), react.createElement(es_row, null, react.createElement(es_col, {
     span: 18
   }, react.createElement(input, {
@@ -42341,15 +42314,15 @@ function SettingView(props) {
     icon: react.createElement(icons_PlusOutlined, null),
     // 输入框为空 或者 输入框与已有配置相同  disabled
     disabled: !inputValue || settings.filter(setting => setting === inputValue).length > 0,
-    onClick: () => setting_view_awaiter(this, void 0, void 0, function* () {
+    onClick: () => {
       // 添加 保存到GM
       if (inputValue) {
         Settings.addSettingValue(setting, inputValue);
       }
       setInputValue('');
-      yield updateSettings();
+      updateSettings();
       updateBox();
-    })
+    }
   })), react.createElement(es_col, {
     span: 3
   }, react.createElement(es_button, {
@@ -48375,6 +48348,276 @@ select_Select.Option = es_Option;
 select_Select.OptGroup = es_OptGroup;
 select_Select._InternalPanelDoNotUseOrYouWillBeFired = select_PurePanel;
 /* harmony default export */ const es_select = (select_Select);
+;// CONCATENATED MODULE: ./node_modules/antd/es/auto-complete/index.js
+/**
+ * TODO: 4.0
+ *
+ * - Remove `dataSource`
+ * - `size` not work with customizeInput
+ * - CustomizeInput not feedback `ENTER` key since accessibility enhancement
+ */
+
+
+
+
+
+
+
+
+
+const {
+  Option: auto_complete_Option
+} = es_select;
+function isSelectOptionOrSelectOptGroup(child) {
+  return child && child.type && (child.type.isSelectOption || child.type.isSelectOptGroup);
+}
+const AutoComplete = (props, ref) => {
+  const {
+    prefixCls: customizePrefixCls,
+    className,
+    popupClassName,
+    dropdownClassName,
+    children,
+    dataSource
+  } = props;
+  const childNodes = toArray_toArray(children);
+  // ============================= Input =============================
+  let customizeInput;
+  if (childNodes.length === 1 && isValidElement(childNodes[0]) && !isSelectOptionOrSelectOptGroup(childNodes[0])) {
+    [customizeInput] = childNodes;
+  }
+  const getInputElement = customizeInput ? () => customizeInput : undefined;
+  // ============================ Options ============================
+  let optionChildren;
+  // [Legacy] convert `children` or `dataSource` into option children
+  if (childNodes.length && isSelectOptionOrSelectOptGroup(childNodes[0])) {
+    optionChildren = children;
+  } else {
+    optionChildren = dataSource ? dataSource.map(item => {
+      if (isValidElement(item)) {
+        return item;
+      }
+      switch (typeof item) {
+        case 'string':
+          return /*#__PURE__*/react.createElement(auto_complete_Option, {
+            key: item,
+            value: item
+          }, item);
+        case 'object':
+          {
+            const {
+              value: optionValue
+            } = item;
+            return /*#__PURE__*/react.createElement(auto_complete_Option, {
+              key: optionValue,
+              value: optionValue
+            }, item.text);
+          }
+        default:
+           false ? 0 : void 0;
+          return undefined;
+      }
+    }) : [];
+  }
+  if (false) {}
+  const {
+    getPrefixCls
+  } = react.useContext(context_ConfigContext);
+  const prefixCls = getPrefixCls('select', customizePrefixCls);
+  return /*#__PURE__*/react.createElement(es_select, Object.assign({
+    ref: ref
+  }, omit_omit(props, ['dataSource', 'dropdownClassName']), {
+    prefixCls: prefixCls,
+    popupClassName: popupClassName || dropdownClassName,
+    className: classnames_default()(`${prefixCls}-auto-complete`, className),
+    mode: es_select.SECRET_COMBOBOX_MODE_DO_NOT_USE
+  }, {
+    // Internal api
+    getInputElement
+  }), optionChildren);
+};
+const RefAutoComplete = /*#__PURE__*/react.forwardRef(AutoComplete);
+// We don't care debug panel
+/* istanbul ignore next */
+const auto_complete_PurePanel = genPurePanel(RefAutoComplete);
+RefAutoComplete.Option = auto_complete_Option;
+RefAutoComplete._InternalPanelDoNotUseOrYouWillBeFired = auto_complete_PurePanel;
+/* harmony default export */ const auto_complete = (RefAutoComplete);
+;// CONCATENATED MODULE: ./src/view/special/uid-username-search.view.tsx
+var uid_username_search_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+
+
+
+
+function UidUsernameSearchView(props) {
+  const {
+    commit
+  } = props;
+  const uu = react.useState(new UidUsername())[0];
+  const [uid, setUid] = react.useState('');
+  const [username, setUsername] = react.useState(undefined);
+  const [userInfos, setUserInfos] = react.useState([]);
+  const [searchType, setSearchType] = react.useState('uid2username');
+  const [userInfoEnd, setUserInfoEnd] = react.useState(false);
+  const uid2username = uid => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
+    let username = yield uu.uid2username(uid);
+    username = username === '' ? undefined : username;
+    return username;
+  });
+  return react.createElement(react.Fragment, null, react.createElement(es_col, {
+    span: 18
+  }, react.createElement(es_row, null, react.createElement(input, {
+    size: 'small',
+    allowClear: true,
+    value: uid,
+    placeholder: 'uid',
+    onChange: e => {
+      let value = e.target.value;
+      setSearchType('uid2username');
+      if (value === '') {
+        // 清空, 清空所有
+        setUid('');
+        setUsername(undefined);
+        setUserInfos([]);
+        setUserInfoEnd(false);
+      } else if (/^[1-9](\d+)?$/.test(value)) {
+        // 手动更改uid后, 清空username选项
+        setUid(String(value));
+        uid2username(String(value)).then(setUsername);
+        setUserInfos([]);
+        setUserInfoEnd(false);
+      } else {
+        // 不是正整数 => 不改变(变为上一次的值)
+        setUid(uid);
+        // 上一次是username搜索, 清空备选列
+        if (searchType === 'username2uid') {
+          uid2username(uid).then(setUsername);
+          setUserInfos([]);
+          setUserInfoEnd(false);
+        }
+      }
+    }
+  })), react.createElement(es_row, null, react.createElement(auto_complete, {
+    size: 'small',
+    style: {
+      width: '100%'
+    },
+    showSearch: true,
+    placeholder: 'username',
+    allowClear: true,
+    getPopupContainer: target => target,
+    value: username,
+    disabled: searchType === 'uid2username' && uid !== '',
+    onSearch: keyword => {
+      setSearchType('username2uid');
+      setUid('');
+      setUsername(keyword);
+      uu.username2infos(keyword).then(setUserInfos);
+      setUserInfoEnd(false);
+    },
+    onSelect: uid => {
+      setSearchType('username2uid');
+      setUid(uid);
+      uid2username(uid).then(setUsername);
+    },
+    onPopupScroll: e => {
+      let target = e.target;
+      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+        // 滑动到底部
+        if (!userInfoEnd) {
+          if (username) {
+            uu.username2infos(username, userInfos.length / 20 + 1).then(newInfos => {
+              if (newInfos.length === 0 || newInfos.length % 20 !== 0) {
+                setUserInfoEnd(true);
+              }
+              setUserInfos([...userInfos, ...newInfos]);
+            });
+          } else {
+            setUserInfoEnd(true);
+          }
+        }
+      }
+    }
+  }, userInfos.map(result => react.createElement(auto_complete.Option, {
+    key: result.uid
+  }, result.username))))), react.createElement(es_col, {
+    span: 2
+  }, react.createElement(es_button, {
+    size: 'small',
+    style: {
+      width: '100%',
+      height: '100%'
+    },
+    block: true,
+    disabled: !uid || !username,
+    icon: react.createElement(icons_PlusOutlined, null),
+    onMouseUp: event => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
+      if (event.button === 2) {
+        // 单击右键
+        switch (searchType) {
+          case 'username2uid':
+            // 清空
+            setUid('');
+            setUsername(undefined);
+            setUserInfos([]);
+            setUserInfoEnd(false);
+            break;
+          case 'uid2username':
+            // 取消准备
+            setSearchType('username2uid');
+            uu.username2infos(username !== null && username !== void 0 ? username : '').then(setUserInfos);
+            setUserInfoEnd(false);
+            break;
+        }
+      }
+    }),
+    onClick: () => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
+      if (uid) {
+        // 有输入uid再处理
+        switch (searchType) {
+          case 'username2uid':
+            // 准备
+            setSearchType('uid2username');
+            break;
+          case 'uid2username':
+            // 添加
+            setUid('');
+            setUsername(undefined);
+            setUserInfos([]);
+            setUserInfoEnd(false);
+            commit(uid);
+            break;
+        }
+      }
+    })
+  })));
+}
 ;// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx
 var uid_username_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
@@ -48408,40 +48651,38 @@ var uid_username_view_awaiter = undefined && undefined.__awaiter || function (th
 
 
 
+
 function UidUsernameView(props) {
   const {
     updateBox
   } = props;
   const uu = react.useState(new UidUsername())[0];
   const [settings, setSettings] = react.useState([]);
-  const [inputUid, setInputUid] = react.useState('');
-  const [inputUsername, setInputUsername] = react.useState(undefined);
-  const [searched, setSearched] = react.useState([]);
-  const [searchKeyword, setSearchKeyword] = react.useState('');
-  const [toUpdate, setToUpdate] = react.useState(0);
-  const updateSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
-    let uids = yield uu.get('uid')();
-    Promise.all(uids.map(uid => uu.uid2username(uid))).then(usernames => {
-      let settings = [];
-      uids.forEach((uid, i) => {
-        settings.push({
-          uid,
-          username: usernames[i]
+  const [hide, setHide] = react.useState(true); // 是否显示隐藏的tag标签
+  const [hideSettings, setHideSettings] = react.useState([]); // 隐藏的uid
+  /**
+   * 更新配置展示
+   */
+  const updateSettings = () => {
+    uu.get('uid')().then(uids => {
+      Promise.all(uids.map(uid => uu.uid2username(uid))).then(usernames => {
+        let settings = [];
+        uids.forEach((uid, i) => {
+          settings.push({
+            uid,
+            username: usernames[i]
+          });
         });
+        setSettings(settings);
       });
-      setSettings(settings);
     });
-  });
-  const [hide, setHide] = react.useState(true);
-  const [hideSettings, setHideSettings] = react.useState([]);
-  const uid2username = uid => uid_username_view_awaiter(this, void 0, void 0, function* () {
-    let username = yield uu.uid2username(uid);
-    username = username === '' ? undefined : username;
-    return username;
-  });
-  const updateHideSettings = () => uid_username_view_awaiter(this, void 0, void 0, function* () {
-    setHideSettings(yield Settings.getSettingValue('uid.hide'));
-  });
+  };
+  /**
+   * 更新隐藏展示
+   */
+  const updateHideSettings = () => {
+    Settings.getSettingValue('uid.hide').then(hideSettings => setHideSettings(hideSettings));
+  };
   react.useEffect(() => {
     updateSettings();
     updateHideSettings();
@@ -48451,141 +48692,59 @@ function UidUsernameView(props) {
     key: item.uid,
     getPopupContainer: e => e,
     mouseEnterDelay: 0,
-    trigger: 'click'
+    trigger: 'click',
+    showArrow: false
   }, react.createElement(tag, {
     closable: true,
     style: {
       userSelect: 'none'
     },
-    onDoubleClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+    onDoubleClick: () => {
+      // 双击隐藏, 添加uid.hide
       Settings.addSettingValue('uid.hide', item.uid);
-      yield updateHideSettings();
-    }),
-    onClose: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+      updateHideSettings();
+    },
+    onClose: () => {
+      // 删除, 删除uid
       uu.del('uid')(item.uid);
-      yield updateSettings();
+      updateSettings();
       updateBox();
-    }),
+    },
     key: item.username
   }, item.username))), !hide && settings.filter(item => hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
     title: item.uid,
     key: item.uid,
     getPopupContainer: e => e,
     mouseEnterDelay: 0,
-    trigger: 'click'
+    trigger: 'click',
+    showArrow: false
   }, react.createElement(tag, {
     closable: true,
     style: {
       userSelect: 'none'
     },
     color: '#00000080',
-    onDoubleClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+    onDoubleClick: () => {
+      // 双击显示, 删除uid.hide
       Settings.delSettingValue('uid.hide', item.uid);
-      yield updateHideSettings();
-    }),
-    onClose: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+      updateHideSettings();
+    },
+    onClose: () => {
+      // 删除, 删除uid和uid.hide
       uu.del('uid')(item.uid);
       Settings.delSettingValue('uid.hide', item.uid);
-      yield updateSettings();
-      yield updateHideSettings();
+      updateSettings();
+      updateHideSettings();
       updateBox();
-    }),
+    },
     key: item.username
-  }, item.username)))), react.createElement(es_row, null, react.createElement(es_col, {
-    span: 18
-  }, react.createElement(es_row, null, react.createElement(input, {
-    size: 'small',
-    allowClear: true,
-    value: inputUid,
-    placeholder: 'uid',
-    onChange: e => uid_username_view_awaiter(this, void 0, void 0, function* () {
-      let value = e.target.value;
-      if (value === '') {
-        // username搜索后点取消, 保留选择的username
-        // uid搜索后点取消, 清空username
-        setInputUid('');
-        if (searched.length === 0) {
-          setInputUsername(undefined);
-        }
-      } else if (/^[1-9](\d+)?$/.test(value)) {
-        // 手动更改uid后, 清空username选项
-        setInputUid(value + '');
-        setInputUsername(yield uid2username(value + ''));
-        setSearched([]);
-      } else {
-        // 不是正整数 => 不改变(变为上一次的值)
-        setInputUid(inputUid);
-        if (searched.length !== 0) {
-          setSearched([]);
-          setInputUsername(yield uid2username(inputUid));
-        }
-      }
-    })
-  })), react.createElement(es_row, null, react.createElement(es_select, {
-    size: 'small',
-    style: {
-      width: '100%'
-    },
-    showSearch: true,
-    allowClear: true,
-    placeholder: 'username',
-    showArrow: false,
-    disabled: inputUid !== '' && searched.length === 0,
-    value: inputUsername,
-    getPopupContainer: target => target,
-    filterOption: false,
-    onSearch: keyword => uid_username_view_awaiter(this, void 0, void 0, function* () {
-      setSearchKeyword(keyword);
-      setSearched(yield uu.username2uid(keyword));
-    }),
-    onChange: uid => uid_username_view_awaiter(this, void 0, void 0, function* () {
-      if (uid) {
-        setInputUid(uid + '');
-        setInputUsername(yield uid2username(uid + ''));
-      } else {
-        setInputUid('');
-        setInputUsername(undefined);
-        setSearched([]);
-      }
-    }),
-    onPopupScroll: e => uid_username_view_awaiter(this, void 0, void 0, function* () {
-      let target = e.target;
-      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-        // 滑动到底部
-        if (searchKeyword && searched.length % 20 === 0) {
-          searched.push(...(yield uu.username2uid(searchKeyword, searched.length / 20 + 1)));
-          setSearched(searched);
-          setToUpdate(toUpdate + 1);
-        }
-      }
-    })
-  }, searched.map(result => react.createElement(es_select.Option, {
-    key: result.uid + '',
-    value: result.uid + ''
-  }, result.username))))), react.createElement(es_col, {
-    span: 2
-  }, react.createElement(es_button, {
-    size: 'small',
-    style: {
-      width: '100%',
-      height: '100%'
-    },
-    block: true,
-    disabled: !inputUsername,
-    icon: react.createElement(icons_PlusOutlined, null),
-    onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
-      if (inputUid && inputUsername) {
-        uu.add('uid')(inputUid);
-      }
-      setInputUid('');
-      // 是通过username搜索的, 不清空当前username
-      if (searched.length === 0) {
-        setInputUsername(undefined);
-      }
-      yield updateSettings();
+  }, item.username)))), react.createElement(es_row, null, react.createElement(UidUsernameSearchView, {
+    commit: uid => {
+      uu.add('uid')(uid);
+      updateSettings();
       updateBox();
-    })
-  })), react.createElement(es_col, {
+    }
+  }), react.createElement(es_col, {
     span: 2
   }, react.createElement(es_button, {
     size: 'small',
@@ -48596,8 +48755,11 @@ function UidUsernameView(props) {
     block: true,
     icon: react.createElement(icons_SyncOutlined, null),
     onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+      // 刷新, uid排序
+      yield uu.get('uid')().then(array => uu.set('uid')(array.map(Number).sort((a, b) => a - b).map(String)));
+      yield Settings.getSettingValue('uid.hide').then(array => Settings.setSettingValue('uid.hide', array.map(Number).sort((a, b) => a - b).map(String)));
       GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
-      yield updateSettings();
+      updateSettings();
     })
   })), react.createElement(es_col, {
     span: 2
@@ -48612,11 +48774,11 @@ function UidUsernameView(props) {
     onClick: () => setHide(!hide)
   }))));
 }
-;// CONCATENATED MODULE: ./src/view/display-type.tsx
+;// CONCATENATED MODULE: ./src/view/display-type.view.tsx
 
 
 
-function DisplayType() {
+function DisplayTypeView() {
   var _a;
   const [displayType, setDisplayType] = react.useState((_a = document.getElementById(DISPLAY_STYLE_ID)) === null || _a === void 0 ? void 0 : _a.getAttribute('displayType'));
   return react.createElement(react.Fragment, null, react.createElement(card, {
@@ -48649,7 +48811,7 @@ function DisplayType() {
     }
   }, displayType))));
 }
-;// CONCATENATED MODULE: ./src/view/box.tsx
+;// CONCATENATED MODULE: ./src/view/box.view.tsx
 
 
 
@@ -48657,7 +48819,7 @@ function DisplayType() {
 
 
 
-function Box(props) {
+function BoxView(props) {
   const {
     pageMap
   } = props;
@@ -48675,8 +48837,6 @@ function Box(props) {
     ref: mainRef,
     style: {
       display: 'none',
-      bottom: '6vh',
-      color: '#777777',
       position: 'absolute',
       top: '10px',
       right: '400px',
@@ -48697,7 +48857,7 @@ function Box(props) {
     page: page
   }))), react.createElement(es_col, {
     span: 10
-  }, react.createElement(DisplayType, null))), react.createElement(es_tabs, null, react.createElement(es_tabs.TabPane, {
+  }, react.createElement(DisplayTypeView, null))), react.createElement(es_tabs, null, react.createElement(es_tabs.TabPane, {
     key: "uid2username-tab",
     tab: react.createElement("span", null, "uid")
   }, react.createElement(UidUsernameView, {
@@ -48763,7 +48923,7 @@ function createBox(pageMap, root = {
     document.body.appendChild(div);
   }
   root.root = (0,client/* createRoot */.s)(document.getElementById(APP_ID));
-  root.root.render(react.createElement(Box, {
+  root.root.render(react.createElement(BoxView, {
     pageMap: pageMap
   }));
   return () => {
@@ -48831,6 +48991,18 @@ function iframes(pageMap) {
     }
   }, 500);
 }
+;// CONCATENATED MODULE: ./src/init/global.ts
+
+function globalInit() {
+  // 取消插件内部的浏览器右键菜单事件
+  document.oncontextmenu = event => {
+    var _a;
+    if (event.srcElement && event.srcElement instanceof Node) {
+      return !((_a = document.getElementById(APP_ID)) === null || _a === void 0 ? void 0 : _a.contains(event.srcElement));
+    }
+    return false;
+  };
+}
 ;// CONCATENATED MODULE: ./src/main.tsx
 var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
@@ -48866,7 +49038,10 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
 
 
 
+
 (() => main_awaiter(void 0, void 0, void 0, function* () {
+  // 全局配置
+  globalInit();
   // 检查版本是否更新 更新配置
   yield checkVersion();
   // 读取配置生成 PageMap
