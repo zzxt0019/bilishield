@@ -13,9 +13,9 @@ export function UidUsernameView(props: {
     const [inputUid, setInputUid] = React.useState('');
     const [inputUsername, setInputUsername] = React.useState<string | undefined>(undefined);
     const [userInfos, setUserInfos] = React.useState<{ uid: number, username: string; }[]>([]);
-    const [searchKeyword, setSearchKeyword] = React.useState('');
     const [searchType, setSearchType] = React.useState<'uid2username' | 'username2uid'>('uid2username');
     const [toUpdate, setToUpdate] = React.useState(0);
+    const [userInfoEnd, setUserInfoEnd] = React.useState(false);
     const updateSettings = async () => {
         let uids = await uu.get('uid')()
         Promise.all(uids.map(uid => uu.uid2username(uid)))
@@ -88,15 +88,18 @@ export function UidUsernameView(props: {
                                    setInputUid('')
                                    setInputUsername(undefined);
                                    setUserInfos([]);
+                                   setUserInfoEnd(false);
                                } else if (/^[1-9](\d+)?$/.test(value)) {
                                    // 手动更改uid后, 清空username选项
                                    setInputUid(value + '');
                                    setInputUsername(await uid2username(value + ''));
                                    setUserInfos([])
+                                   setUserInfoEnd(false);
                                } else {  // 不是正整数 => 不改变(变为上一次的值)
                                    setInputUid(inputUid);
                                    if (userInfos.length !== 0) {
                                        setUserInfos([]);
+                                       setUserInfoEnd(false);
                                        setInputUsername(await uid2username(inputUid));
                                    }
                                }
@@ -105,18 +108,34 @@ export function UidUsernameView(props: {
                 <Row>
                     <AutoComplete size={'small'} style={{width: '100%'}} showSearch={true} placeholder={'username'}
                                   allowClear={true}
-                                  getPopupContainer={target => target} searchValue={searchKeyword} value={inputUsername}
+                                  getPopupContainer={target => target} value={inputUsername}
                                   disabled={searchType === 'uid2username' && inputUid !== ''}
                                   onSearch={async (keyword) => {
                                       setSearchType('username2uid');
                                       setInputUid('');
                                       setInputUsername(keyword);
                                       setUserInfos(await uu.username2infos(keyword));
+                                      setUserInfoEnd(false);
                                   }}
                                   onSelect={async (uid) => {
                                       setSearchType('username2uid');
                                       setInputUid(uid);
                                       setInputUsername(await uid2username(uid));
+                                  }}
+                                  onPopupScroll={async (e) => {
+                                      let target: any = e.target;
+                                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+                                          // 滑动到底部
+                                          if (!userInfoEnd) {
+                                              let newInfos = inputUsername ? await uu.username2infos(inputUsername, userInfos.length / 20 + 1) : [];
+                                              if (newInfos.length === 0 || newInfos.length % 20 !== 0) {
+                                                  setUserInfoEnd(true);
+                                              }
+                                              userInfos.push(...newInfos);
+                                              setUserInfos(userInfos);
+                                              setToUpdate(toUpdate + 1);
+                                          }
+                                      }
                                   }}>
                         {userInfos.map(result =>
                             <AutoComplete.Option key={result.uid}>
@@ -140,10 +159,12 @@ export function UidUsernameView(props: {
                                     setInputUid('');
                                     setInputUsername(undefined);
                                     setUserInfos([]);
+                                    setUserInfoEnd(false);
                                     break;
                                 case 'uid2username':  // 取消准备
                                     setSearchType('username2uid');
                                     setUserInfos(inputUsername ? await uu.username2infos(inputUsername) : []);
+                                    setUserInfoEnd(false);
                                     break;
                             }
                         }
@@ -159,6 +180,7 @@ export function UidUsernameView(props: {
                                     setInputUid('');
                                     setInputUsername(undefined);
                                     setUserInfos([]);
+                                    setUserInfoEnd(false);
                                     await updateSettings();
                                     updateBox()
                                     break;
