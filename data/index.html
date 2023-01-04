@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bilishield</title>
+</head>
+<body>
+</body>
+<link rel="stylesheet" type="text/css" href="gh-pages/github.min.css">
+<script src="gh-pages/marked.min.js"></script>
+<script src="gh-pages/highlight.min.js"></script>
+
+<script>
+
+    hljs.initHighlighting();
+    let data = document.domain === 'zzxt0019.github.io' ? [
+        './script/userscript.js',
+        './script/userscript.min.js',
+        './yaml/page.yaml',
+        './yaml/rule.yaml',
+        './yaml/setting.yaml',
+    ] : [
+        '../dist/script/userscript.js',
+        '../dist/script/userscript.min.js',
+        '../dist/yaml/page.yaml',
+        '../dist/yaml/rule.yaml',
+        '../dist/yaml/setting.yaml',
+    ];
+    window.onload = () => {
+        let table = document.body.appendChild(document.createElement('table'));
+        let divs = [];
+        data.forEach((path) => {
+            // details
+            let div = document.body.appendChild(document.createElement('div'));
+            div.style.display = 'none';
+            divs.push(div);
+            let tr = table.appendChild(document.createElement('tr'));
+            let td1 = tr.appendChild(document.createElement('td'));
+            let td2 = tr.appendChild(document.createElement('td'));
+            let a1 = td1.appendChild(document.createElement('a'));
+            a1.href = 'javascript:void(0);';
+            a1.onclick = () => {
+                divs.forEach(div0 => {
+                    div.style.display = div.style.display === 'none' ? '' : 'none';
+                    if (div !== div0) {
+                        div0.style.display = 'none';
+                    }
+                });
+            }
+            a1.innerText = path.substring(path.lastIndexOf('/') + 1);
+            let a2 = td2.appendChild(document.createElement('a'));
+            a2.href = path;
+            fetch(path).then(res => {
+                res.blob().then(blob => {
+                    a2.innerText = (blob.size / 1024).toFixed(2) + 'KB';
+                    blob.arrayBuffer().then(res => {
+                        let text = new TextDecoder('utf-8').decode(res);
+                        marked.setOptions({
+                            highlight: function (code) {
+                                return hljs.highlightAuto(code).value;
+                            }
+                        })
+                        if (!a1.innerHTML.includes('min')) {
+                            div.innerHTML = marked.parse('```' + path.substring(path.lastIndexOf('.') + 1) + '\n' + text + '\n```');
+                        } else {
+                            div.innerText = text;
+                        }
+                    });
+                });
+            });
+        })
+    }
+</script>
+</html>
