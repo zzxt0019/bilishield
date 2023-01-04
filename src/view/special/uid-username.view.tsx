@@ -1,41 +1,38 @@
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
-import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined, SyncOutlined} from '@ant-design/icons';
-import {AutoComplete, Button, Card, Col, Input, Row, Tag, Tooltip} from "antd";
+import {EyeInvisibleOutlined, EyeOutlined, SyncOutlined} from '@ant-design/icons';
+import {Button, Card, Col, Row, Tag, Tooltip} from "antd";
 import React from "react";
 import {Settings} from "@/config/setting/setting";
+import {UidUsernameSearchView} from "@/view/special/uid-username-search.view";
 
 export function UidUsernameView(props: {
     updateBox: () => void
 }) {
     const {updateBox} = props;
     const uu: UidUsername = React.useState(new UidUsername())[0];
-    const [settings, setSettings] = React.useState<{ username: string, uid: string }[]>([]);
-    const [inputUid, setInputUid] = React.useState('');
-    const [inputUsername, setInputUsername] = React.useState<string | undefined>(undefined);
-    const [userInfos, setUserInfos] = React.useState<{ uid: number, username: string; }[]>([]);
-    const [searchType, setSearchType] = React.useState<'uid2username' | 'username2uid'>('uid2username');
-    const [toUpdate, setToUpdate] = React.useState(0);
-    const [userInfoEnd, setUserInfoEnd] = React.useState(false);
-    const updateSettings = async () => {
-        let uids = await uu.get('uid')()
-        Promise.all(uids.map(uid => uu.uid2username(uid)))
-            .then((usernames) => {
-                let settings: { username: string, uid: string }[] = []
-                uids.forEach((uid, i) => {
-                    settings.push({uid, username: usernames[i]})
+    const [settings, setSettings] = React.useState<{ uid: string, username: string, }[]>([]);
+    const [hide, setHide] = React.useState(true);  // 是否显示隐藏的tag标签
+    const [hideSettings, setHideSettings] = React.useState<string[]>([]);  // 隐藏的uid
+    /**
+     * 更新配置展示
+     */
+    const updateSettings = () => {
+        uu.get('uid')().then(uids => {
+            Promise.all(uids.map(uid => uu.uid2username(uid)))
+                .then((usernames) => {
+                    let settings: { uid: string, username: string, }[] = []
+                    uids.forEach((uid, i) => {
+                        settings.push({uid, username: usernames[i]})
+                    })
+                    setSettings(settings)
                 })
-                setSettings(settings)
-            })
+        })
     }
-    const [hide, setHide] = React.useState(true);
-    const [hideSettings, setHideSettings] = React.useState<string[]>([]);
-    const uid2username = async (uid: string) => {
-        let username: string | undefined = await uu.uid2username(uid);
-        username = username === '' ? undefined : username;
-        return username;
-    }
-    const updateHideSettings = async () => {
-        setHideSettings(await Settings.getSettingValue('uid.hide'));
+    /**
+     * 更新隐藏展示
+     */
+    const updateHideSettings = () => {
+        Settings.getSettingValue('uid.hide').then(hideSettings => setHideSettings(hideSettings));
     }
     React.useEffect(() => {
         updateSettings();
@@ -43,151 +40,53 @@ export function UidUsernameView(props: {
     }, [])
     return <>
         <Card>
+            {/* 展示Tag */}
             {settings.filter(item => !hideSettings.includes(item.uid)).map(item =>
                 <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
-                         trigger='click'>
+                         trigger='click' showArrow={false}>
                     <Tag closable={true} style={{userSelect: 'none'}}
-                         onDoubleClick={async () => {
+                         onDoubleClick={() => {
+                             // 双击隐藏, 添加uid.hide
                              Settings.addSettingValue('uid.hide', item.uid);
-                             await updateHideSettings();
+                             updateHideSettings();
                          }}
-                         onClose={async () => {
+                         onClose={() => {
+                             // 删除, 删除uid
                              uu.del('uid')(item.uid)
-                             await updateSettings()
+                             updateSettings()
                              updateBox()
                          }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
             )}
+            {/* 隐藏Tag */}
             {!hide && settings.filter(item => hideSettings.includes(item.uid)).map(item =>
                 <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
-                         trigger='click'>
+                         trigger='click' showArrow={false}>
                     <Tag closable={true} style={{userSelect: 'none'}}
                          color={'#00000080'}
-                         onDoubleClick={async () => {
+                         onDoubleClick={() => {
+                             // 双击显示, 删除uid.hide
                              Settings.delSettingValue('uid.hide', item.uid);
-                             await updateHideSettings();
+                             updateHideSettings();
                          }}
-                         onClose={async () => {
+                         onClose={() => {
+                             // 删除, 删除uid和uid.hide
                              uu.del('uid')(item.uid);
                              Settings.delSettingValue('uid.hide', item.uid);
-                             await updateSettings();
-                             await updateHideSettings();
+                             updateSettings();
+                             updateHideSettings();
                              updateBox()
                          }} key={item.username}>{item.username}</Tag>
                 </Tooltip>
             )}
         </Card>
         <Row>
-            <Col span={18}>
-                <Row>
-                    <Input size={'small'} allowClear={true} value={inputUid} placeholder={'uid'}
-                           onChange={async (e) => {
-                               setSearchType('uid2username');
-                               let value = e.target.value
-                               if (value === '') {
-                                   setInputUid('')
-                                   setInputUsername(undefined);
-                                   setUserInfos([]);
-                                   setUserInfoEnd(false);
-                               } else if (/^[1-9](\d+)?$/.test(value)) {
-                                   // 手动更改uid后, 清空username选项
-                                   setInputUid(value + '');
-                                   setInputUsername(await uid2username(value + ''));
-                                   setUserInfos([])
-                                   setUserInfoEnd(false);
-                               } else {  // 不是正整数 => 不改变(变为上一次的值)
-                                   setInputUid(inputUid);
-                                   if (userInfos.length !== 0) {
-                                       setUserInfos([]);
-                                       setUserInfoEnd(false);
-                                       setInputUsername(await uid2username(inputUid));
-                                   }
-                               }
-                           }}></Input>
-                </Row>
-                <Row>
-                    <AutoComplete size={'small'} style={{width: '100%'}} showSearch={true} placeholder={'username'}
-                                  allowClear={true}
-                                  getPopupContainer={target => target} value={inputUsername}
-                                  disabled={searchType === 'uid2username' && inputUid !== ''}
-                                  onSearch={async (keyword) => {
-                                      setSearchType('username2uid');
-                                      setInputUid('');
-                                      setInputUsername(keyword);
-                                      setUserInfos(await uu.username2infos(keyword));
-                                      setUserInfoEnd(false);
-                                  }}
-                                  onSelect={async (uid) => {
-                                      setSearchType('username2uid');
-                                      setInputUid(uid);
-                                      setInputUsername(await uid2username(uid));
-                                  }}
-                                  onPopupScroll={async (e) => {
-                                      let target: any = e.target;
-                                      if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-                                          // 滑动到底部
-                                          if (!userInfoEnd) {
-                                              let newInfos = inputUsername ? await uu.username2infos(inputUsername, userInfos.length / 20 + 1) : [];
-                                              if (newInfos.length === 0 || newInfos.length % 20 !== 0) {
-                                                  setUserInfoEnd(true);
-                                              }
-                                              userInfos.push(...newInfos);
-                                              setUserInfos(userInfos);
-                                              setToUpdate(toUpdate + 1);
-                                          }
-                                      }
-                                  }}>
-                        {userInfos.map(result =>
-                            <AutoComplete.Option key={result.uid}>
-                                {result.username}
-                            </AutoComplete.Option>)}
-                    </AutoComplete>
-                </Row>
-            </Col>
-            <Col span={2}>
-                <Button
-                    size={'small'}
-                    style={{width: '100%', height: '100%'}}
-                    block
-                    disabled={!inputUid || !inputUsername}
-                    icon={<PlusOutlined/>}
-                    onMouseUp={async (event) => {
-                        if (event.button === 2) {
-                            // 单击右键
-                            switch (searchType) {
-                                case 'username2uid':  // 清空
-                                    setInputUid('');
-                                    setInputUsername(undefined);
-                                    setUserInfos([]);
-                                    setUserInfoEnd(false);
-                                    break;
-                                case 'uid2username':  // 取消准备
-                                    setSearchType('username2uid');
-                                    setUserInfos(inputUsername ? await uu.username2infos(inputUsername) : []);
-                                    setUserInfoEnd(false);
-                                    break;
-                            }
-                        }
-                    }}
-                    onClick={async () => {
-                        if (inputUid) {  // 有输入uid再处理
-                            switch (searchType) {
-                                case 'username2uid':  // 准备
-                                    setSearchType('uid2username');
-                                    break;
-                                case 'uid2username':  // 添加
-                                    uu.add('uid')(inputUid);
-                                    setInputUid('');
-                                    setInputUsername(undefined);
-                                    setUserInfos([]);
-                                    setUserInfoEnd(false);
-                                    await updateSettings();
-                                    updateBox()
-                                    break;
-                            }
-                        }
-                    }}></Button>
-            </Col>
+            <UidUsernameSearchView commit={uid => {
+                uu.add('uid')(uid);
+                updateSettings();
+                updateBox();
+            }}></UidUsernameSearchView>
+            {/* 刷新按钮 */}
             <Col span={2}>
                 <Button
                     size={'small'}
@@ -195,12 +94,16 @@ export function UidUsernameView(props: {
                     block
                     icon={<SyncOutlined/>}
                     onClick={async () => {
+                        // 刷新, uid排序
+                        await uu.get('uid')().then(array => uu.set('uid')(array.map(Number).sort((a, b) => a - b).map(String)));
+                        await Settings.getSettingValue('uid.hide').then(array => Settings.setSettingValue('uid.hide', array.map(Number).sort((a, b) => a - b).map(String)));
                         GM_listValues()
                             .filter(item => item.startsWith('uid_'))
                             .forEach(item => GM_deleteValue(item))
-                        await updateSettings()
+                        updateSettings()
                     }}></Button>
             </Col>
+            {/* 隐藏按钮 */}
             <Col span={2}>
                 <Button
                     size={'small'}
