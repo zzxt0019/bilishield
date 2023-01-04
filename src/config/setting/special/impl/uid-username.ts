@@ -64,7 +64,7 @@ export class UidUsername extends SpecialSetting {
         }).catch(() => Promise.resolve(''))
     }
 
-    async username2uid(username: string, page: number = 1): Promise<{ uid: number, username: string }[]> {
+    async username2infos(username: string, page: number = 1): Promise<{ uid: number, username: string }[]> {
         return new Promise<{ uid: number, username: string }[]>((res, rej) => {
             GM_xmlhttpRequest({
                 method: 'GET',

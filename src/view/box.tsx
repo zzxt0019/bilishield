@@ -24,8 +24,6 @@ export function Box(props: {
     return <>
         <div ref={mainRef} style={{
             display: 'none',
-            bottom: '6vh',
-            color: '#777777',
             position: 'absolute',
             top: '10px',
             right: '400px',
