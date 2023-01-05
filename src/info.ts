@@ -3,9 +3,9 @@
 // @version         1.1.${timestamp}
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
-// @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
-// @updateURL       https://zzxt0019.github.io/bilishield/script/userscript.min.js
-// @downloadURL     https://zzxt0019.github.io/bilishield/script/userscript.min.js
+// @icon64          https://zzxt0019.github.io/bilishield/data/img/Elysia.png
+// @updateURL       https://zzxt0019.github.io/bilishield/data/script/userscript.min.js
+// @downloadURL     https://zzxt0019.github.io/bilishield/data/script/userscript.min.js
 // @description     bilibili屏蔽 更新时间: ${date}
 
 // @match           *://*.bilibili.com/*
