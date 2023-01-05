@@ -4,10 +4,41 @@ import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
 import CopyPlugin from "copy-webpack-plugin";
 
+const userscript = 'userscript';
 const banner = fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
     .replace('${timestamp}', String(new Date().getTime()))
     .replace('${date}', String(new Date(Date.now() + 8 * 3600_000 + new Date().getTimezoneOffset() * 60_000).toLocaleString()))
     .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
+
+/**
+ * 生成文件json
+ */
+function json() {
+    fs.mkdirSync(path.resolve(__dirname, './build'));
+    const read = (file: string, json: any) => {
+        if (fs.lstatSync(path.resolve(__dirname, './public') + '/' + file).isDirectory()) {  // 是文件夹
+            fs.readdirSync(path.resolve(__dirname, './public') + '/' + file)
+                .forEach(_file => read(file + '/' + _file, json));
+        } else {  // 是文件
+            let split = file.split('/');
+            for (let i = 0; i < split.length - 1; i++) {
+                if (split[i]) {
+                    if (!json[split[i]]) {
+                        json[split[i]] = {};
+                    }
+                    json = json[split[i]];
+                }
+            }
+            json[split[split.length - 1]] = split[split.length - 1].substring(split[split.length - 1].lastIndexOf('.') + 1)
+        }
+    };
+    // 提前配置需要打包生成的userscript
+    let json = {script: {[userscript + '.js']: 'js', [userscript + '.min.js']: 'js'}};
+    read('', json);
+    fs.writeFileSync(path.resolve(__dirname, './build') + '/data.json', JSON.stringify(json));
+}
+
+json()
 
 const config: Configuration = {
     resolve: {
@@ -16,13 +47,12 @@ const config: Configuration = {
         },
         extensions: ['.ts', '.js', '.tsx'],
     },
-
     entry: {
-        'userscript': './src/main.tsx',
-        'userscript.min': './src/main.tsx',
+        [userscript]: './src/main.tsx',
+        [userscript + '.min']: './src/main.tsx',
     },
     output: {
-        path: path.resolve(__dirname, 'dist/script'),
+        path: path.resolve(__dirname, 'build/script'),
         filename: '[name].js',
     },
 
@@ -49,13 +79,13 @@ const config: Configuration = {
     plugins: [
         new BannerPlugin({
             raw: true,
-            include: 'userscript.js',
+            include: userscript + '.js',
             banner,
         }),
         new CopyPlugin({
             patterns: [{
                 from: __dirname + '/public/',
-                to: __dirname + '/dist/',
+                to: __dirname + '/build/',
             }],
         })
     ]
