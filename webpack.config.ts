@@ -14,7 +14,9 @@ const banner = fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8'
  * 生成文件json
  */
 function json() {
-    fs.mkdirSync(path.resolve(__dirname, './build'));
+    if (!fs.existsSync(path.resolve(__dirname, './build'))) {
+        fs.mkdirSync(path.resolve(__dirname, './build'));
+    }
     const read = (file: string, json: any) => {
         if (fs.lstatSync(path.resolve(__dirname, './public') + '/' + file).isDirectory()) {  // 是文件夹
             fs.readdirSync(path.resolve(__dirname, './public') + '/' + file)
