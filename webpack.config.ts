@@ -37,7 +37,10 @@ function json() {
     // 提前配置需要打包生成的userscript
     let json = {script: {[userscript + '.js']: 'js', [userscript + '.min.js']: 'js'}};
     read('', json);
-    fs.writeFileSync(path.resolve(__dirname, './build') + '/data.json', JSON.stringify(json));
+    fs.writeFileSync(path.resolve(__dirname, './build') + '/data.json', JSON.stringify({
+        data: json,
+        timestamp: Date.now(),
+    }));
 }
 
 json()
