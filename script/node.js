@@ -2,20 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const highlight = require('highlight.js').default;
 const marked = require('marked');
+const _html = 'html'
 
 function readFile(filePath, json, fileCallback) {
-    if (filePath === '_html' || filePath === 'data.json') {
+    if (filePath === _html || filePath === 'data.json') {
         return;
     }
-    if (fs.lstatSync(path.resolve(__dirname, '../build') + '/' + filePath).isDirectory()) {  // 是文件夹
-        if (!fs.existsSync(path.resolve(__dirname, '../build/_html') + '/' + filePath)) {
-            fs.mkdirSync(path.resolve(__dirname, '../build/_html') + '/' + filePath);
+    if (fs.lstatSync(path.resolve(__dirname, '../build') + `/${filePath}`).isDirectory()) {  // 是文件夹
+        if (!fs.existsSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}`)) {
+            fs.mkdirSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}`);
         }
-        fs.readdirSync(path.resolve(__dirname, '../build') + '/' + filePath)
+        fs.readdirSync(path.resolve(__dirname, '../build') + `/${filePath}`)
             .forEach(file => {
                 readFile((filePath ? filePath + '/' : '') + file, json, fileCallback)
             });
-    } else if (fs.lstatSync(path.resolve(__dirname, '../build') + '/' + filePath).isFile()) {
+    } else if (fs.lstatSync(path.resolve(__dirname, '../build') + `/${filePath}`).isFile()) {
         fileCallback(filePath, json);
     }
 }
@@ -24,8 +25,8 @@ function readFile(filePath, json, fileCallback) {
  * 生成文件json
  */
 function json() {
-    if (!fs.existsSync(path.resolve(__dirname, '../build/_html'))) {
-        fs.mkdirSync(path.resolve(__dirname, '../build/_html'));
+    if (!fs.existsSync(path.resolve(__dirname, `../build/${_html}`))) {
+        fs.mkdirSync(path.resolve(__dirname, `../build/${_html}`));
     }
     // 提前配置需要打包生成的userscript
     let json = {};
@@ -42,13 +43,12 @@ function json() {
         // size
         json[split[split.length - 1]] = (fs.readFileSync(path.resolve(__dirname, '../build') + '/' + filePath).length / 1024).toFixed(2) + 'KB';
         // html
-        fs.writeFileSync(path.resolve(__dirname, '../build/_html') + '/' + filePath + '.html', createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + '/' + filePath), filePath));
+        fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + '/' + filePath), filePath));
     });
     fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify({
         data: json, timestamp: Date.now(),
     }));
-    fs.copyFileSync(path.resolve(__dirname, '../node_modules') + '/highlight.js/styles/github.css',
-        path.resolve(__dirname, '../build/_html/github.css'));
+    fs.copyFileSync(path.resolve(__dirname, '../node_modules') + '/highlight.js/styles/github.css', path.resolve(__dirname, `../build/${_html}/github.css`));
 }
 
 function createMarkdownHtml(text, filePath) {
