@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const highlight = require('highlight.js').default;
 const marked = require('marked');
-const _html = 'html'
+const _html = 'html';
+const _css = 'github.css';
 const ignores = [_html, 'data.json', 'index.js', 'index.html'];
 
 function readFile(filePath, json, fileCallback) {
@@ -49,10 +50,11 @@ function json() {
     fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify({
         data: json, timestamp: Date.now(),
     }));
-    fs.copyFileSync(path.resolve(__dirname, '../node_modules') + '/highlight.js/styles/github.css', path.resolve(__dirname, `../build/${_html}/github.css`));
+    fs.copyFileSync(path.resolve(__dirname, '../node_modules') + `/highlight.js/styles/${_css}`, path.resolve(__dirname, `../build/${_html}/${_css}`));
 }
 
 function createMarkdownHtml(text, filePath) {
+    fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, '');
     marked.setOptions({
         highlight: function (code) {
             return highlight.highlightAuto(code).value;
@@ -71,7 +73,9 @@ function createMarkdownHtml(text, filePath) {
 <head>
     <meta charset="UTF-8">
     <title>bilishield</title>
-    <link href="../github.css"  type="text/css" rel="stylesheet">
+    <link href="${path.relative(
+        path.resolve(__dirname, './build') + `/${_html}/${filePath}.html`,
+        path.resolve(__dirname, './build') +`/${_html}/${_css}` )}"  type="text/css" rel="stylesheet">
 </head>
 <body>
 ${body}
