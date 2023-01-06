@@ -20,9 +20,10 @@ const config: Configuration = {
     entry: {
         [userscript]: './src/main.tsx',
         [userscript + '.min']: './src/main.tsx',
+        index: './src/index.tsx',
     },
     output: {
-        path: path.resolve(__dirname, 'build/script'),
+        path: path.resolve(__dirname, 'build'),
         filename: '[name].js',
     },
 

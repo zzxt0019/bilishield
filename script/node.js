@@ -3,9 +3,10 @@ const path = require('path');
 const highlight = require('highlight.js').default;
 const marked = require('marked');
 const _html = 'html'
+const ignores = [_html, 'data.json', 'index.js', 'index.html'];
 
 function readFile(filePath, json, fileCallback) {
-    if (filePath === _html || filePath === 'data.json') {
+    if (ignores.includes(filePath)) {
         return;
     }
     if (fs.lstatSync(path.resolve(__dirname, '../build') + `/${filePath}`).isDirectory()) {  // 是文件夹
@@ -41,9 +42,9 @@ function json() {
             }
         }
         // size
-        json[split[split.length - 1]] = (fs.readFileSync(path.resolve(__dirname, '../build') + '/' + filePath).length / 1024).toFixed(2) + 'KB';
+        json[split[split.length - 1]] = (fs.readFileSync(path.resolve(__dirname, '../build') + `/${filePath}`).length / 1024).toFixed(2) + 'KB';
         // html
-        fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + '/' + filePath), filePath));
+        fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + `/${filePath}`), filePath));
     });
     fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify({
         data: json, timestamp: Date.now(),
@@ -59,7 +60,7 @@ function createMarkdownHtml(text, filePath) {
     })
     let body;
     if (filePath.endsWith('png') || filePath.endsWith('img')) {
-        body = `<img alt=[${filePath.substring(0, filePath.lastIndexOf('.'))}] src="${`../../${filePath}`}"/>`;
+        body = `<img alt=[${filePath.substring(0, filePath.lastIndexOf('.'))}] src="../../${filePath}"/>`;
     } else if (filePath.includes('min')) {
         body = `<div>${text}</div>`;
     } else {
@@ -70,7 +71,7 @@ function createMarkdownHtml(text, filePath) {
 <head>
     <meta charset="UTF-8">
     <title>bilishield</title>
-    <link href="../github.css"  type="text/css" rel="stylesheet"></link>
+    <link href="../github.css"  type="text/css" rel="stylesheet">
 </head>
 <body>
 ${body}
