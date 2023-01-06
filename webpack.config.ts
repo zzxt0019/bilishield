@@ -20,7 +20,7 @@ const config: Configuration = {
     entry: {
         [userscript]: './src/main.tsx',
         [userscript + '.min']: './src/main.tsx',
-        index: './src/index.tsx',
+        index: './src/gh-pages/index.tsx',
     },
     output: {
         path: path.resolve(__dirname, 'build'),
