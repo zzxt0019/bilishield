@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bilishield</title>
+    <link href="../github.css"  type="text/css" rel="stylesheet"></link>
+</head>
+<body>
+<pre><code class="language-yaml"><span class="hljs-comment"># 比例首页</span>
+<span class="hljs-attr">bilibili_rank_up:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页排行榜</span> <span class="hljs-string">up用户名</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.rank-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.info</span> <span class="hljs-string">.name</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">bilibili_rank_title:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页排行榜</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.rank-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">&#x27;[title]&#x27;</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_rank_pgc:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页排行榜</span> <span class="hljs-string">番剧国创</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.pgc-rank-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_rank_manka:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页排行榜</span> <span class="hljs-string">漫画</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.manga-rank-item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_upperright_video:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">右上视频</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-card-reco</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">img</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">alt</span>
+<span class="hljs-attr">bilibili_upperright_video_up:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">右上视频</span> <span class="hljs-string">UP</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-card-reco</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p.up</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">bilibili_upperleft_card:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">左边上角滑动图片</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.van-slide</span> <span class="hljs-string">.item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">img</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">alt</span>
+<span class="hljs-attr">bilibili_upperleft_card_adv:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">左边上角滑动图片</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.van-slide</span> <span class="hljs-string">.item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">i.bypb-icon</span>
+<span class="hljs-attr">bilibili_left_video_title:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">左边视频块</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-card-common</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a.title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_left_video_up:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">左边视频块</span> <span class="hljs-string">up</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-card-common</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a.up</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">bilibili_left_video_adv:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">左边视频块</span> <span class="hljs-string">up</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-card-common</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">always:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.gg-normal-icon</span>
+<span class="hljs-attr">bilibili_zhuanlan_title:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">专栏</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.article-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_zhuanlan_up:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">专栏</span> <span class="hljs-string">UP</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.article-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a.up</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">bilibili_banner_adv:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">广告横条</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">a.banner-card.b-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">always:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.gg-icon</span>
+
+
+<span class="hljs-attr">bilibili_ex_title:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">推广</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.ex-card-common</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+<span class="hljs-attr">bilibili_ex_up:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">推广</span> <span class="hljs-string">UP</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.ex-card-common</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a.ex-up</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+<span class="hljs-attr">bilibili__live_up:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">直播</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.live-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p.name</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+<span class="hljs-attr">bilibili__live_title:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">直播</span> <span class="hljs-string">标题</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.live-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+<span class="hljs-attr">bilibili__live_type:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">直播</span> <span class="hljs-string">分类</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.live-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p.tag</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+<span class="hljs-attr">bilibili_timeline_card:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">番剧国创左侧卡片</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.time-line-card.item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+<span class="hljs-attr">bilibili_manga_card:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">比例首页</span> <span class="hljs-string">漫画左侧卡片</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.manga-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+<span class="hljs-attr">bilibili_number:</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_main</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">这无缘无故的攀比之心是从何而来</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">span.number</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">always:</span> <span class="hljs-literal">true</span>
+
+<span class="hljs-comment"># 比例整体(评论区)</span>
+<span class="hljs-attr">bilibili_all_comment_card:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">主评论卡片</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_all</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.list-item.reply-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_card</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.sailing-img</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">alt</span>
+<span class="hljs-attr">bilibili_all_comment_img:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">主评论图片</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_all</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.list-item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_card</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">p.text</span> <span class="hljs-string">img</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">alt</span>
+<span class="hljs-attr">bilibili_all_comment_uid:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">主评论人</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_all</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.list-item.reply-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">uid</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a[data-usercard-mid]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">data-usercard-mid</span>
+<span class="hljs-attr">bilibili_all_inner_comment_img:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">子评论图片</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_all</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.reply-item.reply-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_card</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">img</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">alt</span>
+<span class="hljs-attr">bilibili_all_inner_comment_uid:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">子评论人</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_all</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.reply-item.reply-wrap</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">uid</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">a[data-usercard-mid]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">data-usercard-mid</span>
+
+<span class="hljs-comment"># 比例直播页面</span>
+<span class="hljs-attr">bilibili_live_right_word:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">直播右侧弹幕</span> <span class="hljs-string">关键字</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_live</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.chat-item.danmaku-item</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">data-danmaku</span>
+<span class="hljs-attr">bilibili_live_roll_word:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">直播中央弹幕</span> <span class="hljs-string">关键字</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_live</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.bilibili-danmaku.mode-roll</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">bilibili_live_adv:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">直播页面广告栏</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_live</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.item-wrapper</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+
+<span class="hljs-comment"># 比例视频页</span>
+<span class="hljs-attr">bilibili_video_right_word:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">视频页右侧</span> <span class="hljs-string">推荐视频</span> <span class="hljs-string">关键字</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_video</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-page-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.info</span> <span class="hljs-string">span.title[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_video_right_up:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">视频页右侧</span> <span class="hljs-string">推荐视频</span> <span class="hljs-string">up</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_video</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-page-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.count.up</span> <span class="hljs-string">a</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+</code></pre>
+
+</body>
+</html>
