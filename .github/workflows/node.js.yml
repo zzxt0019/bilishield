@@ -28,4 +28,3 @@ jobs:
         with:
           folder: build
           token: ${{secrets.REPO_TOKEN}}
-          target-folder: data
