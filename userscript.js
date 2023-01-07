@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673079262723
+// @version         1.1.1673081440014
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/7/2023, 4:14:22 PM
+// @description     bilibili屏蔽 更新时间: 1/7/2023, 4:50:40 PM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -12804,27 +12804,37 @@ function checkVersion() {
   return check_update_awaiter(this, void 0, void 0, function* () {
     let version = (_a = GM_getValue('script.version')) !== null && _a !== void 0 ? _a : '1.0';
     let configs = ['page', 'rule', 'setting'];
-    // if (GM_info.script.version > version) {  // 存储版本 < 当前版本 => 更新配置
-    let jsonPromises = [];
-    configs.forEach(key => {
-      var _a;
-      jsonPromises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + key + '/data.json'));
-    });
-    let jsonResponses = yield Promise.all(jsonPromises);
-    let yamlPromises = [];
-    for (let i = 0; i < configs.length; i++) {
-      let arr = yield jsonResponses[i].json();
-      yamlPromises.push([]);
-      arr.forEach(yaml => {
+    if (GM_info.script.version > version) {
+      // 存储版本 < 当前版本 => 更新配置
+      let jsonPromises = [];
+      configs.forEach(key => {
         var _a;
-        yamlPromises[i].push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + configs[i] + yaml));
+        jsonPromises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + key + '/data.json'));
       });
-    }
-    for (let i = 0; i < yamlPromises.length; i++) {
-      let yamlResponses = yield Promise.all(yamlPromises[i]);
-      yamlResponses.forEach(yamlResponse => check_update_awaiter(this, void 0, void 0, function* () {
-        console.log(configs[i], parse(yield yamlResponse.text()));
-      }));
+      let jsonResponses = yield Promise.all(jsonPromises);
+      let yamlPromises = [];
+      for (let i = 0; i < configs.length; i++) {
+        let arr = yield jsonResponses[i].json();
+        yamlPromises.push([]);
+        arr.forEach(yaml => {
+          var _a;
+          yamlPromises[i].push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + configs[i] + yaml));
+        });
+      }
+      for (let i = 0; i < yamlPromises.length; i++) {
+        let yamlResponses = yield Promise.all(yamlPromises[i]);
+        let yamlJson = {};
+        for (const yamlResponse of yamlResponses) {
+          yamlJson = Object.assign(Object.assign({}, yamlJson), parse(yield yamlResponse.text()));
+        }
+        GM_setValue('script.' + configs[i], yamlJson);
+      }
+      GM_setValue('script.version', GM_info.script.version);
+    } else if (GM_info.script.version < version) {
+      // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
+      configs.forEach(config => {
+        GM_setValue('script.' + config, parse(GM_getResourceText(config)));
+      });
     }
   });
 }
