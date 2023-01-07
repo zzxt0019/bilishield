@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673081440014
+// @version         1.1.1673117850296
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/7/2023, 4:50:40 PM
+// @description     bilibili屏蔽 更新时间: 1/8/2023, 2:57:30 AM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -12832,8 +12832,20 @@ function checkVersion() {
       GM_setValue('script.version', GM_info.script.version);
     } else if (GM_info.script.version < version) {
       // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
-      configs.forEach(config => {
-        GM_setValue('script.' + config, parse(GM_getResourceText(config)));
+      let dataJson = GM_getResourceText('data.json');
+      let yamlJson = JSON.parse(dataJson).yaml;
+      let data = {
+        page: {},
+        rule: {},
+        setting: {}
+      };
+      Object.entries(yamlJson).forEach(([key, value]) => {
+        Object.keys(value).forEach(fileName => {
+          data[key] = Object.assign(Object.assign({}, data[key]), parse(GM_getResourceText(key + '-' + fileName)));
+        });
+      });
+      Object.entries(data).forEach(([key, value]) => {
+        GM_setValue('script.' + key, value);
       });
     }
   });
