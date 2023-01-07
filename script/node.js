@@ -9,7 +9,7 @@ const ignores = [_html, 'data.json', 'index.js', 'index.html'];
 /**
  * 递归读取文件
  */
-function readFile(filePath, json, fileCallback) {
+function readFile(filePath, json, yamlJson, fileCallback) {
     // 不读取的部分
     if (ignores.includes(filePath)) {
         return;
@@ -22,11 +22,11 @@ function readFile(filePath, json, fileCallback) {
         // 读取文件
         fs.readdirSync(path.resolve(__dirname, '../build') + `/${filePath}`)
             .forEach(file => {
-                readFile((filePath ? filePath + '/' : '') + file, json, fileCallback)
+                readFile((filePath ? filePath + '/' : '') + file, json, yamlJson, fileCallback);
             });
     } else if (fs.lstatSync(path.resolve(__dirname, '../build') + `/${filePath}`).isFile()) {  // 是文件
         // 处理
-        fileCallback(filePath, json);
+        fileCallback(filePath, json, yamlJson);
     }
 }
 
@@ -37,8 +37,8 @@ function afterBuild() {
         fs.mkdirSync(path.resolve(__dirname, `../build/${_html}`));
     }
     // 提前配置需要打包生成的userscript
-    let json = {};
-    readFile('', json, (filePath, json) => {
+    let json = {}, yamlJson = {};
+    readFile('', json, yamlJson, (filePath, json, yamlJson) => {
         let split = filePath.split('/');
         for (let i = 0; i < split.length - 1; i++) {
             if (split[i]) {
@@ -52,7 +52,16 @@ function afterBuild() {
         json[split[split.length - 1]] = (fs.readFileSync(path.resolve(__dirname, '../build') + `/${filePath}`).length / 1024).toFixed(2) + 'KB';
         // html
         fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + `/${filePath}`), filePath));
+        // yaml路径
+        if (filePath.startsWith('yaml/')) {
+            let dir = filePath.substring(5).substring(0, filePath.substring(5).indexOf('/')); // page, rule, setting
+            if (!yamlJson[dir]) {
+                yamlJson[dir] = [];
+            }
+            yamlJson[dir].push(filePath.substring(5).substring(filePath.substring(5).indexOf('/')));
+        }
     });
+    writeYamlJson(yamlJson);
     // 写data.json
     fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify(json));
     // 复制highlight的css
@@ -84,6 +93,12 @@ function createMarkdownHtml(text, filePath) {
 ${body}
 </body>
 </html>`
+}
+
+function writeYamlJson(yamlJson) {
+    Object.entries(yamlJson).forEach(([key, value]) => {
+        fs.writeFileSync(path.resolve(__dirname, '../build') + `/yaml/${key}/data.json`, JSON.stringify(value));
+    })
 }
 
 afterBuild();
