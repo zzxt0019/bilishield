@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673117850296
+// @version         1.1.1673118902905
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/8/2023, 2:57:30 AM
+// @description     bilibili屏蔽 更新时间: 1/8/2023, 3:15:02 AM
 
 // @match           *://*.bilibili.com/*
 // @noframes
