@@ -42,10 +42,12 @@ function checkIgnore(filePath) {  // ../build/*
 
 /**
  * 生成所有文件的data.json 记录文件夹和文件
+ * build通过../build生成
+ * dev通过../public生成(dev只需要yaml, 如果测试gh-pages则运行build)
  */
-function dataJson() {
+function dataJson(dir = 'build') {
     let json = {};
-    readFile('../build', {
+    readFile('../' + dir, {
         fileCallback: (filePath, json) => {
             let split = filePath.split('/');
             // let i = 2; 从`../build`之后算起

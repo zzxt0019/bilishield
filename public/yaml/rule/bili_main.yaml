@@ -1,5 +1,5 @@
 # 比例首页
-bilibili_rank_up:
+rank_up:
   name: 比例首页排行榜 up用户名
   page: bilibili_main
   mainSelector: .rank-wrap
@@ -7,7 +7,7 @@ bilibili_rank_up:
     innerSelector: .info .name
     setting: username
     innerHTML: true
-bilibili_rank_title:
+rank_title:
   page: bilibili_main
   name: 比例首页排行榜 标题
   mainSelector: .rank-wrap
@@ -15,7 +15,7 @@ bilibili_rank_title:
     innerSelector: '[title]'
     setting: bilibili_match
     attribute: title
-bilibili_rank_pgc:
+rank_pgc:
   page: bilibili_main
   name: 比例首页排行榜 番剧国创
   mainSelector: .pgc-rank-wrap
@@ -23,7 +23,7 @@ bilibili_rank_pgc:
     innerSelector: .title
     setting: bilibili_match
     attribute: title
-bilibili_rank_manka:
+rank_manka:
   page: bilibili_main
   name: 比例首页排行榜 漫画
   mainSelector: .manga-rank-item
@@ -31,7 +31,7 @@ bilibili_rank_manka:
     innerSelector: .title
     setting: bilibili_match
     attribute: title
-bilibili_upperright_video:
+upperright_video:
   page: bilibili_main
   name: 比例首页 右上视频
   mainSelector: .video-card-reco
@@ -39,7 +39,7 @@ bilibili_upperright_video:
     innerSelector: img
     setting: bilibili_match
     attribute: alt
-bilibili_upperright_video_up:
+upperright_video_up:
   page: bilibili_main
   name: 比例首页 右上视频 UP
   mainSelector: .video-card-reco
@@ -47,7 +47,7 @@ bilibili_upperright_video_up:
     innerSelector: p.up
     setting: username
     innerHTML: true
-bilibili_upperleft_card:
+upperleft_card:
   page: bilibili_main
   name: 比例首页 左边上角滑动图片
   mainSelector: .van-slide .item
@@ -55,13 +55,13 @@ bilibili_upperleft_card:
     innerSelector: img
     setting: bilibili_match
     attribute: alt
-bilibili_upperleft_card_adv:
+upperleft_card_adv:
   page: bilibili_main
   name: 比例首页 左边上角滑动图片
   mainSelector: .van-slide .item
   checker:
     innerSelector: i.bypb-icon
-bilibili_left_video_title:
+left_video_title:
   page: bilibili_main
   name: 比例首页 左边视频块 标题
   mainSelector: .video-card-common
@@ -69,7 +69,7 @@ bilibili_left_video_title:
     innerSelector: a.title
     setting: bilibili_match
     attribute: title
-bilibili_left_video_up:
+left_video_up:
   page: bilibili_main
   name: 比例首页 左边视频块 up
   mainSelector: .video-card-common
@@ -77,14 +77,14 @@ bilibili_left_video_up:
     innerSelector: a.up
     setting: username
     innerHTML: true
-bilibili_left_video_adv:
+left_video_adv:
   page: bilibili_main
   name: 比例首页 左边视频块 up
   mainSelector: .video-card-common
   checker:
     always: true
     innerSelector: .gg-normal-icon
-bilibili_zhuanlan_title:
+zhuanlan_title:
   page: bilibili_main
   name: 比例首页 专栏 标题
   mainSelector: .article-card
@@ -92,7 +92,7 @@ bilibili_zhuanlan_title:
     innerSelector: .title
     setting: bilibili_match
     attribute: title
-bilibili_zhuanlan_up:
+zhuanlan_up:
   page: bilibili_main
   name: 比例首页 专栏 UP
   mainSelector: .article-card
@@ -100,14 +100,14 @@ bilibili_zhuanlan_up:
     innerSelector: a.up
     setting: username
     innerHTML: true
-bilibili_banner_adv:
+banner_adv:
   page: bilibili_main
   name: 比例首页 广告横条
   mainSelector: a.banner-card.b-wrap
   checker:
     always: true
     innerSelector: .gg-icon
-bilibili_ex_title:
+ex_title:
   page: bilibili_main
   name: 比例首页 推广 标题
   mainSelector: .ex-card-common
@@ -115,7 +115,7 @@ bilibili_ex_title:
     innerSelector: p[title]
     attribute: title
     setting: bilibili_match
-bilibili_ex_up:
+ex_up:
   page: bilibili_main
   name: 比例首页 推广 UP
   mainSelector: .ex-card-common
@@ -123,7 +123,7 @@ bilibili_ex_up:
     innerSelector: a.ex-up
     innerHTML: true
     setting: username
-bilibili__live_up:
+live_up:
   page: bilibili_main
   name: 比例首页 直播 标题
   mainSelector: .live-card
@@ -131,7 +131,7 @@ bilibili__live_up:
     innerSelector: p.name
     innerHTML: true
     setting: username
-bilibili__live_title:
+live_title:
   page: bilibili_main
   name: 比例首页 直播 标题
   mainSelector: .live-card
@@ -139,7 +139,7 @@ bilibili__live_title:
     innerSelector: p[title]
     attribute: title
     setting: bilibili_match
-bilibili__live_type:
+live_type:
   page: bilibili_main
   name: 比例首页 直播 分类
   mainSelector: .live-card
@@ -147,7 +147,7 @@ bilibili__live_type:
     innerSelector: p.tag
     innerHTML: true
     setting: bilibili_match
-bilibili_timeline_card:
+timeline_card:
   page: bilibili_main
   name: 比例首页 番剧国创左侧卡片
   mainSelector: .time-line-card.item
@@ -155,7 +155,7 @@ bilibili_timeline_card:
     innerSelector: a[title]
     attribute: title
     setting: bilibili_match
-bilibili_manga_card:
+manga_card:
   page: bilibili_main
   name: 比例首页 漫画左侧卡片
   mainSelector: .manga-card
@@ -163,7 +163,7 @@ bilibili_manga_card:
     innerSelector: p[title]
     attribute: title
     setting: bilibili_match
-bilibili_number:
+number:
   page: bilibili_main
   name: 这无缘无故的攀比之心是从何而来
   mainSelector: span.number

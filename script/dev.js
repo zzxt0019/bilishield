@@ -6,7 +6,7 @@ function dev() {
     if (!fs.existsSync(path.resolve(__dirname, '../build'))) {
         fs.mkdirSync(path.resolve(__dirname, '../build'), {recursive: true});
     }
-    let json = dataJson();
+    let json = dataJson('public');
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(json));
     let text = String(fs.readFileSync(path.resolve(__dirname, '../src/info-local.ts')));
     let replace = '';
