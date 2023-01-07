@@ -107,8 +107,6 @@ bilibili_banner_adv:
   checker:
     always: true
     innerSelector: .gg-icon
-
-
 bilibili_ex_title:
   page: bilibili_main
   name: 比例首页 推广 标题
@@ -171,86 +169,3 @@ bilibili_number:
   mainSelector: span.number
   checker:
     always: true
-
-# 比例整体(评论区)
-bilibili_all_comment_card:
-  name: 主评论卡片
-  page: bilibili_all
-  mainSelector: .list-item.reply-wrap
-  checker:
-    setting: bilibili_card
-    innerSelector: .sailing-img
-    attribute: alt
-bilibili_all_comment_img:
-  name: 主评论图片
-  page: bilibili_all
-  mainSelector: .list-item
-  checker:
-    setting: bilibili_card
-    innerSelector: p.text img
-    attribute: alt
-bilibili_all_comment_uid:
-  name: 主评论人
-  page: bilibili_all
-  mainSelector: .list-item.reply-wrap
-  checker:
-    setting: uid
-    innerSelector: a[data-usercard-mid]
-    attribute: data-usercard-mid
-bilibili_all_inner_comment_img:
-  name: 子评论图片
-  page: bilibili_all
-  mainSelector: .reply-item.reply-wrap
-  checker:
-    setting: bilibili_card
-    innerSelector: img
-    attribute: alt
-bilibili_all_inner_comment_uid:
-  name: 子评论人
-  page: bilibili_all
-  mainSelector: .reply-item.reply-wrap
-  checker:
-    setting: uid
-    innerSelector: a[data-usercard-mid]
-    attribute: data-usercard-mid
-
-# 比例直播页面
-bilibili_live_right_word:
-  name: 直播右侧弹幕 关键字
-  page: bilibili_live
-  mainSelector: .chat-item.danmaku-item
-  checker:
-    setting: bilibili_match
-    attribute: data-danmaku
-bilibili_live_roll_word:
-  name: 直播中央弹幕 关键字
-  page: bilibili_live
-  mainSelector: .bilibili-danmaku.mode-roll
-  checker:
-    setting: bilibili_match
-    innerHTML: true
-bilibili_live_adv:
-  name: 直播页面广告栏
-  page: bilibili_live
-  mainSelector: .item-wrapper
-  checker:
-    setting: bilibili_match
-    attribute: title
-
-# 比例视频页
-bilibili_video_right_word:
-  name: 视频页右侧 推荐视频 关键字
-  page: bilibili_video
-  mainSelector: .video-page-card
-  checker:
-    setting: bilibili_match
-    innerSelector: .info span.title[title]
-    attribute: title
-bilibili_video_right_up:
-  name: 视频页右侧 推荐视频 up
-  page: bilibili_video
-  mainSelector: .video-page-card
-  checker:
-    setting: username
-    innerSelector: .count.up a
-    innerHTML: true
