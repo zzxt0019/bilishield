@@ -54,9 +54,7 @@ function afterBuild() {
         fs.writeFileSync(path.resolve(__dirname, `../build/${_html}`) + `/${filePath}.html`, createMarkdownHtml(fs.readFileSync(path.resolve(__dirname, '../build') + `/${filePath}`), filePath));
     });
     // 写data.json
-    fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify({
-        data: json, timestamp: Date.now(),
-    }));
+    fs.writeFileSync(path.resolve(__dirname, '../build') + '/data.json', JSON.stringify(json));
     // 复制highlight的css
     fs.copyFileSync(path.resolve(__dirname, '../node_modules') + `/highlight.js/styles/${_css}`, path.resolve(__dirname, `../build/${_html}/${_css}`));
 }
@@ -67,13 +65,11 @@ function createMarkdownHtml(text, filePath) {
     marked.setOptions({
         highlight: function (code) {
             return highlight.highlightAuto(code).value;
-        }
+        }, gfm: true, breaks: true
     })
     let body;
     if (filePath.endsWith('png') || filePath.endsWith('img')) {
         body = `<img alt=[${filePath.substring(0, filePath.lastIndexOf('.'))}] src="../../${filePath}"/>`;
-    } else if (filePath.includes('min')) {
-        body = `<div>${text}</div>`;
     } else {
         body = marked.parse(`\`\`\`${filePath.substring(filePath.lastIndexOf('.') + 1)}\n${text}\n\`\`\``);
     }
