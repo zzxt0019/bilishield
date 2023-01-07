@@ -5,10 +5,7 @@
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/data/img/Elysia.png
 // @description     bilibili屏蔽 本地开发环境
-// @require         file://D:\【本地路径】\bilishield\build\userscript.js
-// @resource        page file://D:\【本地路径】\bilishield\public\yaml\page.yaml
-// @resource        rule file://D:\【本地路径】\bilishield\public\yaml\rule.yaml
-// @resource        setting file://D:\【本地路径】\bilishield\public\yaml\setting.yaml
+//${zzxt0019}
 
 // @match           http*://**/**
 // @noframes

@@ -40,6 +40,9 @@ function checkIgnore(filePath) {  // ../build/*
     return filePath.startsWith(`../build/${_html}/`);
 }
 
+/**
+ * 生成所有文件的data.json 记录文件夹和文件
+ */
 function dataJson() {
     let json = {};
     readFile('../build', {
@@ -60,23 +63,4 @@ function dataJson() {
     return json;
 }
 
-function yamlJson() {
-    let yamlJson = {};
-    readFile('../build', {
-        fileCallback: (filePath, yamlJson) => {
-            // let i = 2; 从`../build`之后算起
-            const prefix = '../build/yaml/';
-            if (filePath.startsWith(prefix)) {
-                let dir = filePath.substring(prefix.length).substring(0, filePath.substring(prefix.length).indexOf('/')); // page, rule, setting
-                if (!yamlJson[dir]) {
-                    yamlJson[dir] = [];
-                }
-                yamlJson[dir].push(filePath.substring(prefix.length).substring(filePath.substring(prefix.length).indexOf('/')));
-            }
-        }, checkIgnore
-    }, yamlJson);
-    return yamlJson;
-}
-
-
-module.exports = {_html, readFile, dataJson, yamlJson, checkIgnore}
+module.exports = {_html, readFile, dataJson, checkIgnore}

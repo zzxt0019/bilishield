@@ -3,7 +3,7 @@ const path = require('path');
 const marked = require("marked");
 const {default: highlight} = require("highlight.js");
 const _css = 'github.css';
-const {readFile, _html, dataJson, yamlJson, checkIgnore} = require('./base.js');
+const {readFile, _html, dataJson, checkIgnore} = require('./base.js');
 
 function createMarked() {
     if (!fs.existsSync(path.resolve(__dirname, `../build/${_html}`))) {
@@ -48,10 +48,6 @@ ${body}
 function build() {
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(dataJson()));
     createMarked();
-    let yamlJsons = yamlJson();
-    Object.entries(yamlJsons).forEach(([key, value]) => {
-        fs.writeFileSync(path.resolve(__dirname, '../build/yaml/' + key + '/data.json'), JSON.stringify(value));
-    });
     fs.copyFileSync(path.resolve(__dirname, '../node_modules/highlight.js/styles/' + _css), path.resolve(__dirname, `../build/${_html}/${_css}`));
 }
 
