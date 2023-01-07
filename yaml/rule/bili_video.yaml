@@ -1,0 +1,17 @@
+# 比例视频页
+bilibili_video_right_word:
+  name: 视频页右侧 推荐视频 关键字
+  page: bilibili_video
+  mainSelector: .video-page-card
+  checker:
+    setting: bilibili_match
+    innerSelector: .info span.title[title]
+    attribute: title
+bilibili_video_right_up:
+  name: 视频页右侧 推荐视频 up
+  page: bilibili_video
+  mainSelector: .video-page-card
+  checker:
+    setting: username
+    innerSelector: .count.up a
+    innerHTML: true

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bilishield</title>
+    <link href="../../github.css"  type="text/css" rel="stylesheet">
+</head>
+<body>
+<pre><code class="language-yaml"><span class="hljs-comment"># 比例视频页</span>
+<span class="hljs-attr">bilibili_video_right_word:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">视频页右侧</span> <span class="hljs-string">推荐视频</span> <span class="hljs-string">关键字</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_video</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-page-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">bilibili_match</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.info</span> <span class="hljs-string">span.title[title]</span>
+    <span class="hljs-attr">attribute:</span> <span class="hljs-string">title</span>
+<span class="hljs-attr">bilibili_video_right_up:</span>
+  <span class="hljs-attr">name:</span> <span class="hljs-string">视频页右侧</span> <span class="hljs-string">推荐视频</span> <span class="hljs-string">up</span>
+  <span class="hljs-attr">page:</span> <span class="hljs-string">bilibili_video</span>
+  <span class="hljs-attr">mainSelector:</span> <span class="hljs-string">.video-page-card</span>
+  <span class="hljs-attr">checker:</span>
+    <span class="hljs-attr">setting:</span> <span class="hljs-string">username</span>
+    <span class="hljs-attr">innerSelector:</span> <span class="hljs-string">.count.up</span> <span class="hljs-string">a</span>
+    <span class="hljs-attr">innerHTML:</span> <span class="hljs-literal">true</span>
+</code></pre>
+
+</body>
+</html>

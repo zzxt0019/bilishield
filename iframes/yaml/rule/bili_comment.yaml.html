@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bilishield</title>
+    <link href="../../github.css"  type="text/css" rel="stylesheet">
+</head>
+<body>
+<pre><code class="language-yaml"><span class="hljs-meta"># 比例整体(评论区)</span>
+<span class="hljs-symbol">bilibili_all_comment_card:</span>
+<span class="hljs-symbol">  name:</span> 主评论卡片
+<span class="hljs-symbol">  page:</span> bilibili_all
+<span class="hljs-symbol">  mainSelector:</span> .list-item.reply-wrap
+<span class="hljs-symbol">  checker:</span>
+<span class="hljs-symbol">    setting:</span> bilibili_card
+<span class="hljs-symbol">    innerSelector:</span> .sailing-img
+<span class="hljs-symbol">    attribute:</span> alt
+<span class="hljs-symbol">bilibili_all_comment_img:</span>
+<span class="hljs-symbol">  name:</span> 主评论图片
+<span class="hljs-symbol">  page:</span> bilibili_all
+<span class="hljs-symbol">  mainSelector:</span> .list-item
+<span class="hljs-symbol">  checker:</span>
+<span class="hljs-symbol">    setting:</span> bilibili_card
+<span class="hljs-symbol">    innerSelector:</span> p.text img
+<span class="hljs-symbol">    attribute:</span> alt
+<span class="hljs-symbol">bilibili_all_comment_uid:</span>
+<span class="hljs-symbol">  name:</span> 主评论人
+<span class="hljs-symbol">  page:</span> bilibili_all
+<span class="hljs-symbol">  mainSelector:</span> .list-item.reply-wrap
+<span class="hljs-symbol">  checker:</span>
+<span class="hljs-symbol">    setting:</span> uid
+<span class="hljs-symbol">    innerSelector:</span> a[data-usercard-mid]
+<span class="hljs-symbol">    attribute:</span> data-usercard-mid
+<span class="hljs-symbol">bilibili_all_inner_comment_img:</span>
+<span class="hljs-symbol">  name:</span> 子评论图片
+<span class="hljs-symbol">  page:</span> bilibili_all
+<span class="hljs-symbol">  mainSelector:</span> .reply-item.reply-wrap
+<span class="hljs-symbol">  checker:</span>
+<span class="hljs-symbol">    setting:</span> bilibili_card
+<span class="hljs-symbol">    innerSelector:</span> img
+<span class="hljs-symbol">    attribute:</span> alt
+<span class="hljs-symbol">bilibili_all_inner_comment_uid:</span>
+<span class="hljs-symbol">  name:</span> 子评论人
+<span class="hljs-symbol">  page:</span> bilibili_all
+<span class="hljs-symbol">  mainSelector:</span> .reply-item.reply-wrap
+<span class="hljs-symbol">  checker:</span>
+<span class="hljs-symbol">    setting:</span> uid
+<span class="hljs-symbol">    innerSelector:</span> a[data-usercard-mid]
+<span class="hljs-symbol">    attribute:</span> data-usercard-mid
+</code></pre>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+# 比例直播页面
+bilibili_live_right_word:
+  name: 直播右侧弹幕 关键字
+  page: bilibili_live
+  mainSelector: .chat-item.danmaku-item
+  checker:
+    setting: bilibili_match
+    attribute: data-danmaku
+bilibili_live_roll_word:
+  name: 直播中央弹幕 关键字
+  page: bilibili_live
+  mainSelector: .bilibili-danmaku.mode-roll
+  checker:
+    setting: bilibili_match
+    innerHTML: true
+bilibili_live_adv:
+  name: 直播页面广告栏
+  page: bilibili_live
+  mainSelector: .item-wrapper
+  checker:
+    setting: bilibili_match
+    attribute: title
