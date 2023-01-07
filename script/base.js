@@ -1,0 +1,82 @@
+const fs = require('fs');
+const path = require('path');
+
+const _html = 'iframes';
+
+const ignores = [_html, 'data.json', 'index.js', 'index.html'];
+
+/**
+ * 递归读取文件
+ */
+function readFile(filePath, {fileCallback, dirCallback, checkIgnore}, ...params) {
+    if (checkIgnore && checkIgnore(filePath, ...params)) {
+        return;
+    }
+    if (fs.lstatSync(path.resolve(__dirname, filePath)).isDirectory()) {  // 是文件夹
+        // 读取文件
+        fs.readdirSync(path.resolve(__dirname, filePath))
+            .forEach(file => {
+                dirCallback && dirCallback(filePath, ...params);
+                readFile(`${filePath}/${file}`, {fileCallback, dirCallback, checkIgnore}, ...params);
+            });
+    } else if (fs.lstatSync(path.resolve(__dirname, filePath)).isFile()) {  // 是文件
+        // 处理
+        fileCallback && fileCallback(filePath, ...params);
+    }
+}
+
+/**
+ * 忽略的文件
+ *  data.json   目录文件
+ *  index.js    gh-pages.js
+ *  index.html  gh-pages.html
+ */
+function checkIgnore(filePath) {  // ../build/*
+    for (const ignoreFile of ['data.json', 'index.js', 'index.html']) {
+        if (filePath === `../build/${ignoreFile}`) {
+            return true;
+        }
+    }
+    return filePath.startsWith(`../build/${_html}/`);
+}
+
+function dataJson() {
+    let json = {};
+    readFile('../build', {
+        fileCallback: (filePath, json) => {
+            let split = filePath.split('/');
+            // let i = 2; 从`../build`之后算起
+            for (let i = 2; i < split.length - 1; i++) {
+                if (split[i]) {
+                    if (!json[split[i]]) {
+                        json[split[i]] = {};
+                    }
+                    json = json[split[i]];
+                }
+            }
+            json[split[split.length - 1]] = (fs.readFileSync(path.resolve(__dirname, filePath)).length / 1024).toFixed(2) + 'KB';
+        }, checkIgnore
+    }, json);
+    return json;
+}
+
+function yamlJson() {
+    let yamlJson = {};
+    readFile('../build', {
+        fileCallback: (filePath, yamlJson) => {
+            // let i = 2; 从`../build`之后算起
+            const prefix = '../build/yaml/';
+            if (filePath.startsWith(prefix)) {
+                let dir = filePath.substring(prefix.length).substring(0, filePath.substring(prefix.length).indexOf('/')); // page, rule, setting
+                if (!yamlJson[dir]) {
+                    yamlJson[dir] = [];
+                }
+                yamlJson[dir].push(filePath.substring(prefix.length).substring(filePath.substring(prefix.length).indexOf('/')));
+            }
+        }, checkIgnore
+    }, yamlJson);
+    return yamlJson;
+}
+
+
+module.exports = {_html, readFile, dataJson, yamlJson, checkIgnore}
