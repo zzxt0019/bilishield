@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673118902905
+// @version         1.1.1673121521922
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/8/2023, 3:15:02 AM
+// @description     bilibili屏蔽 更新时间: 1/8/2023, 3:58:41 AM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -12800,35 +12800,40 @@ var check_update_awaiter = undefined && undefined.__awaiter || function (thisArg
 };
 
 function checkVersion() {
-  var _a;
+  var _a, _b;
   return check_update_awaiter(this, void 0, void 0, function* () {
     let version = (_a = GM_getValue('script.version')) !== null && _a !== void 0 ? _a : '1.0';
-    let configs = ['page', 'rule', 'setting'];
     if (GM_info.script.version > version) {
       // 存储版本 < 当前版本 => 更新配置
-      let jsonPromises = [];
-      configs.forEach(key => {
-        var _a;
-        jsonPromises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + key + '/data.json'));
-      });
-      let jsonResponses = yield Promise.all(jsonPromises);
-      let yamlPromises = [];
-      for (let i = 0; i < configs.length; i++) {
-        let arr = yield jsonResponses[i].json();
-        yamlPromises.push([]);
-        arr.forEach(yaml => {
+      let dataJsonRes = yield fetch(((_b = GM_info.script.icon64) === null || _b === void 0 ? void 0 : _b.substring(0, 0x25)) + '/data.json');
+      let yamlJson = (yield dataJsonRes.json()).yaml;
+      let promises = [];
+      let keys = [];
+      Object.entries(yamlJson).forEach(([key, value]) => {
+        Object.keys(value).forEach(fileName => {
           var _a;
-          yamlPromises[i].push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + configs[i] + yaml));
+          keys.push({
+            key,
+            fileName
+          });
+          promises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + key + '/' + fileName));
         });
-      }
-      for (let i = 0; i < yamlPromises.length; i++) {
-        let yamlResponses = yield Promise.all(yamlPromises[i]);
-        let yamlJson = {};
-        for (const yamlResponse of yamlResponses) {
-          yamlJson = Object.assign(Object.assign({}, yamlJson), parse(yield yamlResponse.text()));
+      });
+      let data = {};
+      let responses = yield Promise.all(promises);
+      for (let i = 0; i < responses.length; i++) {
+        let res = responses[i];
+        let text = yield res.text();
+        let key = keys[i];
+        if (key.key === 'rule') {
+          data[key.key] = Object.assign(Object.assign({}, data[key.key]), ruleKey(parse(text), key.fileName.substring(0, key.fileName.lastIndexOf('.'))));
+        } else {
+          data[key.key] = Object.assign(Object.assign({}, data[key.key]), parse(text));
         }
-        GM_setValue('script.' + configs[i], yamlJson);
       }
+      Object.entries(data).forEach(([key, value]) => {
+        GM_setValue('script.' + key, value);
+      });
       GM_setValue('script.version', GM_info.script.version);
     } else if (GM_info.script.version < version) {
       // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
@@ -12849,6 +12854,13 @@ function checkVersion() {
       });
     }
   });
+}
+function ruleKey(oldJson, key) {
+  let newJson = {};
+  Object.entries(oldJson).forEach(([_key, _value]) => {
+    newJson[key + '-' + _key] = _value;
+  });
+  return newJson;
 }
 // EXTERNAL MODULE: ./node_modules/react-dom/client.js
 var client = __webpack_require__(745);

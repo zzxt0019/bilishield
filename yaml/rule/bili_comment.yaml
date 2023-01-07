@@ -1,5 +1,5 @@
 # 比例整体(评论区)
-bilibili_all_comment_card:
+card:
   name: 主评论卡片
   page: bilibili_all
   mainSelector: .list-item.reply-wrap
@@ -7,7 +7,7 @@ bilibili_all_comment_card:
     setting: bilibili_card
     innerSelector: .sailing-img
     attribute: alt
-bilibili_all_comment_img:
+img:
   name: 主评论图片
   page: bilibili_all
   mainSelector: .list-item
@@ -15,7 +15,7 @@ bilibili_all_comment_img:
     setting: bilibili_card
     innerSelector: p.text img
     attribute: alt
-bilibili_all_comment_uid:
+uid:
   name: 主评论人
   page: bilibili_all
   mainSelector: .list-item.reply-wrap
@@ -23,7 +23,7 @@ bilibili_all_comment_uid:
     setting: uid
     innerSelector: a[data-usercard-mid]
     attribute: data-usercard-mid
-bilibili_all_inner_comment_img:
+inner_img:
   name: 子评论图片
   page: bilibili_all
   mainSelector: .reply-item.reply-wrap
@@ -31,7 +31,7 @@ bilibili_all_inner_comment_img:
     setting: bilibili_card
     innerSelector: img
     attribute: alt
-bilibili_all_inner_comment_uid:
+inner_uid:
   name: 子评论人
   page: bilibili_all
   mainSelector: .reply-item.reply-wrap
