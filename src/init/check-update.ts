@@ -27,7 +27,6 @@ export async function checkVersion() {
         }
         GM_setValue('script.version', GM_info.script.version);
     } else if (GM_info.script.version < version) {  // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
-        console.log(123123123)
         let dataJson = GM_getResourceText('data.json');
         let yamlJson = JSON.parse(dataJson).yaml;
         let data: any = {page: {}, rule: {}, setting: {}};
