@@ -25,7 +25,7 @@ function createMarked() {
             })
             let body;
             if (filePath.endsWith('png') || filePath.endsWith('img')) {
-                body = `<img alt=[${filePath.substring(0, filePath.lastIndexOf('.'))}] src="../../${filePath}"/>`;
+                body = `<img alt=[${filePath.substring(filePath.lastIndexOf('/'), filePath.lastIndexOf('.'))}] src="../../${filePath.substring('../build/'.length)}"/>`;
             } else {
                 body = marked.parse(`\`\`\`${filePath.substring(filePath.lastIndexOf('.') + 1)}\n${text}\n\`\`\``);
             }

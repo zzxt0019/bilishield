@@ -33,7 +33,7 @@ const config: Configuration = {
             new ESBuildMinifyPlugin({
                 target: 'es2016',
                 banner,
-                include: /\.min/
+                include: new RegExp(userscript + '\.min\.js'),
             })
         ]
     },
