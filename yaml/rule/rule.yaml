@@ -1,0 +1,256 @@
+# 比例首页
+bilibili_rank_up:
+  name: 比例首页排行榜 up用户名
+  page: bilibili_main
+  mainSelector: .rank-wrap
+  checker:
+    innerSelector: .info .name
+    setting: username
+    innerHTML: true
+bilibili_rank_title:
+  page: bilibili_main
+  name: 比例首页排行榜 标题
+  mainSelector: .rank-wrap
+  checker:
+    innerSelector: '[title]'
+    setting: bilibili_match
+    attribute: title
+bilibili_rank_pgc:
+  page: bilibili_main
+  name: 比例首页排行榜 番剧国创
+  mainSelector: .pgc-rank-wrap
+  checker:
+    innerSelector: .title
+    setting: bilibili_match
+    attribute: title
+bilibili_rank_manka:
+  page: bilibili_main
+  name: 比例首页排行榜 漫画
+  mainSelector: .manga-rank-item
+  checker:
+    innerSelector: .title
+    setting: bilibili_match
+    attribute: title
+bilibili_upperright_video:
+  page: bilibili_main
+  name: 比例首页 右上视频
+  mainSelector: .video-card-reco
+  checker:
+    innerSelector: img
+    setting: bilibili_match
+    attribute: alt
+bilibili_upperright_video_up:
+  page: bilibili_main
+  name: 比例首页 右上视频 UP
+  mainSelector: .video-card-reco
+  checker:
+    innerSelector: p.up
+    setting: username
+    innerHTML: true
+bilibili_upperleft_card:
+  page: bilibili_main
+  name: 比例首页 左边上角滑动图片
+  mainSelector: .van-slide .item
+  checker:
+    innerSelector: img
+    setting: bilibili_match
+    attribute: alt
+bilibili_upperleft_card_adv:
+  page: bilibili_main
+  name: 比例首页 左边上角滑动图片
+  mainSelector: .van-slide .item
+  checker:
+    innerSelector: i.bypb-icon
+bilibili_left_video_title:
+  page: bilibili_main
+  name: 比例首页 左边视频块 标题
+  mainSelector: .video-card-common
+  checker:
+    innerSelector: a.title
+    setting: bilibili_match
+    attribute: title
+bilibili_left_video_up:
+  page: bilibili_main
+  name: 比例首页 左边视频块 up
+  mainSelector: .video-card-common
+  checker:
+    innerSelector: a.up
+    setting: username
+    innerHTML: true
+bilibili_left_video_adv:
+  page: bilibili_main
+  name: 比例首页 左边视频块 up
+  mainSelector: .video-card-common
+  checker:
+    always: true
+    innerSelector: .gg-normal-icon
+bilibili_zhuanlan_title:
+  page: bilibili_main
+  name: 比例首页 专栏 标题
+  mainSelector: .article-card
+  checker:
+    innerSelector: .title
+    setting: bilibili_match
+    attribute: title
+bilibili_zhuanlan_up:
+  page: bilibili_main
+  name: 比例首页 专栏 UP
+  mainSelector: .article-card
+  checker:
+    innerSelector: a.up
+    setting: username
+    innerHTML: true
+bilibili_banner_adv:
+  page: bilibili_main
+  name: 比例首页 广告横条
+  mainSelector: a.banner-card.b-wrap
+  checker:
+    always: true
+    innerSelector: .gg-icon
+
+
+bilibili_ex_title:
+  page: bilibili_main
+  name: 比例首页 推广 标题
+  mainSelector: .ex-card-common
+  checker:
+    innerSelector: p[title]
+    attribute: title
+    setting: bilibili_match
+bilibili_ex_up:
+  page: bilibili_main
+  name: 比例首页 推广 UP
+  mainSelector: .ex-card-common
+  checker:
+    innerSelector: a.ex-up
+    innerHTML: true
+    setting: username
+bilibili__live_up:
+  page: bilibili_main
+  name: 比例首页 直播 标题
+  mainSelector: .live-card
+  checker:
+    innerSelector: p.name
+    innerHTML: true
+    setting: username
+bilibili__live_title:
+  page: bilibili_main
+  name: 比例首页 直播 标题
+  mainSelector: .live-card
+  checker:
+    innerSelector: p[title]
+    attribute: title
+    setting: bilibili_match
+bilibili__live_type:
+  page: bilibili_main
+  name: 比例首页 直播 分类
+  mainSelector: .live-card
+  checker:
+    innerSelector: p.tag
+    innerHTML: true
+    setting: bilibili_match
+bilibili_timeline_card:
+  page: bilibili_main
+  name: 比例首页 番剧国创左侧卡片
+  mainSelector: .time-line-card.item
+  checker:
+    innerSelector: a[title]
+    attribute: title
+    setting: bilibili_match
+bilibili_manga_card:
+  page: bilibili_main
+  name: 比例首页 漫画左侧卡片
+  mainSelector: .manga-card
+  checker:
+    innerSelector: p[title]
+    attribute: title
+    setting: bilibili_match
+bilibili_number:
+  page: bilibili_main
+  name: 这无缘无故的攀比之心是从何而来
+  mainSelector: span.number
+  checker:
+    always: true
+
+# 比例整体(评论区)
+bilibili_all_comment_card:
+  name: 主评论卡片
+  page: bilibili_all
+  mainSelector: .list-item.reply-wrap
+  checker:
+    setting: bilibili_card
+    innerSelector: .sailing-img
+    attribute: alt
+bilibili_all_comment_img:
+  name: 主评论图片
+  page: bilibili_all
+  mainSelector: .list-item
+  checker:
+    setting: bilibili_card
+    innerSelector: p.text img
+    attribute: alt
+bilibili_all_comment_uid:
+  name: 主评论人
+  page: bilibili_all
+  mainSelector: .list-item.reply-wrap
+  checker:
+    setting: uid
+    innerSelector: a[data-usercard-mid]
+    attribute: data-usercard-mid
+bilibili_all_inner_comment_img:
+  name: 子评论图片
+  page: bilibili_all
+  mainSelector: .reply-item.reply-wrap
+  checker:
+    setting: bilibili_card
+    innerSelector: img
+    attribute: alt
+bilibili_all_inner_comment_uid:
+  name: 子评论人
+  page: bilibili_all
+  mainSelector: .reply-item.reply-wrap
+  checker:
+    setting: uid
+    innerSelector: a[data-usercard-mid]
+    attribute: data-usercard-mid
+
+# 比例直播页面
+bilibili_live_right_word:
+  name: 直播右侧弹幕 关键字
+  page: bilibili_live
+  mainSelector: .chat-item.danmaku-item
+  checker:
+    setting: bilibili_match
+    attribute: data-danmaku
+bilibili_live_roll_word:
+  name: 直播中央弹幕 关键字
+  page: bilibili_live
+  mainSelector: .bilibili-danmaku.mode-roll
+  checker:
+    setting: bilibili_match
+    innerHTML: true
+bilibili_live_adv:
+  name: 直播页面广告栏
+  page: bilibili_live
+  mainSelector: .item-wrapper
+  checker:
+    setting: bilibili_match
+    attribute: title
+
+# 比例视频页
+bilibili_video_right_word:
+  name: 视频页右侧 推荐视频 关键字
+  page: bilibili_video
+  mainSelector: .video-page-card
+  checker:
+    setting: bilibili_match
+    innerSelector: .info span.title[title]
+    attribute: title
+bilibili_video_right_up:
+  name: 视频页右侧 推荐视频 up
+  page: bilibili_video
+  mainSelector: .video-page-card
+  checker:
+    setting: username
+    innerSelector: .count.up a
+    innerHTML: true
