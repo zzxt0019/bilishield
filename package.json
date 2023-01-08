@@ -2,8 +2,8 @@
   "version": "1.0",
   "name": "tampermonkey-typescript",
   "scripts": {
-    "dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=development --watch",
-    "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=production"
+    "dev": "node ./script/dev && cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=development --watch",
+    "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=production && node ./script/build"
   },
   "devDependencies": {
     "@types/arrive": "^2.4.1",

@@ -35,17 +35,15 @@ export function App() {
     }, []);
 
     return <>
-        <Tree
+        <Tree.DirectoryTree
             showLine={true}
             treeData={treeData}
             onSelect={(keys, event) => {
                 if (event.node.isLeaf && keys.length > 0) {
                     setIframe(`./iframes${keys[0]}.html`);
-                } else {
-                    setIframe('')
                 }
             }}>
-        </Tree>
+        </Tree.DirectoryTree>
         <iframe style={{width: '100%', height: '500px'}} src={iframe}></iframe>
     </>;
 }

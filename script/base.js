@@ -3,8 +3,6 @@ const path = require('path');
 
 const _html = 'iframes';
 
-const ignores = [_html, 'data.json', 'index.js', 'index.html'];
-
 /**
  * 递归读取文件
  */
@@ -33,7 +31,7 @@ function readFile(filePath, {fileCallback, dirCallback, checkIgnore}, ...params)
  */
 function checkIgnore(filePath) {  // ../build/*
     for (const ignoreFile of ['data.json', 'index.js', 'index.html']) {
-        if (filePath === `../build/${ignoreFile}`) {
+        if (filePath === `../build/${ignoreFile}` || filePath === `../public/index.html`) {  // dev: ../public/index.html
             return true;
         }
     }
