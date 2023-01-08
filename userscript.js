@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673121521922
+// @version         1.1.1673174112389
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/8/2023, 3:58:41 AM
+// @description     bilibili屏蔽 更新时间: 1/8/2023, 6:35:12 PM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -4341,7 +4341,7 @@ const DISPLAY_CLASS = 'zzxt0019class';
 const DISPLAY_STYLE_ID = 'zzxt0019style';
 const CSS_INNER_HTML = {
   hide: '.zzxt0019class { display: none !important; }',
-  debug: '.zzxt0019class { background-color: yellow !important; }'
+  debug: '.zzxt0019class { background-color: yellow !important; border: 5px groove yellow; }'
 };
 ;// CONCATENATED MODULE: ./src/config/page/special/special-pages.ts
 // import {BaiduPage} from "@/config/page/special/impl/baidu-page";

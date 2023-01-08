@@ -13747,14 +13747,12 @@ function App() {
       });
     });
   }, []);
-  return react.createElement(react.Fragment, null, react.createElement(tree, {
+  return react.createElement(react.Fragment, null, react.createElement(tree.DirectoryTree, {
     showLine: true,
     treeData: treeData,
     onSelect: (keys, event) => {
       if (event.node.isLeaf && keys.length > 0) {
         setIframe(`./iframes${keys[0]}.html`);
-      } else {
-        setIframe('');
       }
     }
   }), react.createElement("iframe", {
