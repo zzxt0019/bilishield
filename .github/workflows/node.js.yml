@@ -27,10 +27,9 @@ jobs:
           folder: build
           token: ${{secrets.REPO_TOKEN}}
       - name: prepare to "build"
-        run:
-          - mkdir ./_build
-          - cp ./build/userscript.js ./_build/userscript.js
-          - cp ./build/userscript.min.js ./_build/userscript.min.js
+        run: mkdir ./_build |
+          cp ./build/userscript.js ./_build/userscript.js
+          cp ./build/userscript.min.js ./_build/userscript.min.js
       - name: to "build"
         uses: JamesIves/github-pages-deploy-action@v4
         with:
