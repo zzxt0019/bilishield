@@ -21,6 +21,17 @@ export function BoxView(props: {
             }
         }
     })
+
+    function updateBox() {
+        // 需要更改所有内容, 需要放在外面
+        for (const page of pageMap.values()) {
+            if (page.working) {
+                page.stop()
+                page.start()
+            }
+        }
+    }
+
     return <>
         <div ref={mainRef} style={{
             display: 'none',
@@ -50,15 +61,7 @@ export function BoxView(props: {
                 }
                 <Tabs>
                     <Tabs.TabPane key="uid2username-tab" tab={<span>uid</span>}>
-                        <UidUsernameView updateBox={() => {
-                            // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-                            for (const page of pageMap.values()) {
-                                if (page.working) {
-                                    page.stop()
-                                    page.start()
-                                }
-                            }
-                        }}/>
+                        <UidUsernameView updateBox={updateBox}/>
                     </Tabs.TabPane>
                     {  // 配置
                         [...Settings.getSystemSettings().values()].map(setting =>
@@ -66,15 +69,7 @@ export function BoxView(props: {
                                 <SettingView
                                     key={setting.key}
                                     setting={setting}
-                                    updateBox={() => {
-                                        // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-                                        for (const page of pageMap.values()) {
-                                            if (page.working) {
-                                                page.stop()
-                                                page.start()
-                                            }
-                                        }
-                                    }}/>
+                                    updateBox={updateBox}/>
                             </Tabs.TabPane>)}
                 </Tabs>
                 <Row>
@@ -89,5 +84,5 @@ export function BoxView(props: {
                 </Row></>
             </div>
         </div>
-    </>
+    </>;
 }
