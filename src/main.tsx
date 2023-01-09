@@ -1,6 +1,6 @@
 import "arrive";
 import React from "react";
-import * as STATIC from './main-static'
+import * as MainStatic from './main-static'
 import {readEtc} from "@/init/read-etc";
 import {checkVersion} from "@/init/check-update";
 import {createBox} from "@/init/create-box";
@@ -22,8 +22,8 @@ import {globalInit} from "@/init/global";
     // 追加页面iframe内部屏蔽
     iframes(pageMap);
     // 油猴菜单展示/隐藏配置
-    GM_registerMenuCommand('配置', () => {
-        let main = document.querySelector('#' + STATIC.APP_ID + ' div') as HTMLDivElement;
+    GM_registerMenuCommand('脚本配置', () => {
+        let main = document.querySelector(`#${MainStatic.APP_ID}>div`) as HTMLDivElement;
         main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none');
     });
 })();
