@@ -8,7 +8,7 @@ function dev() {
     }
     let json = dataJson('public');
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(json));
-    let text = String(fs.readFileSync(path.resolve(__dirname, '../src/info-local.ts')));
+    let text = String(fs.readFileSync(path.resolve(__dirname, '../src/userscript-info-local.js')));
     let replace = '';
     replace += '// @require         file://' + path.resolve(__dirname, '../build/userscript.js') + '\n';
     replace += '// @resource        data.json file://' + path.resolve(__dirname, '../build/data.json') + '\n';
@@ -18,7 +18,7 @@ function dev() {
         })
     })
     let info = text.replace('//${zzxt0019}', replace);
-    fs.writeFileSync(path.resolve(__dirname, '../src/info-local-cp.ts'), info);
+    fs.writeFileSync(path.resolve(__dirname, '../build/userscript-info-local-copy.js'), info);
 }
 
 dev()

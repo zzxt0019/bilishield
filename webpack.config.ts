@@ -5,7 +5,7 @@ import {ESBuildMinifyPlugin} from 'esbuild-loader';
 import CopyPlugin from "copy-webpack-plugin";
 
 const userscript = 'userscript';
-const banner = fs.readFileSync(path.resolve(__dirname, './src/info.ts'), 'utf-8')
+const banner = fs.readFileSync(path.resolve(__dirname, './src/userscript-info.js'), 'utf-8')
     .replace('${timestamp}', String(new Date().getTime()))
     .replace('${date}', String(new Date(Date.now() + 8 * 3600_000 + new Date().getTimezoneOffset() * 60_000).toLocaleString()))
     .replace(/(==\/UserScript==)[\s\S]+$/, '$1');

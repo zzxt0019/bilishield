@@ -19,9 +19,8 @@ function createMarked() {
             let fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
             fs.writeFileSync(path.resolve(__dirname, `../build/${_html}/${htmlDirPath}/${fileName}.html`), '');
             marked.setOptions({
-                highlight: function (code) {
-                    return highlight.highlightAuto(code).value;
-                }, gfm: true, breaks: true
+                highlight: code => highlight.highlightAuto(code).value,
+                gfm: true, breaks: true
             })
             let body;
             if (filePath.endsWith('png') || filePath.endsWith('img')) {
@@ -39,7 +38,8 @@ function createMarked() {
 <body>
 ${body}
 </body>
-</html>`);
+</html>`
+            );
 
         }, checkIgnore
     })

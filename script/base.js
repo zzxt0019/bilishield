@@ -30,7 +30,7 @@ function readFile(filePath, {fileCallback, dirCallback, checkIgnore}, ...params)
  *  index.html  gh-pages.html
  */
 function checkIgnore(filePath) {  // ../build/*
-    for (const ignoreFile of ['data.json', 'index.js', 'index.html']) {
+    for (const ignoreFile of ['data.json', 'index.js', 'index.html', 'userscript-info-local-copy.js']) {
         if (filePath === `../build/${ignoreFile}` || filePath === `../public/index.html`) {  // dev: ../public/index.html
             return true;
         }
