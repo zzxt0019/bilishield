@@ -52,25 +52,25 @@ export function BoxView(props: {
                         <Col span={14}>
                             {  // 页面
                                 [...pageMap.values()].filter(page => page.isCurrent()).map(page =>
-                                    <PageView page={page}/>)}
+                                    <PageView key={page.key} page={page}/>)}
                         </Col>
                         <Col span={10}>
                             <DisplayTypeView></DisplayTypeView>
                         </Col>
                     </Row>
                 }
-                <Tabs>
-                    <Tabs.TabPane key="uid2username-tab" tab={<span>uid</span>}>
-                        <UidUsernameView updateBox={updateBox}/>
-                    </Tabs.TabPane>
-                    {  // 配置
-                        [...Settings.getSystemSettings().values()].map(setting =>
-                            <Tabs.TabPane key={setting.key + '-tab'} tab={<span>{setting.name}</span>}>
-                                <SettingView
-                                    key={setting.key}
-                                    setting={setting}
-                                    updateBox={updateBox}/>
-                            </Tabs.TabPane>)}
+                <Tabs defaultActiveKey={'uid'} items={[{
+                    key: 'uid', label: 'uid',
+                    children: <UidUsernameView updateBox={updateBox}/>
+                }, ...[...Settings.getSystemSettings().values()].map(setting => {
+                    return {
+                        key: setting.key, label: setting.name,
+                        children: <SettingView
+                            key={setting.key}
+                            setting={setting}
+                            updateBox={updateBox}/>
+                    }
+                })]}>
                 </Tabs>
                 <Row>
                     <Col span={8}></Col>
