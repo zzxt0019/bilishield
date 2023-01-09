@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673243533000
+// @version         1.1.1673266448338
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/9/2023, 1:52:13 PM
+// @description     bilibili屏蔽 更新时间: 1/9/2023, 8:14:08 PM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -48871,6 +48871,15 @@ function BoxView(props) {
       }
     };
   });
+  function updateBox() {
+    // 需要更改所有内容, 需要放在外面
+    for (const page of pageMap.values()) {
+      if (page.working) {
+        page.stop();
+        page.start();
+      }
+    }
+  }
   return react.createElement(react.Fragment, null, react.createElement("div", {
     ref: mainRef,
     style: {
@@ -48892,38 +48901,30 @@ function BoxView(props) {
   },
   // 页面
   [...pageMap.values()].filter(page => page.isCurrent()).map(page => react.createElement(PageView, {
+    key: page.key,
     page: page
   }))), react.createElement(es_col, {
     span: 10
-  }, react.createElement(DisplayTypeView, null))), react.createElement(es_tabs, null, react.createElement(es_tabs.TabPane, {
-    key: "uid2username-tab",
-    tab: react.createElement("span", null, "uid")
-  }, react.createElement(UidUsernameView, {
-    updateBox: () => {
-      // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-      for (const page of pageMap.values()) {
-        if (page.working) {
-          page.stop();
-          page.start();
-        }
-      }
-    }
-  })), [...Settings.getSystemSettings().values()].map(setting => react.createElement(es_tabs.TabPane, {
-    key: setting.key + '-tab',
-    tab: react.createElement("span", null, setting.name)
-  }, react.createElement(SettingView, {
-    key: setting.key,
-    setting: setting,
-    updateBox: () => {
-      // 需要更改所有内容, 需要放在外面, SettingView里不需要page信息
-      for (const page of pageMap.values()) {
-        if (page.working) {
-          page.stop();
-          page.start();
-        }
-      }
-    }
-  })))), react.createElement(es_row, null, react.createElement(es_col, {
+  }, react.createElement(DisplayTypeView, null))), react.createElement(es_tabs, {
+    defaultActiveKey: 'uid',
+    items: [{
+      key: 'uid',
+      label: 'uid',
+      children: react.createElement(UidUsernameView, {
+        updateBox: updateBox
+      })
+    }, ...[...Settings.getSystemSettings().values()].map(setting => {
+      return {
+        key: setting.key,
+        label: setting.name,
+        children: react.createElement(SettingView, {
+          key: setting.key,
+          setting: setting,
+          updateBox: updateBox
+        })
+      };
+    })]
+  }), react.createElement(es_row, null, react.createElement(es_col, {
     span: 8
   }), react.createElement(es_col, {
     span: 8
