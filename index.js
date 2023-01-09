@@ -570,59 +570,6 @@ if (true) {
 } else {}
 
 
-/***/ }),
-
-/***/ 6774:
-/***/ ((module) => {
-
-//
-
-module.exports = function shallowEqual(objA, objB, compare, compareContext) {
-  var ret = compare ? compare.call(compareContext, objA, objB) : void 0;
-
-  if (ret !== void 0) {
-    return !!ret;
-  }
-
-  if (objA === objB) {
-    return true;
-  }
-
-  if (typeof objA !== "object" || !objA || typeof objB !== "object" || !objB) {
-    return false;
-  }
-
-  var keysA = Object.keys(objA);
-  var keysB = Object.keys(objB);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  var bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB);
-
-  // Test for A's keys different from B.
-  for (var idx = 0; idx < keysA.length; idx++) {
-    var key = keysA[idx];
-
-    if (!bHasOwnProperty(key)) {
-      return false;
-    }
-
-    var valueA = objA[key];
-    var valueB = objB[key];
-
-    ret = compare ? compare.call(compareContext, valueA, valueB, key) : void 0;
-
-    if (ret === false || (ret === void 0 && valueA !== valueB)) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-
 /***/ })
 
 /******/ 	});
@@ -761,23 +708,23 @@ function extends_extends() {
   return extends_extends.apply(this, arguments);
 }
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/typeof.js
-function _typeof(obj) {
+function typeof_typeof(obj) {
   "@babel/helpers - typeof";
 
-  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+  return typeof_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
     return typeof obj;
   } : function (obj) {
     return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-  }, _typeof(obj);
+  }, typeof_typeof(obj);
 }
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/toPrimitive.js
 
 function _toPrimitive(input, hint) {
-  if (_typeof(input) !== "object" || input === null) return input;
+  if (typeof_typeof(input) !== "object" || input === null) return input;
   var prim = input[Symbol.toPrimitive];
   if (prim !== undefined) {
     var res = prim.call(input, hint || "default");
-    if (_typeof(res) !== "object") return res;
+    if (typeof_typeof(res) !== "object") return res;
     throw new TypeError("@@toPrimitive must return a primitive value.");
   }
   return (hint === "string" ? String : Number)(input);
@@ -787,7 +734,7 @@ function _toPrimitive(input, hint) {
 
 function _toPropertyKey(arg) {
   var key = _toPrimitive(arg, "string");
-  return _typeof(key) === "symbol" ? key : String(key);
+  return typeof_typeof(key) === "symbol" ? key : String(key);
 }
 ;// CONCATENATED MODULE: ./node_modules/@babel/runtime/helpers/esm/defineProperty.js
 
@@ -948,7 +895,7 @@ function _isNativeReflectConstruct() {
 
 
 function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof(call) === "object" || typeof call === "function")) {
+  if (call && (typeof_typeof(call) === "object" || typeof call === "function")) {
     return call;
   } else if (call !== void 0) {
     throw new TypeError("Derived constructors may only return object or undefined");
@@ -1793,7 +1740,7 @@ function traverseDataNodes(dataNodes, callback,
 // To avoid too many params, let use config instead of origin param
 config) {
   var mergedConfig = {};
-  if (_typeof(config) === 'object') {
+  if (typeof_typeof(config) === 'object') {
     mergedConfig = config;
   } else {
     mergedConfig = {
@@ -2678,7 +2625,7 @@ function parseCheckedKeys(keys) {
       checkedKeys: keys,
       halfCheckedKeys: undefined
     };
-  } else if (_typeof(keys) === 'object') {
+  } else if (typeof_typeof(keys) === 'object') {
     keyProps = {
       checkedKeys: keys.checked || undefined,
       halfCheckedKeys: keys.halfChecked || undefined
@@ -2780,7 +2727,7 @@ function useMemo_useMemo(getValue, condition, shouldUpdate) {
 function fillRef(ref, node) {
   if (typeof ref === 'function') {
     ref(node);
-  } else if (_typeof(ref) === 'object' && ref && 'current' in ref) {
+  } else if (typeof_typeof(ref) === 'object' && ref && 'current' in ref) {
     ref.current = node;
   }
 }
@@ -4450,7 +4397,7 @@ function useScrollTo(containerRef, data, heights, itemHeight, getKey, collectHei
     es_raf.cancel(scrollRef.current);
     if (typeof arg === 'number') {
       syncScrollTop(arg);
-    } else if (arg && _typeof(arg) === 'object') {
+    } else if (arg && typeof_typeof(arg) === 'object') {
       var index;
       var align = arg.align;
       if ('index' in arg) {
@@ -4625,7 +4572,7 @@ function useDiffItem(data, getKey, onDiff) {
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-virtual-list/es/utils/isFirefox.js
 
-var isFF = (typeof navigator === "undefined" ? "undefined" : _typeof(navigator)) === 'object' && /Firefox/i.test(navigator.userAgent);
+var isFF = (typeof navigator === "undefined" ? "undefined" : typeof_typeof(navigator)) === 'object' && /Firefox/i.test(navigator.userAgent);
 /* harmony default export */ const isFirefox = (isFF);
 ;// CONCATENATED MODULE: ./node_modules/rc-virtual-list/es/hooks/useOriginScroll.js
 
@@ -5171,7 +5118,7 @@ var transitionEndName = internalTransitionEndName || 'transitionend';
 function getTransitionName(transitionName, transitionType) {
   if (!transitionName) return null;
 
-  if (_typeof(transitionName) === 'object') {
+  if (typeof_typeof(transitionName) === 'object') {
     var type = transitionType.replace(/-\w/g, function (match) {
       return match[1].toUpperCase();
     });
@@ -5652,7 +5599,7 @@ var DomWrapper_DomWrapper = /*#__PURE__*/function (_React$Component) {
 function genCSSMotion(config) {
   var transitionSupport = config;
 
-  if (_typeof(config) === 'object') {
+  if (typeof_typeof(config) === 'object') {
     transitionSupport = config.transitionSupport;
   }
 
@@ -5786,7 +5733,7 @@ var STATUS_REMOVED = 'removed';
 function wrapKeyToObject(key) {
   var keyObj;
 
-  if (key && _typeof(key) === 'object' && 'key' in key) {
+  if (key && typeof_typeof(key) === 'object' && 'key' in key) {
     keyObj = key;
   } else {
     keyObj = {
@@ -7606,7 +7553,7 @@ var Tree = /*#__PURE__*/function (_React$Component) {
       // It's better move to hooks but we just simply keep here
       var draggableConfig;
       if (draggable) {
-        if (_typeof(draggable) === 'object') {
+        if (typeof_typeof(draggable) === 'object') {
           draggableConfig = draggable;
         } else if (typeof draggable === 'function') {
           draggableConfig = {
@@ -8880,7 +8827,7 @@ function utils_warning(valid, message) {
   es_warning(valid, "[@ant-design/icons] ".concat(message));
 }
 function isIconDefinition(target) {
-  return _typeof(target) === 'object' && typeof target.name === 'string' && typeof target.theme === 'string' && (_typeof(target.icon) === 'object' || typeof target.icon === 'function');
+  return typeof_typeof(target) === 'object' && typeof target.name === 'string' && typeof target.theme === 'string' && (typeof_typeof(target.icon) === 'object' || typeof target.icon === 'function');
 }
 function normalizeAttrs() {
   var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -9440,6 +9387,405 @@ function murmur2(str) {
 
 /* harmony default export */ const hash_browser_esm = (murmur2);
 
+;// CONCATENATED MODULE: ./node_modules/rc-util/es/isEqual.js
+
+
+/**
+ * Deeply compares two object literals.
+ * @param obj1 object 1
+ * @param obj2 object 2
+ * @param shallow shallow compare
+ * @returns
+ */
+function isEqual_isEqual(obj1, obj2) {
+  var shallow = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  // https://github.com/mapbox/mapbox-gl-js/pull/5979/files#diff-fde7145050c47cc3a306856efd5f9c3016e86e859de9afbd02c879be5067e58f
+  var refSet = new Set();
+  function deepEqual(a, b) {
+    var level = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+    var circular = refSet.has(a);
+    warning(!circular, 'Warning: There may be circular references');
+    if (circular) {
+      return false;
+    }
+    if (a === b) {
+      return true;
+    }
+    if (shallow && level > 1) {
+      return false;
+    }
+    refSet.add(a);
+    var newLevel = level + 1;
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) {
+        return false;
+      }
+      for (var i = 0; i < a.length; i++) {
+        if (!deepEqual(a[i], b[i], newLevel)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    if (a && b && _typeof(a) === 'object' && _typeof(b) === 'object') {
+      var keys = Object.keys(a);
+      if (keys.length !== Object.keys(b).length) {
+        return false;
+      }
+      return keys.every(function (key) {
+        return deepEqual(a[key], b[key], newLevel);
+      });
+    }
+    // other
+    return false;
+  }
+  return deepEqual(obj1, obj2);
+}
+/* harmony default export */ const es_isEqual = ((/* unused pure expression or super */ null && (isEqual_isEqual)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/Cache.js
+
+
+
+
+// [times, realValue]
+var Entity = /*#__PURE__*/function () {
+  function Entity() {
+    _classCallCheck(this, Entity);
+
+    _defineProperty(this, "cache", new Map());
+  }
+
+  _createClass(Entity, [{
+    key: "get",
+    value: function get(keys) {
+      return this.cache.get(keys.join('%')) || null;
+    }
+  }, {
+    key: "update",
+    value: function update(keys, valueFn) {
+      var path = keys.join('%');
+      var prevValue = this.cache.get(path);
+      var nextValue = valueFn(prevValue);
+
+      if (nextValue === null) {
+        this.cache.delete(path);
+      } else {
+        this.cache.set(path, nextValue);
+      }
+    }
+  }]);
+
+  return Entity;
+}();
+
+/* harmony default export */ const Cache = (Entity);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/StyleContext.js
+
+
+var StyleContext_excluded = (/* unused pure expression or super */ null && (["children"]));
+
+
+
+
+var StyleContext_ATTR_TOKEN = 'data-token-hash';
+var StyleContext_ATTR_MARK = 'data-css-hash';
+var ATTR_DEV_CACHE_PATH = 'data-dev-cache-path'; // Mark css-in-js instance in style element
+
+var CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
+var CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
+function createCache() {
+  if (typeof document !== 'undefined' && document.head && document.body) {
+    var styles = document.body.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]")) || [];
+    var firstChild = document.head.firstChild;
+    Array.from(styles).forEach(function (style) {
+      style[CSS_IN_JS_INSTANCE] = style[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID; // Not force move if no head
+
+      document.head.insertBefore(style, firstChild);
+    }); // Deduplicate of moved styles
+
+    var styleHash = {};
+    Array.from(document.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]"))).forEach(function (style) {
+      var hash = style.getAttribute(StyleContext_ATTR_MARK);
+
+      if (styleHash[hash]) {
+        if (style[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+          var _style$parentNode;
+
+          (_style$parentNode = style.parentNode) === null || _style$parentNode === void 0 ? void 0 : _style$parentNode.removeChild(style);
+        }
+      } else {
+        styleHash[hash] = true;
+      }
+    });
+  }
+
+  return new Cache();
+}
+var StyleContext = /*#__PURE__*/react.createContext({
+  hashPriority: 'low',
+  cache: createCache(),
+  defaultCache: true
+});
+var StyleProvider = function StyleProvider(props) {
+  var children = props.children,
+      restProps = _objectWithoutProperties(props, StyleContext_excluded);
+
+  var parentContext = React.useContext(StyleContext);
+  var context = useMemo(function () {
+    var mergedContext = _objectSpread({}, parentContext);
+
+    Object.keys(restProps).forEach(function (key) {
+      var value = restProps[key];
+
+      if (restProps[key] !== undefined) {
+        mergedContext[key] = value;
+      }
+    });
+    var cache = restProps.cache;
+    mergedContext.cache = mergedContext.cache || createCache();
+    mergedContext.defaultCache = !cache && parentContext.defaultCache;
+    return mergedContext;
+  }, [parentContext, restProps], function (prev, next) {
+    return !isEqual(prev[0], next[0], true) || !isEqual(prev[1], next[1], true);
+  });
+  return /*#__PURE__*/React.createElement(StyleContext.Provider, {
+    value: context
+  }, children);
+};
+/* harmony default export */ const es_StyleContext = (StyleContext);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useHMR.js
+function useProdHMR() {
+  return false;
+}
+
+var webpackHMR = false;
+
+function useDevHMR() {
+  return webpackHMR;
+}
+
+/* harmony default export */ const useHMR = ( true ? useProdHMR : 0); // Webpack `module.hot.accept` do not support any deps update trigger
+// We have to hack handler to force mark as HRM
+
+if (false) { var originWebpackHotUpdate, win; }
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useGlobalCache.js
+
+
+
+
+
+function useClientCache(prefix, keyPath, cacheFn, onCacheRemove) {
+  var _React$useContext = react.useContext(es_StyleContext),
+      globalCache = _React$useContext.cache;
+
+  var fullPath = [prefix].concat(_toConsumableArray(keyPath));
+  var HMRUpdate = useHMR(); // Create cache
+
+  react.useMemo(function () {
+    globalCache.update(fullPath, function (prevCache) {
+      var _ref = prevCache || [],
+          _ref2 = slicedToArray_slicedToArray(_ref, 2),
+          _ref2$ = _ref2[0],
+          times = _ref2$ === void 0 ? 0 : _ref2$,
+          cache = _ref2[1]; // HMR should always ignore cache since developer may change it
+
+
+      var tmpCache = cache;
+
+      if (false) {}
+
+      var mergedCache = tmpCache || cacheFn();
+      return [times + 1, mergedCache];
+    });
+  },
+  /* eslint-disable react-hooks/exhaustive-deps */
+  [fullPath.join('_')]
+  /* eslint-enable */
+  ); // Remove if no need anymore
+
+  react.useEffect(function () {
+    return function () {
+      globalCache.update(fullPath, function (prevCache) {
+        var _ref3 = prevCache || [],
+            _ref4 = slicedToArray_slicedToArray(_ref3, 2),
+            _ref4$ = _ref4[0],
+            times = _ref4$ === void 0 ? 0 : _ref4$,
+            cache = _ref4[1];
+
+        var nextCount = times - 1;
+
+        if (nextCount === 0) {
+          onCacheRemove === null || onCacheRemove === void 0 ? void 0 : onCacheRemove(cache, false);
+          return null;
+        }
+
+        return [times - 1, cache];
+      });
+    };
+  }, fullPath);
+  return globalCache.get(fullPath)[1];
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/util.js
+
+
+
+
+function flattenToken(token) {
+  var str = '';
+  Object.keys(token).forEach(function (key) {
+    var value = token[key];
+    str += key;
+
+    if (value && typeof_typeof(value) === 'object') {
+      str += flattenToken(value);
+    } else {
+      str += value;
+    }
+  });
+  return str;
+}
+/**
+ * Convert derivative token to key string
+ */
+
+function token2key(token, salt) {
+  return hash_browser_esm("".concat(salt, "_").concat(flattenToken(token)));
+}
+var layerKey = "layer-".concat(Date.now(), "-").concat(Math.random()).replace(/\./g, '');
+var layerWidth = '903px';
+
+function supportSelector(styleStr, handleElement) {
+  if (canUseDom()) {
+    var _ele$parentNode;
+
+    updateCSS(styleStr, layerKey);
+
+    var _ele = document.createElement('div');
+
+    _ele.style.position = 'fixed';
+    _ele.style.left = '0';
+    _ele.style.top = '0';
+    handleElement === null || handleElement === void 0 ? void 0 : handleElement(_ele);
+    document.body.appendChild(_ele);
+
+    if (false) {}
+
+    var support = getComputedStyle(_ele).width === layerWidth;
+    (_ele$parentNode = _ele.parentNode) === null || _ele$parentNode === void 0 ? void 0 : _ele$parentNode.removeChild(_ele);
+    removeCSS(layerKey);
+    return support;
+  }
+
+  return false;
+}
+
+var canLayer = undefined;
+function supportLayer() {
+  if (canLayer === undefined) {
+    canLayer = supportSelector("@layer ".concat(layerKey, " { .").concat(layerKey, " { width: ").concat(layerWidth, "!important; } }"), function (ele) {
+      ele.className = layerKey;
+    });
+  }
+
+  return canLayer;
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useCacheToken.js
+
+
+
+
+
+
+
+var EMPTY_OVERRIDE = {}; // Generate different prefix to make user selector break in production env.
+// This helps developer not to do style override directly on the hash id.
+
+var hashPrefix =  false ? 0 : 'css';
+var tokenKeys = new Map();
+
+function recordCleanToken(tokenKey) {
+  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) + 1);
+}
+
+function removeStyleTags(key) {
+  if (typeof document !== 'undefined') {
+    var styles = document.querySelectorAll("style[".concat(StyleContext_ATTR_TOKEN, "=\"").concat(key, "\"]"));
+    styles.forEach(function (style) {
+      if (style[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
+        var _style$parentNode;
+
+        (_style$parentNode = style.parentNode) === null || _style$parentNode === void 0 ? void 0 : _style$parentNode.removeChild(style);
+      }
+    });
+  }
+} // Remove will check current keys first
+
+
+function cleanTokenStyle(tokenKey) {
+  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
+  var tokenKeyList = Array.from(tokenKeys.keys());
+  var cleanableKeyList = tokenKeyList.filter(function (key) {
+    var count = tokenKeys.get(key) || 0;
+    return count <= 0;
+  });
+
+  if (cleanableKeyList.length < tokenKeyList.length) {
+    cleanableKeyList.forEach(function (key) {
+      removeStyleTags(key);
+      tokenKeys.delete(key);
+    });
+  }
+}
+/**
+ * Cache theme derivative token as global shared one
+ * @param theme Theme entity
+ * @param tokens List of tokens, used for cache. Please do not dynamic generate object directly
+ * @param option Additional config
+ * @returns Call Theme.getDerivativeToken(tokenObject) to get token
+ */
+
+
+function useCacheToken(theme, tokens) {
+  var option = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var _option$salt = option.salt,
+      salt = _option$salt === void 0 ? '' : _option$salt,
+      _option$override = option.override,
+      override = _option$override === void 0 ? EMPTY_OVERRIDE : _option$override,
+      formatToken = option.formatToken; // Basic - We do basic cache here
+
+  var mergedToken = react.useMemo(function () {
+    return Object.assign.apply(Object, [{}].concat(_toConsumableArray(tokens)));
+  }, [tokens]);
+  var tokenStr = react.useMemo(function () {
+    return flattenToken(mergedToken);
+  }, [mergedToken]);
+  var overrideTokenStr = react.useMemo(function () {
+    return flattenToken(override);
+  }, [override]);
+  var cachedToken = useClientCache('token', [salt, theme.id, tokenStr, overrideTokenStr], function () {
+    var derivativeToken = theme.getDerivativeToken(mergedToken); // Merge with override
+
+    var mergedDerivativeToken = _objectSpread2(_objectSpread2({}, derivativeToken), override); // Format if needed
+
+
+    if (formatToken) {
+      mergedDerivativeToken = formatToken(mergedDerivativeToken);
+    } // Optimize for `useStyleRegister` performance
+
+
+    var tokenKey = token2key(mergedDerivativeToken, salt);
+    mergedDerivativeToken._tokenKey = tokenKey;
+    recordCleanToken(tokenKey);
+    var hashId = "".concat(hashPrefix, "-").concat(hash_browser_esm(tokenKey));
+    mergedDerivativeToken._hashId = hashId; // Not used
+
+    return [mergedDerivativeToken, hashId];
+  }, function (cache) {
+    // Remove token will remove all related style
+    cleanTokenStyle(cache[0]._tokenKey);
+  });
+  return cachedToken;
+}
 ;// CONCATENATED MODULE: ./node_modules/@emotion/unitless/dist/unitless.browser.esm.js
 var unitlessKeys = {
   animationIterationCount: 1,
@@ -10109,238 +10455,46 @@ function declaration (value, root, parent, length) {
 	return node(value, root, parent, DECLARATION, substr(value, 0, length), substr(value, length + 1, -1), length)
 }
 
-// EXTERNAL MODULE: ./node_modules/shallowequal/index.js
-var shallowequal = __webpack_require__(6774);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/Cache.js
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/utils.js
 
-
-
-
-// [times, realValue]
-var Entity = /*#__PURE__*/function () {
-  function Entity() {
-    _classCallCheck(this, Entity);
-
-    _defineProperty(this, "cache", new Map());
-  }
-
-  _createClass(Entity, [{
-    key: "get",
-    value: function get(keys) {
-      return this.cache.get(keys.join('%')) || null;
-    }
-  }, {
-    key: "update",
-    value: function update(keys, valueFn) {
-      var path = keys.join('%');
-      var prevValue = this.cache.get(path);
-      var nextValue = valueFn(prevValue);
-
-      if (nextValue === null) {
-        this.cache.delete(path);
-      } else {
-        this.cache.set(path, nextValue);
-      }
-    }
-  }]);
-
-  return Entity;
-}();
-
-/* harmony default export */ const Cache = (Entity);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/StyleContext.js
-
-
-var StyleContext_excluded = (/* unused pure expression or super */ null && (["children"]));
-
-
-
-
-var StyleContext_ATTR_TOKEN = 'data-token-hash';
-var StyleContext_ATTR_MARK = 'data-css-hash';
-var ATTR_DEV_CACHE_PATH = 'data-dev-cache-path'; // Mark css-in-js instance in style element
-
-var CSS_IN_JS_INSTANCE = '__cssinjs_instance__';
-var CSS_IN_JS_INSTANCE_ID = Math.random().toString(12).slice(2);
-function createCache() {
-  if (typeof document !== 'undefined' && document.head && document.body) {
-    var styles = document.body.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]")) || [];
-    var firstChild = document.head.firstChild;
-    Array.from(styles).forEach(function (style) {
-      style[CSS_IN_JS_INSTANCE] = style[CSS_IN_JS_INSTANCE] || CSS_IN_JS_INSTANCE_ID; // Not force move if no head
-
-      document.head.insertBefore(style, firstChild);
-    }); // Deduplicate of moved styles
-
-    var styleHash = {};
-    Array.from(document.querySelectorAll("style[".concat(StyleContext_ATTR_MARK, "]"))).forEach(function (style) {
-      var hash = style.getAttribute(StyleContext_ATTR_MARK);
-
-      if (styleHash[hash]) {
-        if (style[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
-          var _style$parentNode;
-
-          (_style$parentNode = style.parentNode) === null || _style$parentNode === void 0 ? void 0 : _style$parentNode.removeChild(style);
-        }
-      } else {
-        styleHash[hash] = true;
-      }
-    });
-  }
-
-  return new Cache();
-}
-var StyleContext = /*#__PURE__*/react.createContext({
-  hashPriority: 'low',
-  cache: createCache(),
-  defaultCache: true
-});
-var StyleProvider = function StyleProvider(props) {
-  var children = props.children,
-      restProps = _objectWithoutProperties(props, StyleContext_excluded);
-
-  var parentContext = React.useContext(StyleContext);
-  var context = useMemo(function () {
-    var mergedContext = _objectSpread({}, parentContext);
-
-    Object.keys(restProps).forEach(function (key) {
-      var value = restProps[key];
-
-      if (restProps[key] !== undefined) {
-        mergedContext[key] = value;
-      }
-    });
-    var cache = restProps.cache;
-    mergedContext.cache = mergedContext.cache || createCache();
-    mergedContext.defaultCache = !cache && parentContext.defaultCache;
-    return mergedContext;
-  }, [parentContext, restProps], function (prev, next) {
-    return !shallowEqual(prev[0], next[0]) || !shallowEqual(prev[1], next[1]);
-  });
-  return /*#__PURE__*/React.createElement(StyleContext.Provider, {
-    value: context
-  }, children);
-};
-/* harmony default export */ const es_StyleContext = (StyleContext);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useHMR.js
-function useProdHMR() {
-  return false;
-}
-
-var webpackHMR = false;
-
-function useDevHMR() {
-  return webpackHMR;
-}
-
-/* harmony default export */ const useHMR = ( true ? useProdHMR : 0); // Webpack `module.hot.accept` do not support any deps update trigger
-// We have to hack handler to force mark as HRM
-
-if (false) { var originWebpackHotUpdate, win; }
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useGlobalCache.js
-
-
-
-
-
-function useClientCache(prefix, keyPath, cacheFn, onCacheRemove) {
-  var _React$useContext = react.useContext(es_StyleContext),
-      globalCache = _React$useContext.cache;
-
-  var fullPath = [prefix].concat(_toConsumableArray(keyPath));
-  var HMRUpdate = useHMR(); // Create cache
-
-  react.useMemo(function () {
-    globalCache.update(fullPath, function (prevCache) {
-      var _ref = prevCache || [],
-          _ref2 = slicedToArray_slicedToArray(_ref, 2),
-          _ref2$ = _ref2[0],
-          times = _ref2$ === void 0 ? 0 : _ref2$,
-          cache = _ref2[1]; // HMR should always ignore cache since developer may change it
-
-
-      var tmpCache = cache;
-
-      if (false) {}
-
-      var mergedCache = tmpCache || cacheFn();
-      return [times + 1, mergedCache];
-    });
-  },
-  /* eslint-disable react-hooks/exhaustive-deps */
-  [fullPath.join('_')]
-  /* eslint-enable */
-  ); // Remove if no need anymore
-
-  react.useEffect(function () {
-    return function () {
-      globalCache.update(fullPath, function (prevCache) {
-        var _ref3 = prevCache || [],
-            _ref4 = slicedToArray_slicedToArray(_ref3, 2),
-            _ref4$ = _ref4[0],
-            times = _ref4$ === void 0 ? 0 : _ref4$,
-            cache = _ref4[1];
-
-        var nextCount = times - 1;
-
-        if (nextCount === 0) {
-          onCacheRemove === null || onCacheRemove === void 0 ? void 0 : onCacheRemove(cache, false);
-          return null;
-        }
-
-        return [times - 1, cache];
-      });
-    };
-  }, fullPath);
-  return globalCache.get(fullPath)[1];
-}
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/util.js
-
-
-
-
-
-function flattenToken(token) {
-  var str = '';
-  Object.keys(token).forEach(function (key) {
-    var value = token[key];
-    str += key;
-
-    if (value && _typeof(value) === 'object') {
-      str += flattenToken(value);
-    } else {
-      str += value;
-    }
-  });
-  return str;
-}
-/**
- * Convert derivative token to key string
- */
-
-function token2key(token, slat) {
-  return hash_browser_esm("".concat(slat, "_").concat(flattenToken(token)));
-}
-function util_warning(message, path) {
-  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in '".concat(path, "': ") : '').concat(message));
-}
-var styleValidate = function styleValidate(key, value) {
-  var info = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+function utils_lintWarning(message, info) {
   var path = info.path,
-      hashId = info.hashId;
+      parentSelectors = info.parentSelectors;
+  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in '".concat(path, "': ") : '').concat(message).concat(parentSelectors.length ? " Selector info: ".concat(parentSelectors.join(' -> '), ")") : ''));
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/contentQuotesLinter.js
 
+
+var linter = function linter(key, value, info) {
+  if (key === 'content') {
+    // From emotion: https://github.com/emotion-js/emotion/blob/main/packages/serialize/src/index.js#L63
+    var contentValuePattern = /(attr|counters?|url|(((repeating-)?(linear|radial))|conic)-gradient)\(|(no-)?(open|close)-quote/;
+    var contentValues = ['normal', 'none', 'initial', 'inherit', 'unset'];
+
+    if (typeof value !== 'string' || contentValues.indexOf(value) === -1 && !contentValuePattern.test(value) && (value.charAt(0) !== value.charAt(value.length - 1) || value.charAt(0) !== '"' && value.charAt(0) !== "'")) {
+      lintWarning("You seem to be using a value for 'content' without quotes, try replacing it with `content: '\"".concat(value, "\"'`."), info);
+    }
+  }
+};
+
+/* harmony default export */ const contentQuotesLinter = ((/* unused pure expression or super */ null && (linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/hashedAnimationLinter.js
+
+
+var hashedAnimationLinter_linter = function linter(key, value, info) {
+  if (key === 'animation') {
+    if (info.hashId && value !== 'none') {
+      lintWarning("You seem to be using hashed animation '".concat(value, "', in which case 'animationName' with Keyframe as value is recommended."), info);
+    }
+  }
+};
+
+/* harmony default export */ const hashedAnimationLinter = ((/* unused pure expression or super */ null && (hashedAnimationLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/logicalPropertiesLinter.js
+
+
+var logicalPropertiesLinter_linter = function linter(key, value, info) {
   switch (key) {
-    case 'content':
-      // From emotion: https://github.com/emotion-js/emotion/blob/main/packages/serialize/src/index.js#L63
-      var contentValuePattern = /(attr|counters?|url|(((repeating-)?(linear|radial))|conic)-gradient)\(|(no-)?(open|close)-quote/;
-      var contentValues = ['normal', 'none', 'initial', 'inherit', 'unset'];
-
-      if (typeof value !== 'string' || contentValues.indexOf(value) === -1 && !contentValuePattern.test(value) && (value.charAt(0) !== value.charAt(value.length - 1) || value.charAt(0) !== '"' && value.charAt(0) !== "'")) {
-        util_warning("You seem to be using a value for 'content' without quotes, try replacing it with `content: '\"".concat(value, "\"'`"), path);
-      }
-
-      return;
-
     case 'marginLeft':
     case 'marginRight':
     case 'paddingLeft':
@@ -10359,7 +10513,7 @@ var styleValidate = function styleValidate(key, value) {
     case 'borderTopRightRadius':
     case 'borderBottomLeftRadius':
     case 'borderBottomRightRadius':
-      util_warning("You seem to be using non-logical property '".concat(key, "' which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), path);
+      lintWarning("You seem to be using non-logical property '".concat(key, "' which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), info);
       return;
 
     case 'margin':
@@ -10373,7 +10527,7 @@ var styleValidate = function styleValidate(key, value) {
         });
 
         if (valueArr.length === 4 && valueArr[1] !== valueArr[3]) {
-          util_warning("You seem to be using '".concat(key, "' property with different left ").concat(key, " and right ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), path);
+          lintWarning("You seem to be using '".concat(key, "' property with different left ").concat(key, " and right ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), info);
         }
       }
 
@@ -10382,7 +10536,7 @@ var styleValidate = function styleValidate(key, value) {
     case 'clear':
     case 'textAlign':
       if (value === 'left' || value === 'right') {
-        util_warning("You seem to be using non-logical value '".concat(value, "' of ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), path);
+        lintWarning("You seem to be using non-logical value '".concat(value, "' of ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), info);
       }
 
       return;
@@ -10419,59 +10573,21 @@ var styleValidate = function styleValidate(key, value) {
         }, false);
 
         if (invalid) {
-          util_warning("You seem to be using non-logical value '".concat(value, "' of ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), path);
+          lintWarning("You seem to be using non-logical value '".concat(value, "' of ").concat(key, ", which is not compatible with RTL mode. Please use logical properties and values instead. For more information: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties."), info);
         }
       }
 
       return;
 
-    case 'animation':
-      if (hashId && value !== 'none') {
-        util_warning("You seem to be using hashed animation '".concat(value, "', in which case 'animationName' with Keyframe as value is recommended."), path);
-      }
-
     default:
-      return;
   }
 };
-var layerKey = "layer-".concat(Date.now(), "-").concat(Math.random()).replace(/\./g, '');
-var layerWidth = '903px';
 
-function supportSelector(styleStr, handleElement) {
-  if (canUseDom()) {
-    var _ele$parentNode;
+/* harmony default export */ const logicalPropertiesLinter = ((/* unused pure expression or super */ null && (logicalPropertiesLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/index.js
 
-    updateCSS(styleStr, layerKey);
 
-    var _ele = document.createElement('div');
 
-    _ele.style.position = 'fixed';
-    _ele.style.left = '0';
-    _ele.style.top = '0';
-    handleElement === null || handleElement === void 0 ? void 0 : handleElement(_ele);
-    document.body.appendChild(_ele);
-
-    if (false) {}
-
-    var support = getComputedStyle(_ele).width === layerWidth;
-    (_ele$parentNode = _ele.parentNode) === null || _ele$parentNode === void 0 ? void 0 : _ele$parentNode.removeChild(_ele);
-    removeCSS(layerKey);
-    return support;
-  }
-
-  return false;
-}
-
-var canLayer = undefined;
-function supportLayer() {
-  if (canLayer === undefined) {
-    canLayer = supportSelector("@layer ".concat(layerKey, " { .").concat(layerKey, " { width: ").concat(layerWidth, "!important; } }"), function (ele) {
-      ele.className = layerKey;
-    });
-  }
-
-  return canLayer;
-}
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useStyleRegister.js
 
 
@@ -10483,6 +10599,7 @@ function supportLayer() {
 
 
  // @ts-ignore
+
 
 
 
@@ -10501,10 +10618,9 @@ function normalizeStyle(styleStr) {
 }
 
 function isCompoundCSSProperty(value) {
-  return _typeof(value) === 'object' && value && SKIP_CHECK in value;
-}
+  return typeof_typeof(value) === 'object' && value && SKIP_CHECK in value;
+} // 注入 hash 值
 
-var animationStatistics = {}; // 注入 hash 值
 
 function injectSelectorHash(key, hashId, hashPriority) {
   if (!hashId) {
@@ -10540,17 +10656,21 @@ var parseStyle = function parseStyle(interpolation) {
   var config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
   var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {
-    root: true
+    root: true,
+    parentSelectors: []
   },
       root = _ref.root,
-      injectHash = _ref.injectHash;
+      injectHash = _ref.injectHash,
+      parentSelectors = _ref.parentSelectors;
 
   var hashId = config.hashId,
       layer = config.layer,
       path = config.path,
       hashPriority = config.hashPriority,
       _config$transformers = config.transformers,
-      transformers = _config$transformers === void 0 ? [] : _config$transformers;
+      transformers = _config$transformers === void 0 ? [] : _config$transformers,
+      _config$linters = config.linters,
+      linters = _config$linters === void 0 ? [] : _config$linters;
   var styleStr = '';
   var effectStyle = {};
 
@@ -10559,7 +10679,8 @@ var parseStyle = function parseStyle(interpolation) {
 
     if (!effectStyle[animationName]) {
       var _parseStyle = parseStyle(keyframes.style, config, {
-        root: false
+        root: false,
+        parentSelectors: parentSelectors
       }),
           _parseStyle2 = slicedToArray_slicedToArray(_parseStyle, 1),
           _parsedStr = _parseStyle2[0];
@@ -10600,7 +10721,7 @@ var parseStyle = function parseStyle(interpolation) {
       Object.keys(mergedStyle).forEach(function (key) {
         var value = mergedStyle[key];
 
-        if (_typeof(value) === 'object' && value && (key !== 'animationName' || !value._keyframe) && !isCompoundCSSProperty(value)) {
+        if (typeof_typeof(value) === 'object' && value && (key !== 'animationName' || !value._keyframe) && !isCompoundCSSProperty(value)) {
           var subInjectHash = false; // 当成嵌套对象来处理
 
           var mergedKey = key.trim(); // Whether treat child as root. In most case it is false.
@@ -10625,11 +10746,10 @@ var parseStyle = function parseStyle(interpolation) {
             nextRoot = true;
           }
 
-          var _parseStyle3 = parseStyle(value, _objectSpread2(_objectSpread2({}, config), {}, {
-            path: "".concat(path, " -> ").concat(mergedKey)
-          }), {
+          var _parseStyle3 = parseStyle(value, config, {
             root: nextRoot,
-            injectHash: subInjectHash
+            injectHash: subInjectHash,
+            parentSelectors: [].concat(_toConsumableArray(parentSelectors), [mergedKey])
           }),
               _parseStyle4 = slicedToArray_slicedToArray(_parseStyle3, 2),
               _parsedStr2 = _parseStyle4[0],
@@ -10710,7 +10830,8 @@ function useStyleRegister(info, styleFn) {
       hashPriority = _React$useContext.hashPriority,
       container = _React$useContext.container,
       ssrInline = _React$useContext.ssrInline,
-      transformers = _React$useContext.transformers;
+      transformers = _React$useContext.transformers,
+      linters = _React$useContext.linters;
 
   var tokenKey = token._tokenKey;
   var fullPath = [tokenKey].concat(_toConsumableArray(path)); // Check if need insert style
@@ -10728,16 +10849,15 @@ function useStyleRegister(info, styleFn) {
       hashPriority: hashPriority,
       layer: layer,
       path: path.join('-'),
-      transformers: transformers
+      transformers: transformers,
+      linters: linters
     }),
         _parseStyle6 = slicedToArray_slicedToArray(_parseStyle5, 2),
         parsedStyle = _parseStyle6[0],
         effectStyle = _parseStyle6[1];
 
     var styleStr = normalizeStyle(parsedStyle);
-    var styleId = uniqueHash(fullPath, styleStr); // Clear animation statistics
-
-    animationStatistics = {};
+    var styleId = uniqueHash(fullPath, styleStr);
 
     if (isMergedClientSide) {
       var style = updateCSS(styleStr, styleId, {
@@ -10819,103 +10939,6 @@ function extractStyle(cache) {
     styleText += "<style ".concat(ATTR_TOKEN, "=\"").concat(tokenKey, "\" ").concat(ATTR_MARK, "=\"").concat(styleId, "\">").concat(styleStr, "</style>");
   });
   return styleText;
-}
-;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/hooks/useCacheToken.js
-
-
-
-
-
-
-
-var EMPTY_OVERRIDE = {}; // Generate different prefix to make user selector break in production env.
-// This helps developer not to do style override directly on the hash id.
-
-var hashPrefix =  false ? 0 : 'css';
-var tokenKeys = new Map();
-
-function recordCleanToken(tokenKey) {
-  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) + 1);
-}
-
-function removeStyleTags(key) {
-  if (typeof document !== 'undefined') {
-    var styles = document.querySelectorAll("style[".concat(StyleContext_ATTR_TOKEN, "=\"").concat(key, "\"]"));
-    styles.forEach(function (style) {
-      if (style[CSS_IN_JS_INSTANCE] === CSS_IN_JS_INSTANCE_ID) {
-        var _style$parentNode;
-
-        (_style$parentNode = style.parentNode) === null || _style$parentNode === void 0 ? void 0 : _style$parentNode.removeChild(style);
-      }
-    });
-  }
-} // Remove will check current keys first
-
-
-function cleanTokenStyle(tokenKey) {
-  tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
-  var tokenKeyList = Array.from(tokenKeys.keys());
-  var cleanableKeyList = tokenKeyList.filter(function (key) {
-    var count = tokenKeys.get(key) || 0;
-    return count <= 0;
-  });
-
-  if (cleanableKeyList.length < tokenKeyList.length) {
-    cleanableKeyList.forEach(function (key) {
-      removeStyleTags(key);
-      tokenKeys.delete(key);
-    });
-  }
-}
-/**
- * Cache theme derivative token as global shared one
- * @param theme Theme entity
- * @param tokens List of tokens, used for cache. Please do not dynamic generate object directly
- * @param option Additional config
- * @returns Call Theme.getDerivativeToken(tokenObject) to get token
- */
-
-
-function useCacheToken(theme, tokens) {
-  var option = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var _option$salt = option.salt,
-      salt = _option$salt === void 0 ? '' : _option$salt,
-      _option$override = option.override,
-      override = _option$override === void 0 ? EMPTY_OVERRIDE : _option$override,
-      formatToken = option.formatToken; // Basic - We do basic cache here
-
-  var mergedToken = react.useMemo(function () {
-    return Object.assign.apply(Object, [{}].concat(_toConsumableArray(tokens)));
-  }, [tokens]);
-  var tokenStr = react.useMemo(function () {
-    return flattenToken(mergedToken);
-  }, [mergedToken]);
-  var overrideTokenStr = react.useMemo(function () {
-    return flattenToken(override);
-  }, [override]);
-  var cachedToken = useClientCache('token', [salt, theme.id, tokenStr, overrideTokenStr], function () {
-    var derivativeToken = theme.getDerivativeToken(mergedToken); // Merge with override
-
-    var mergedDerivativeToken = _objectSpread2(_objectSpread2({}, derivativeToken), override); // Format if needed
-
-
-    if (formatToken) {
-      mergedDerivativeToken = formatToken(mergedDerivativeToken);
-    } // Optimize for `useStyleRegister` performance
-
-
-    var tokenKey = token2key(mergedDerivativeToken, salt);
-    mergedDerivativeToken._tokenKey = tokenKey;
-    recordCleanToken(tokenKey);
-    var hashId = "".concat(hashPrefix, "-").concat(hash_browser_esm(tokenKey));
-    mergedDerivativeToken._hashId = hashId; // Not used
-
-    return [mergedDerivativeToken, hashId];
-  }, function (cache) {
-    // Remove token will remove all related style
-    cleanTokenStyle(cache[0]._tokenKey);
-  });
-  return cachedToken;
 }
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/Keyframes.js
 
@@ -11189,7 +11212,34 @@ function createTheme(derivatives) {
 
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/transformers/legacyLogicalProperties.js
 function splitValues(value) {
-  return value.split(/\s+/);
+  if (typeof value === 'number') {
+    return [value];
+  }
+
+  var splitStyle = String(value).split(/\s+/); // Combine styles split in brackets, like `calc(1px + 2px)`
+
+  var temp = '';
+  var brackets = 0;
+  return splitStyle.reduce(function (list, item) {
+    if (item.includes('(')) {
+      temp += item;
+      brackets += item.split('(').length - 1;
+    } else if (item.includes(')')) {
+      temp += item;
+      brackets -= item.split(')').length - 1;
+
+      if (brackets === 0) {
+        list.push(temp);
+        temp = '';
+      }
+    } else if (brackets > 0) {
+      temp += item;
+    } else {
+      list.push(item);
+    }
+
+    return list;
+  }, []);
 }
 
 function noSplit(list) {
@@ -11254,6 +11304,13 @@ var keyMap = {
   borderEndStartRadius: ['borderBottomLeftRadius'],
   borderEndEndRadius: ['borderBottomRightRadius']
 };
+
+function skipCheck(value) {
+  return {
+    _skip_check_: true,
+    value: value
+  };
+}
 /**
  * Convert css logical properties to legacy properties.
  * Such as: `margin-block-start` to `margin-top`.
@@ -11264,6 +11321,7 @@ var keyMap = {
  * - border
  */
 
+
 var transform = {
   visit: function visit(cssObj) {
     var clone = {};
@@ -11272,29 +11330,29 @@ var transform = {
       var matchValue = keyMap[key];
 
       if (matchValue && (typeof value === 'number' || typeof value === 'string')) {
-        var values = splitValues(value.toString());
+        var values = splitValues(value);
 
         if (matchValue.length && matchValue.notSplit) {
           // not split means always give same value like border
           matchValue.forEach(function (matchKey) {
-            clone[matchKey] = value;
+            clone[matchKey] = skipCheck(value);
           });
         } else if (matchValue.length === 1) {
           // Handle like `marginBlockStart` => `marginTop`
-          clone[matchValue[0]] = value;
+          clone[matchValue[0]] = skipCheck(value);
         } else if (matchValue.length === 2) {
           // Handle like `marginBlock` => `marginTop` & `marginBottom`
           matchValue.forEach(function (matchKey, index) {
             var _values$index;
 
-            clone[matchKey] = (_values$index = values[index]) !== null && _values$index !== void 0 ? _values$index : values[0];
+            clone[matchKey] = skipCheck((_values$index = values[index]) !== null && _values$index !== void 0 ? _values$index : values[0]);
           });
         } else if (matchValue.length === 4) {
           // Handle like `inset` => `top` & `right` & `bottom` & `left`
           matchValue.forEach(function (matchKey, index) {
             var _ref, _values$index2;
 
-            clone[matchKey] = (_ref = (_values$index2 = values[index]) !== null && _values$index2 !== void 0 ? _values$index2 : values[index - 2]) !== null && _ref !== void 0 ? _ref : values[0];
+            clone[matchKey] = skipCheck((_ref = (_values$index2 = values[index]) !== null && _values$index2 !== void 0 ? _values$index2 : values[index - 2]) !== null && _ref !== void 0 ? _ref : values[0]);
           });
         } else {
           clone[key] = value;
@@ -11308,6 +11366,7 @@ var transform = {
 };
 /* harmony default export */ const legacyLogicalProperties = ((/* unused pure expression or super */ null && (transform)));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/index.js
+
 
 
 
@@ -11400,6 +11459,7 @@ function statisticToken(token) {
   };
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/style/index.js
+
 
 
 const textEllipsis = {
@@ -11518,7 +11578,7 @@ const genFocusStyle = token => ({
   '&:focus-visible': Object.assign({}, genFocusOutline(token))
 });
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.1.2');
+/* harmony default export */ const version = ('5.1.3');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -12910,6 +12970,9 @@ const genCheckboxStyle = token => {
       },
       '& + span': {
         color: token.colorTextDisabled
+      },
+      [`&${checkboxCls}-indeterminate ${checkboxCls}-inner::after`]: {
+        background: token.colorTextDisabled
       }
     }
   }];
@@ -13425,6 +13488,7 @@ const Tree_Tree = /*#__PURE__*/react.forwardRef((props, ref) => {
     draggable: draggableConfig
   }), children));
 });
+if (false) {}
 /* harmony default export */ const tree_Tree = (Tree_Tree);
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/FolderOpenOutlined.js
 // This icon file is generated automatically.
