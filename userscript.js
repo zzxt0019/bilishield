@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673243361086
+// @version         1.1.1673243533000
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/9/2023, 1:49:21 PM
+// @description     bilibili屏蔽 更新时间: 1/9/2023, 1:52:13 PM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -48965,7 +48965,7 @@ function createBox(pageMap, root = {
     pageMap: pageMap
   }));
   return () => {
-    document.leave('#' + APP_ID, {
+    document.leave(`#${APP_ID}`, {
       fireOnAttributesModification: true,
       onceOnly: false,
       existing: false
@@ -48992,7 +48992,7 @@ function createDisplayStyle(type, document) {
     document.body.appendChild(element);
   }
   return () => {
-    document.leave('#' + DISPLAY_STYLE_ID, {
+    document.leave(`#${DISPLAY_STYLE_ID}`, {
       fireOnAttributesModification: true,
       onceOnly: false,
       existing: false
@@ -49091,9 +49091,9 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
   // 追加页面iframe内部屏蔽
   iframes(pageMap);
   // 油猴菜单展示/隐藏配置
-  GM_registerMenuCommand('配置', () => {
+  GM_registerMenuCommand('脚本配置', () => {
     var _a;
-    let main = document.querySelector('#' + APP_ID + ' div');
+    let main = document.querySelector(`#${APP_ID}>div`);
     main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
   });
 }))();
