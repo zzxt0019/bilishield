@@ -55,6 +55,14 @@ upperleft_card:
     innerSelector: img
     setting: bilibili_match
     attribute: alt
+slide_card:
+  page: bilibili_main
+  name: 比例首页 边策滑动图片 为你推荐
+  mainSelector: .van-slide .item
+  checker:
+    innerSelector: a p.title
+    innerHTML: true
+    setting: bilibili_match
 upperleft_card_adv:
   page: bilibili_main
   name: 比例首页 左边上角滑动图片
@@ -66,7 +74,7 @@ left_video_title:
   name: 比例首页 左边视频块 标题
   mainSelector: .video-card-common
   checker:
-    innerSelector: a.title
+    innerSelector: a[title]
     setting: bilibili_match
     attribute: title
 left_video_up:
@@ -169,3 +177,20 @@ number:
   mainSelector: span.number
   checker:
     always: true
+
+live_rank_up:
+  page: bilibili_main
+  name: 直播推荐-up
+  mainSelector: .live-rank-item
+  checker:
+    innerSelector: .txt
+    innerHTML: true
+    setting: username
+live_rank_match:
+  page: bilibili_main
+  name: 直播推荐-up
+  mainSelector: .live-rank-item
+  checker:
+    innerSelector: .txt
+    innerHTML: true
+    setting: bilibili_match
