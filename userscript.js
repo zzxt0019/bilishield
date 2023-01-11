@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673267313718
+// @version         1.1.1673462802849
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
-// @description     bilibili屏蔽 更新时间: 1/9/2023, 8:28:33 PM
+// @description     bilibili屏蔽 更新时间: 1/12/2023, 2:46:42 AM
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -15345,7 +15345,7 @@ var transform = {
 
 
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.1.3');
+/* harmony default export */ const version = ('5.1.4');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -18130,11 +18130,11 @@ function objectWithoutProperties_objectWithoutProperties(source, excluded) {
   }
   return target;
 }
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/Context.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/components/Context.js
 
 var IconContext = /*#__PURE__*/(0,react.createContext)({});
 /* harmony default export */ const Context = (IconContext);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/utils.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/utils.js
 
 
 
@@ -18208,7 +18208,7 @@ var useInsertStyles = function useInsertStyles() {
     });
   }, []);
 };
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/IconBase.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/components/IconBase.js
 
 
 var IconBase_excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
@@ -18269,7 +18269,7 @@ IconBase.displayName = 'IconReact';
 IconBase.getTwoToneColors = getTwoToneColors;
 IconBase.setTwoToneColors = setTwoToneColors;
 /* harmony default export */ const components_IconBase = (IconBase);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/twoTonePrimaryColor.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/components/twoTonePrimaryColor.js
 
 
 
@@ -18290,7 +18290,7 @@ function getTwoToneColor() {
   }
   return [colors.primaryColor, colors.secondaryColor];
 }
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/AntdIcon.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/components/AntdIcon.js
 
 
 
@@ -18351,7 +18351,7 @@ Icon.displayName = 'AntdIcon';
 Icon.getTwoToneColor = getTwoToneColor;
 Icon.setTwoToneColor = setTwoToneColor;
 /* harmony default export */ const AntdIcon = (Icon);
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/CloseOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/CloseOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -18371,7 +18371,7 @@ CloseOutlined_CloseOutlined.displayName = 'CloseOutlined';
 var EllipsisOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M176 511a56 56 0 10112 0 56 56 0 10-112 0zm280 0a56 56 0 10112 0 56 56 0 10-112 0zm280 0a56 56 0 10112 0 56 56 0 10-112 0z" } }] }, "name": "ellipsis", "theme": "outlined" };
 /* harmony default export */ const asn_EllipsisOutlined = (EllipsisOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EllipsisOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/EllipsisOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -18391,7 +18391,7 @@ EllipsisOutlined_EllipsisOutlined.displayName = 'EllipsisOutlined';
 var PlusOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "defs", "attrs": {}, "children": [{ "tag": "style", "attrs": {} }] }, { "tag": "path", "attrs": { "d": "M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8z" } }, { "tag": "path", "attrs": { "d": "M176 474h672q8 0 8 8v60q0 8-8 8H176q-8 0-8-8v-60q0-8 8-8z" } }] }, "name": "plus", "theme": "outlined" };
 /* harmony default export */ const asn_PlusOutlined = (PlusOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/PlusOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/PlusOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -30929,7 +30929,7 @@ const ButtonGroup = props => {
 var LoadingOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "0 0 1024 1024", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M988 548c-19.9 0-36-16.1-36-36 0-59.4-11.6-117-34.6-171.3a440.45 440.45 0 00-94.3-139.9 437.71 437.71 0 00-139.9-94.3C629 83.6 571.4 72 512 72c-19.9 0-36-16.1-36-36s16.1-36 36-36c69.1 0 136.2 13.5 199.3 40.3C772.3 66 827 103 874 150c47 47 83.9 101.8 109.7 162.7 26.7 63.1 40.2 130.2 40.2 199.3.1 19.9-16 36-35.9 36z" } }] }, "name": "loading", "theme": "outlined" };
 /* harmony default export */ const asn_LoadingOutlined = (LoadingOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/LoadingOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/LoadingOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -32161,7 +32161,7 @@ const SkeletonButton = props => {
 var DotChartOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M888 792H200V168c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v688c0 4.4 3.6 8 8 8h752c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM288 604a64 64 0 10128 0 64 64 0 10-128 0zm118-224a48 48 0 1096 0 48 48 0 10-96 0zm158 228a96 96 0 10192 0 96 96 0 10-192 0zm148-314a56 56 0 10112 0 56 56 0 10-112 0z" } }] }, "name": "dot-chart", "theme": "outlined" };
 /* harmony default export */ const asn_DotChartOutlined = (DotChartOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/DotChartOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/DotChartOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -33037,7 +33037,7 @@ if (false) {}
 var CheckOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474a32 32 0 00-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1.4-12.8-6.3-12.8z" } }] }, "name": "check", "theme": "outlined" };
 /* harmony default export */ const asn_CheckOutlined = (CheckOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/CheckOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/CheckOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -33057,7 +33057,7 @@ CheckOutlined_CheckOutlined.displayName = 'CheckOutlined';
 var CopyOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z" } }] }, "name": "copy", "theme": "outlined" };
 /* harmony default export */ const asn_CopyOutlined = (CopyOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/CopyOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/CopyOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -33077,7 +33077,7 @@ CopyOutlined_CopyOutlined.displayName = 'CopyOutlined';
 var EditOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M257.7 752c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9a9.96 9.96 0 000-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2a33.5 33.5 0 009.4 29.8c6.6 6.4 14.9 9.9 23.8 9.9zm67.4-174.4L687.8 215l73.3 73.3-362.7 362.6-88.9 15.7 15.6-89zM880 836H144c-17.7 0-32 14.3-32 32v36c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-36c0-17.7-14.3-32-32-32z" } }] }, "name": "edit", "theme": "outlined" };
 /* harmony default export */ const asn_EditOutlined = (EditOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EditOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/EditOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -34612,7 +34612,7 @@ tooltip_Tooltip._InternalPanelDoNotUseOrYouWillBeFired = PurePanel;
 var EnterOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M864 170h-60c-4.4 0-8 3.6-8 8v518H310v-73c0-6.7-7.8-10.5-13-6.3l-141.9 112a8 8 0 000 12.6l141.9 112c5.3 4.2 13 .4 13-6.3v-75h498c35.3 0 64-28.7 64-64V178c0-4.4-3.6-8-8-8z" } }] }, "name": "enter", "theme": "outlined" };
 /* harmony default export */ const asn_EnterOutlined = (EnterOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/EnterOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/EnterOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -38829,7 +38829,7 @@ const getMergedStatus = (contextStatus, customStatus) => customStatus || context
 var CloseCircleFilled = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm165.4 618.2l-66-.3L512 563.4l-99.3 118.4-66.1.3c-4.4 0-8-3.5-8-8 0-1.9.7-3.7 1.9-5.2l130.1-155L340.5 359a8.32 8.32 0 01-1.9-5.2c0-4.4 3.6-8 8-8l66.1.3L512 464.6l99.3-118.4 66-.3c4.4 0 8 3.5 8 8 0 1.9-.7 3.7-1.9 5.2L553.5 514l130 155c1.2 1.5 1.9 3.3 1.9 5.2 0 4.4-3.6 8-8 8z" } }] }, "name": "close-circle", "theme": "filled" };
 /* harmony default export */ const asn_CloseCircleFilled = (CloseCircleFilled);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/CloseCircleFilled.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/CloseCircleFilled.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -41802,6 +41802,479 @@ function PageView(props) {
     onClick: workClick
   }, working ? '停止' : '启动')))));
 }
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/Context.js
+
+var Context_IconContext = /*#__PURE__*/(0,react.createContext)({});
+/* harmony default export */ const components_Context = (Context_IconContext);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/node_modules/@ant-design/colors/es/generate.js
+
+var generate_hueStep = 2; // 色相阶梯
+
+var generate_saturationStep = 0.16; // 饱和度阶梯，浅色部分
+
+var generate_saturationStep2 = 0.05; // 饱和度阶梯，深色部分
+
+var generate_brightnessStep1 = 0.05; // 亮度阶梯，浅色部分
+
+var generate_brightnessStep2 = 0.15; // 亮度阶梯，深色部分
+
+var generate_lightColorCount = 5; // 浅色数量，主色上
+
+var generate_darkColorCount = 4; // 深色数量，主色下
+// 暗色主题颜色映射关系表
+
+var generate_darkColorMap = [{
+  index: 7,
+  opacity: 0.15
+}, {
+  index: 6,
+  opacity: 0.25
+}, {
+  index: 5,
+  opacity: 0.3
+}, {
+  index: 5,
+  opacity: 0.45
+}, {
+  index: 5,
+  opacity: 0.65
+}, {
+  index: 5,
+  opacity: 0.85
+}, {
+  index: 4,
+  opacity: 0.9
+}, {
+  index: 3,
+  opacity: 0.95
+}, {
+  index: 2,
+  opacity: 0.97
+}, {
+  index: 1,
+  opacity: 0.98
+}];
+
+// Wrapper function ported from TinyColor.prototype.toHsv
+// Keep it here because of `hsv.h * 360`
+function generate_toHsv(_ref) {
+  var r = _ref.r,
+      g = _ref.g,
+      b = _ref.b;
+  var hsv = rgbToHsv(r, g, b);
+  return {
+    h: hsv.h * 360,
+    s: hsv.s,
+    v: hsv.v
+  };
+} // Wrapper function ported from TinyColor.prototype.toHexString
+// Keep it here because of the prefix `#`
+
+
+function generate_toHex(_ref2) {
+  var r = _ref2.r,
+      g = _ref2.g,
+      b = _ref2.b;
+  return "#".concat(rgbToHex(r, g, b, false));
+} // Wrapper function ported from TinyColor.prototype.mix, not treeshakable.
+// Amount in range [0, 1]
+// Assume color1 & color2 has no alpha, since the following src code did so.
+
+
+function generate_mix(rgb1, rgb2, amount) {
+  var p = amount / 100;
+  var rgb = {
+    r: (rgb2.r - rgb1.r) * p + rgb1.r,
+    g: (rgb2.g - rgb1.g) * p + rgb1.g,
+    b: (rgb2.b - rgb1.b) * p + rgb1.b
+  };
+  return rgb;
+}
+
+function generate_getHue(hsv, i, light) {
+  var hue; // 根据色相不同，色相转向不同
+
+  if (Math.round(hsv.h) >= 60 && Math.round(hsv.h) <= 240) {
+    hue = light ? Math.round(hsv.h) - generate_hueStep * i : Math.round(hsv.h) + generate_hueStep * i;
+  } else {
+    hue = light ? Math.round(hsv.h) + generate_hueStep * i : Math.round(hsv.h) - generate_hueStep * i;
+  }
+
+  if (hue < 0) {
+    hue += 360;
+  } else if (hue >= 360) {
+    hue -= 360;
+  }
+
+  return hue;
+}
+
+function generate_getSaturation(hsv, i, light) {
+  // grey color don't change saturation
+  if (hsv.h === 0 && hsv.s === 0) {
+    return hsv.s;
+  }
+
+  var saturation;
+
+  if (light) {
+    saturation = hsv.s - generate_saturationStep * i;
+  } else if (i === generate_darkColorCount) {
+    saturation = hsv.s + generate_saturationStep;
+  } else {
+    saturation = hsv.s + generate_saturationStep2 * i;
+  } // 边界值修正
+
+
+  if (saturation > 1) {
+    saturation = 1;
+  } // 第一格的 s 限制在 0.06-0.1 之间
+
+
+  if (light && i === generate_lightColorCount && saturation > 0.1) {
+    saturation = 0.1;
+  }
+
+  if (saturation < 0.06) {
+    saturation = 0.06;
+  }
+
+  return Number(saturation.toFixed(2));
+}
+
+function generate_getValue(hsv, i, light) {
+  var value;
+
+  if (light) {
+    value = hsv.v + generate_brightnessStep1 * i;
+  } else {
+    value = hsv.v - generate_brightnessStep2 * i;
+  }
+
+  if (value > 1) {
+    value = 1;
+  }
+
+  return Number(value.toFixed(2));
+}
+
+function generate_generate(color) {
+  var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var patterns = [];
+  var pColor = inputToRGB(color);
+
+  for (var i = generate_lightColorCount; i > 0; i -= 1) {
+    var hsv = generate_toHsv(pColor);
+    var colorString = generate_toHex(inputToRGB({
+      h: generate_getHue(hsv, i, true),
+      s: generate_getSaturation(hsv, i, true),
+      v: generate_getValue(hsv, i, true)
+    }));
+    patterns.push(colorString);
+  }
+
+  patterns.push(generate_toHex(pColor));
+
+  for (var _i = 1; _i <= generate_darkColorCount; _i += 1) {
+    var _hsv = generate_toHsv(pColor);
+
+    var _colorString = generate_toHex(inputToRGB({
+      h: generate_getHue(_hsv, _i),
+      s: generate_getSaturation(_hsv, _i),
+      v: generate_getValue(_hsv, _i)
+    }));
+
+    patterns.push(_colorString);
+  } // dark theme patterns
+
+
+  if (opts.theme === 'dark') {
+    return generate_darkColorMap.map(function (_ref3) {
+      var index = _ref3.index,
+          opacity = _ref3.opacity;
+      var darkColorString = generate_toHex(generate_mix(inputToRGB(opts.backgroundColor || '#141414'), inputToRGB(patterns[index]), opacity * 100));
+      return darkColorString;
+    });
+  }
+
+  return patterns;
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/node_modules/@ant-design/colors/es/index.js
+
+var es_presetPrimaryColors = {
+  red: '#F5222D',
+  volcano: '#FA541C',
+  orange: '#FA8C16',
+  gold: '#FAAD14',
+  yellow: '#FADB14',
+  lime: '#A0D911',
+  green: '#52C41A',
+  cyan: '#13C2C2',
+  blue: '#1677FF',
+  geekblue: '#2F54EB',
+  purple: '#722ED1',
+  magenta: '#EB2F96',
+  grey: '#666666'
+};
+var es_presetPalettes = {};
+var es_presetDarkPalettes = {};
+Object.keys(es_presetPrimaryColors).forEach(function (key) {
+  es_presetPalettes[key] = generate_generate(es_presetPrimaryColors[key]);
+  es_presetPalettes[key].primary = es_presetPalettes[key][5]; // dark presetPalettes
+
+  es_presetDarkPalettes[key] = generate_generate(es_presetPrimaryColors[key], {
+    theme: 'dark',
+    backgroundColor: '#141414'
+  });
+  es_presetDarkPalettes[key].primary = es_presetDarkPalettes[key][5];
+});
+var es_red = es_presetPalettes.red;
+var es_volcano = es_presetPalettes.volcano;
+var es_gold = es_presetPalettes.gold;
+var es_orange = es_presetPalettes.orange;
+var es_yellow = es_presetPalettes.yellow;
+var es_lime = es_presetPalettes.lime;
+var es_green = es_presetPalettes.green;
+var es_cyan = es_presetPalettes.cyan;
+var es_blue = es_presetPalettes.blue;
+var es_geekblue = es_presetPalettes.geekblue;
+var es_purple = es_presetPalettes.purple;
+var es_magenta = es_presetPalettes.magenta;
+var es_grey = es_presetPalettes.grey;
+var gray = es_presetPalettes.grey;
+
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/utils.js
+
+
+
+
+
+
+
+function es_utils_warning(valid, message) {
+  es_warning(valid, "[@ant-design/icons] ".concat(message));
+}
+function utils_isIconDefinition(target) {
+  return typeof_typeof(target) === 'object' && typeof target.name === 'string' && typeof target.theme === 'string' && (typeof_typeof(target.icon) === 'object' || typeof target.icon === 'function');
+}
+function utils_normalizeAttrs() {
+  var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  return Object.keys(attrs).reduce(function (acc, key) {
+    var val = attrs[key];
+    switch (key) {
+      case 'class':
+        acc.className = val;
+        delete acc.class;
+        break;
+      default:
+        acc[key] = val;
+    }
+    return acc;
+  }, {});
+}
+function es_utils_generate(node, key, rootProps) {
+  if (!rootProps) {
+    return /*#__PURE__*/react.createElement(node.tag, _objectSpread2({
+      key: key
+    }, utils_normalizeAttrs(node.attrs)), (node.children || []).map(function (child, index) {
+      return es_utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
+    }));
+  }
+  return /*#__PURE__*/react.createElement(node.tag, _objectSpread2(_objectSpread2({
+    key: key
+  }, utils_normalizeAttrs(node.attrs)), rootProps), (node.children || []).map(function (child, index) {
+    return es_utils_generate(child, "".concat(key, "-").concat(node.tag, "-").concat(index));
+  }));
+}
+function utils_getSecondaryColor(primaryColor) {
+  // choose the second color
+  return generate_generate(primaryColor)[0];
+}
+function utils_normalizeTwoToneColors(twoToneColor) {
+  if (!twoToneColor) {
+    return [];
+  }
+  return Array.isArray(twoToneColor) ? twoToneColor : [twoToneColor];
+}
+// These props make sure that the SVG behaviours like general text.
+// Reference: https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
+var utils_svgBaseProps = {
+  width: '1em',
+  height: '1em',
+  fill: 'currentColor',
+  'aria-hidden': 'true',
+  focusable: 'false'
+};
+var utils_iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  font-style: normal;\n  line-height: 0;\n  text-align: center;\n  text-transform: none;\n  vertical-align: -0.125em;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\n.anticon > * {\n  line-height: 1;\n}\n\n.anticon svg {\n  display: inline-block;\n}\n\n.anticon::before {\n  display: none;\n}\n\n.anticon .anticon-icon {\n  display: block;\n}\n\n.anticon[tabindex] {\n  cursor: pointer;\n}\n\n.anticon-spin::before,\n.anticon-spin {\n  display: inline-block;\n  -webkit-animation: loadingCircle 1s infinite linear;\n  animation: loadingCircle 1s infinite linear;\n}\n\n@-webkit-keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n\n@keyframes loadingCircle {\n  100% {\n    -webkit-transform: rotate(360deg);\n    transform: rotate(360deg);\n  }\n}\n";
+var utils_useInsertStyles = function useInsertStyles() {
+  var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : utils_iconStyles;
+  var _useContext = (0,react.useContext)(components_Context),
+    csp = _useContext.csp;
+  (0,react.useEffect)(function () {
+    updateCSS(styleStr, '@ant-design-icons', {
+      prepend: true,
+      csp: csp
+    });
+  }, []);
+};
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/IconBase.js
+
+
+var components_IconBase_excluded = ["icon", "className", "onClick", "style", "primaryColor", "secondaryColor"];
+
+var IconBase_twoToneColorPalette = {
+  primaryColor: '#333',
+  secondaryColor: '#E6E6E6',
+  calculated: false
+};
+function IconBase_setTwoToneColors(_ref) {
+  var primaryColor = _ref.primaryColor,
+    secondaryColor = _ref.secondaryColor;
+  IconBase_twoToneColorPalette.primaryColor = primaryColor;
+  IconBase_twoToneColorPalette.secondaryColor = secondaryColor || utils_getSecondaryColor(primaryColor);
+  IconBase_twoToneColorPalette.calculated = !!secondaryColor;
+}
+function IconBase_getTwoToneColors() {
+  return _objectSpread2({}, IconBase_twoToneColorPalette);
+}
+var IconBase_IconBase = function IconBase(props) {
+  var icon = props.icon,
+    className = props.className,
+    onClick = props.onClick,
+    style = props.style,
+    primaryColor = props.primaryColor,
+    secondaryColor = props.secondaryColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, components_IconBase_excluded);
+  var colors = IconBase_twoToneColorPalette;
+  if (primaryColor) {
+    colors = {
+      primaryColor: primaryColor,
+      secondaryColor: secondaryColor || utils_getSecondaryColor(primaryColor)
+    };
+  }
+  utils_useInsertStyles();
+  es_utils_warning(utils_isIconDefinition(icon), "icon should be icon definiton, but got ".concat(icon));
+  if (!utils_isIconDefinition(icon)) {
+    return null;
+  }
+  var target = icon;
+  if (target && typeof target.icon === 'function') {
+    target = _objectSpread2(_objectSpread2({}, target), {}, {
+      icon: target.icon(colors.primaryColor, colors.secondaryColor)
+    });
+  }
+  return es_utils_generate(target.icon, "svg-".concat(target.name), _objectSpread2({
+    className: className,
+    onClick: onClick,
+    style: style,
+    'data-icon': target.name,
+    width: '1em',
+    height: '1em',
+    fill: 'currentColor',
+    'aria-hidden': 'true'
+  }, restProps));
+};
+IconBase_IconBase.displayName = 'IconReact';
+IconBase_IconBase.getTwoToneColors = IconBase_getTwoToneColors;
+IconBase_IconBase.setTwoToneColors = IconBase_setTwoToneColors;
+/* harmony default export */ const es_components_IconBase = (IconBase_IconBase);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/twoTonePrimaryColor.js
+
+
+
+function twoTonePrimaryColor_setTwoToneColor(twoToneColor) {
+  var _normalizeTwoToneColo = utils_normalizeTwoToneColors(twoToneColor),
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
+  return es_components_IconBase.setTwoToneColors({
+    primaryColor: primaryColor,
+    secondaryColor: secondaryColor
+  });
+}
+function twoTonePrimaryColor_getTwoToneColor() {
+  var colors = es_components_IconBase.getTwoToneColors();
+  if (!colors.calculated) {
+    return colors.primaryColor;
+  }
+  return [colors.primaryColor, colors.secondaryColor];
+}
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/components/AntdIcon.js
+
+
+
+
+var components_AntdIcon_excluded = ["className", "icon", "spin", "rotate", "tabIndex", "onClick", "twoToneColor"];
+
+
+
+
+
+
+// Initial setting
+// should move it to antd main repo?
+twoTonePrimaryColor_setTwoToneColor('#1890ff');
+var AntdIcon_Icon = /*#__PURE__*/react.forwardRef(function (props, ref) {
+  var _classNames;
+  var className = props.className,
+    icon = props.icon,
+    spin = props.spin,
+    rotate = props.rotate,
+    tabIndex = props.tabIndex,
+    onClick = props.onClick,
+    twoToneColor = props.twoToneColor,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, components_AntdIcon_excluded);
+  var _React$useContext = react.useContext(components_Context),
+    _React$useContext$pre = _React$useContext.prefixCls,
+    prefixCls = _React$useContext$pre === void 0 ? 'anticon' : _React$useContext$pre,
+    rootClassName = _React$useContext.rootClassName;
+  var classString = classnames_default()(rootClassName, prefixCls, (_classNames = {}, _defineProperty(_classNames, "".concat(prefixCls, "-").concat(icon.name), !!icon.name), _defineProperty(_classNames, "".concat(prefixCls, "-spin"), !!spin || icon.name === 'loading'), _classNames), className);
+  var iconTabIndex = tabIndex;
+  if (iconTabIndex === undefined && onClick) {
+    iconTabIndex = -1;
+  }
+  var svgStyle = rotate ? {
+    msTransform: "rotate(".concat(rotate, "deg)"),
+    transform: "rotate(".concat(rotate, "deg)")
+  } : undefined;
+  var _normalizeTwoToneColo = utils_normalizeTwoToneColors(twoToneColor),
+    _normalizeTwoToneColo2 = slicedToArray_slicedToArray(_normalizeTwoToneColo, 2),
+    primaryColor = _normalizeTwoToneColo2[0],
+    secondaryColor = _normalizeTwoToneColo2[1];
+  return /*#__PURE__*/react.createElement("span", _objectSpread2(_objectSpread2({
+    role: "img",
+    "aria-label": icon.name
+  }, restProps), {}, {
+    ref: ref,
+    tabIndex: iconTabIndex,
+    onClick: onClick,
+    className: classString
+  }), /*#__PURE__*/react.createElement(es_components_IconBase, {
+    icon: icon,
+    primaryColor: primaryColor,
+    secondaryColor: secondaryColor,
+    style: svgStyle
+  }));
+});
+AntdIcon_Icon.displayName = 'AntdIcon';
+AntdIcon_Icon.getTwoToneColor = twoTonePrimaryColor_getTwoToneColor;
+AntdIcon_Icon.setTwoToneColor = twoTonePrimaryColor_setTwoToneColor;
+/* harmony default export */ const components_AntdIcon = (AntdIcon_Icon);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/PlusOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var icons_PlusOutlined_PlusOutlined = function PlusOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(components_AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_PlusOutlined
+  }));
+};
+icons_PlusOutlined_PlusOutlined.displayName = 'PlusOutlined';
+/* harmony default export */ const es_icons_PlusOutlined = (/*#__PURE__*/react.forwardRef(icons_PlusOutlined_PlusOutlined));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/EyeOutlined.js
 // This icon file is generated automatically.
 var EyeOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z" } }] }, "name": "eye", "theme": "outlined" };
@@ -41815,7 +42288,7 @@ var EyeOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896
 
 
 var EyeOutlined_EyeOutlined = function EyeOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+  return /*#__PURE__*/react.createElement(components_AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_EyeOutlined
   }));
@@ -41835,7 +42308,7 @@ var EyeInvisibleOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 6
 
 
 var EyeInvisibleOutlined_EyeInvisibleOutlined = function EyeInvisibleOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+  return /*#__PURE__*/react.createElement(components_AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_EyeInvisibleOutlined
   }));
@@ -42160,6 +42633,36 @@ const Group = props => {
   }, props.children)));
 };
 /* harmony default export */ const input_Group = (Group);
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/EyeInvisibleOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var icons_EyeInvisibleOutlined_EyeInvisibleOutlined = function EyeInvisibleOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_EyeInvisibleOutlined
+  }));
+};
+icons_EyeInvisibleOutlined_EyeInvisibleOutlined.displayName = 'EyeInvisibleOutlined';
+/* harmony default export */ const es_icons_EyeInvisibleOutlined = (/*#__PURE__*/react.forwardRef(icons_EyeInvisibleOutlined_EyeInvisibleOutlined));
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/EyeOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var icons_EyeOutlined_EyeOutlined = function EyeOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_EyeOutlined
+  }));
+};
+icons_EyeOutlined_EyeOutlined.displayName = 'EyeOutlined';
+/* harmony default export */ const es_icons_EyeOutlined = (/*#__PURE__*/react.forwardRef(icons_EyeOutlined_EyeOutlined));
 ;// CONCATENATED MODULE: ./node_modules/antd/es/input/Password.js
 var Password_rest = undefined && undefined.__rest || function (s, e) {
   var t = {};
@@ -42179,7 +42682,7 @@ var Password_rest = undefined && undefined.__rest || function (s, e) {
 
 
 
-const defaultIconRender = visible => visible ? /*#__PURE__*/react.createElement(icons_EyeOutlined, null) : /*#__PURE__*/react.createElement(icons_EyeInvisibleOutlined, null);
+const defaultIconRender = visible => visible ? /*#__PURE__*/react.createElement(es_icons_EyeOutlined, null) : /*#__PURE__*/react.createElement(es_icons_EyeInvisibleOutlined, null);
 const ActionMap = {
   click: 'onClick',
   hover: 'onMouseOver'
@@ -42277,7 +42780,7 @@ if (false) {}
 var SearchOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z" } }] }, "name": "search", "theme": "outlined" };
 /* harmony default export */ const asn_SearchOutlined = (SearchOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/SearchOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/SearchOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -42513,7 +43016,7 @@ function SettingView(props) {
     span: 3
   }, react.createElement(es_button, {
     block: true,
-    icon: react.createElement(icons_PlusOutlined, null),
+    icon: react.createElement(es_icons_PlusOutlined, null),
     // 输入框为空 或者 输入框与已有配置相同  disabled
     disabled: !inputValue || settings.filter(setting => setting === inputValue).length > 0,
     onClick: () => {
@@ -42546,7 +43049,7 @@ var SyncOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 89
 
 
 var SyncOutlined_SyncOutlined = function SyncOutlined(props, ref) {
-  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+  return /*#__PURE__*/react.createElement(components_AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
     ref: ref,
     icon: asn_SyncOutlined
   }));
@@ -46924,7 +47427,7 @@ const DefaultRenderEmpty = props => {
 var DownOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7z" } }] }, "name": "down", "theme": "outlined" };
 /* harmony default export */ const asn_DownOutlined = (DownOutlined);
 
-;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/DownOutlined.js
+;// CONCATENATED MODULE: ./node_modules/antd/node_modules/@ant-design/icons/es/icons/DownOutlined.js
 
 // GENERATE BY ./scripts/generate.ts
 // DON NOT EDIT IT MANUALLY
@@ -48733,7 +49236,7 @@ function UidUsernameSearchView(props) {
     },
     block: true,
     disabled: !uid || !username,
-    icon: react.createElement(icons_PlusOutlined, null),
+    icon: react.createElement(es_icons_PlusOutlined, null),
     onMouseUp: event => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
       if (event.button === 2) {
         // 单击右键
