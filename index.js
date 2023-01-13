@@ -13776,10 +13776,10 @@ const es_tree_Tree = tree_Tree;
 es_tree_Tree.DirectoryTree = tree_DirectoryTree;
 es_tree_Tree.TreeNode = es_TreeNode;
 /* harmony default export */ const tree = (es_tree_Tree);
-;// CONCATENATED MODULE: ./src/gh-pages/App.tsx
+;// CONCATENATED MODULE: ./src/gh-pages/GhPagesApp.tsx
 
 
-function App() {
+function GhPagesApp() {
   const [treeData, setTreeData] = react.useState([]);
   const [iframe, setIframe] = react.useState('');
   const read = (value, key, url) => {
@@ -13832,7 +13832,7 @@ function App() {
 
 
 const root = client.createRoot(document.getElementById('root'));
-root.render(react.createElement(react.Fragment, null, react.createElement(App, null)));
+root.render(react.createElement(react.Fragment, null, react.createElement(GhPagesApp, null)));
 })();
 
 /******/ })()
