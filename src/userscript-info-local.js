@@ -5,7 +5,6 @@
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/data/img/Elysia.png
 // @description     bilibili屏蔽 本地开发环境
-// @supportURL      https://github.com/zzxt0019/bilishield
 //${zzxt0019}
 
 // @match           http*://**/**
