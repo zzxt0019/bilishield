@@ -17,15 +17,15 @@ export function createBox(pageMap: Map<string, Page>, root: { root?: Root } = {r
         page.arrive(window);
     }
     let div: Element
-    if (!document.getElementById(MainStatic.APP_ID)) {
+    if (!document.getElementById(MainStatic.AppId)) {
         div = document.createElement('div')
-        div.setAttribute("id", MainStatic.APP_ID);
+        div.setAttribute("id", MainStatic.AppId);
         document.body.appendChild(div);
     }
-    root.root = createRoot(document.getElementById(MainStatic.APP_ID) as Element)
+    root.root = createRoot(document.getElementById(MainStatic.AppId) as Element)
     root.root.render(<BoxView pageMap={pageMap}/>)
     return () => {
-        document.leave(`#${MainStatic.APP_ID}`, {
+        document.leave(`#${MainStatic.AppId}`, {
             fireOnAttributesModification: true,
             onceOnly: false,
             existing: false

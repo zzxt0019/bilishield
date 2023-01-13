@@ -26,8 +26,8 @@ function dateFormat(date: Date, formatter: string = 'yyyy-MM-dd HH:mm:ss.SSS') {
 
 const banner = fs.readFileSync(path.resolve(__dirname, './src/userscript-info.js'), 'utf-8')
     .replace('${timestamp}', String(new Date().getTime()))
-    .replace('${date}', String(dateFormat(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000)))
-        .replace(/(==\/UserScript==)[\s\S]+$/, '$1'));
+    .replace('${date}', String(dateFormat(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
+    .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
 
 const config: Configuration = {
     resolve: {

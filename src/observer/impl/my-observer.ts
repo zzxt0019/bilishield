@@ -1,6 +1,6 @@
 import {Observer} from "@/observer/observer";
 import {DoRuleN} from "@/config/rule/do-rule";
-import {DISPLAY_CLASS} from "@/main-static";
+import {DisplayClass} from "@/main-static";
 
 export class MyObserver extends Observer {
     private observerMap: Map<string, MutationObserver> = new Map()
@@ -18,7 +18,7 @@ export class MyObserver extends Observer {
     }
 
     private handle(rule: DoRuleN, window: Window) {
-        let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DISPLAY_CLASS + ')');
+        let mains = window.document.querySelectorAll(rule.mainSelector + ':not(.' + DisplayClass + ')');
         for (let i = 0; i < mains.length; i++) {
             rule.display(mains[i])
         }

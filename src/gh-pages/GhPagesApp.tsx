@@ -1,7 +1,7 @@
 import React from "react";
 import {Tree} from "antd";
 
-export function App() {
+export function GhPagesApp() {
     const [treeData, setTreeData] = React.useState<any[]>([]);
     const [iframe, setIframe] = React.useState('');
     const read = (value: any, key: string, url: string) => {

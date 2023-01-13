@@ -23,7 +23,7 @@ import {globalInit} from "@/init/global";
     iframes(pageMap);
     // 油猴菜单展示/隐藏配置
     GM_registerMenuCommand('脚本配置', () => {
-        let main = document.querySelector(`#${MainStatic.APP_ID}>div`) as HTMLDivElement;
+        let main = document.querySelector(`#${MainStatic.AppId}>div`) as HTMLDivElement;
         main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none');
     });
 })();

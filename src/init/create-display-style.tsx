@@ -7,21 +7,21 @@ import * as MainStatic from "@/main-static";
  * @param document
  */
 export function createDisplayStyle(type: 'hide' | 'debug', document: Document) {
-    if (!document.getElementById(MainStatic.DISPLAY_STYLE_ID)) {
+    if (!document.getElementById(MainStatic.DisplayStyleId)) {
         let element = document.createElement('style')
-        element.setAttribute('id', MainStatic.DISPLAY_STYLE_ID)
+        element.setAttribute('id', MainStatic.DisplayStyleId)
         element.setAttribute('type', 'text/css')
-        element.setAttribute('displayType', type)
-        element.innerHTML = MainStatic.CSS_INNER_HTML[type]
+        element.setAttribute(MainStatic.DisplayStyleAttribute, type)
+        element.innerHTML = MainStatic.CssInnerHtml[type]
         document.body.appendChild(element)
     }
     return () => {
-        document.leave(`#${MainStatic.DISPLAY_STYLE_ID}`, {
+        document.leave(`#${MainStatic.DisplayStyleId}`, {
             fireOnAttributesModification: true,
             onceOnly: false,
             existing: false
         }, function () {
-            createDisplayStyle((this.getAttribute('displayType') ?? 'hide') as 'hide' | 'debug', document)
+            createDisplayStyle((this.getAttribute(MainStatic.DisplayStyleAttribute) ?? 'hide') as 'hide' | 'debug', document)
         })
     }
 }

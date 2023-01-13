@@ -1,10 +1,10 @@
 import React from "react";
 import {Button, Card, Tooltip} from "antd";
-import {CSS_INNER_HTML, DISPLAY_STYLE_ID} from "@/main-static";
+import * as MainStatic from "@/main-static";
 
 export function DisplayTypeView() {
     const [displayType, setDisplayType] = React.useState(
-        document.getElementById(DISPLAY_STYLE_ID)?.getAttribute('displayType') as string
+        document.getElementById(MainStatic.DisplayStyleId)?.getAttribute(MainStatic.DisplayStyleAttribute) as string
     )
     return <>
         <Card style={{height: '100%'}} bodyStyle={{display: 'flex', alignItems: 'center', height: '100%'}}>
@@ -13,13 +13,13 @@ export function DisplayTypeView() {
                 <Button style={{
                     width: '100px'
                 }} onClick={() => {
-                    let element: HTMLElement = document.getElementById(DISPLAY_STYLE_ID) as HTMLElement;
-                    const displayType = element.getAttribute('displayType') === 'hide' ? 'debug' : 'hide';
-                    element.setAttribute('displayType', displayType);
-                    element.innerHTML = CSS_INNER_HTML[displayType];
+                    let element: HTMLElement = document.getElementById(MainStatic.DisplayStyleId) as HTMLElement;
+                    const displayType = element.getAttribute(MainStatic.DisplayStyleAttribute) === 'hide' ? 'debug' : 'hide';
+                    element.setAttribute(MainStatic.DisplayStyleAttribute, displayType);
+                    element.innerHTML = MainStatic.CssInnerHtml[displayType];
                     for (let i = 0; i < window.frames.length; i++) {
                         try {
-                            (window.frames[i].document.getElementById(DISPLAY_STYLE_ID) as Element).innerHTML = CSS_INNER_HTML[displayType];
+                            (window.frames[i].document.getElementById(MainStatic.DisplayStyleId) as Element).innerHTML = MainStatic.CssInnerHtml[displayType];
                         } catch (ignore) {
                         }
                     }

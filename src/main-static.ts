@@ -1,7 +1,8 @@
-export const APP_ID: string = 'zzxt0019app'
-export const DISPLAY_CLASS: string = 'zzxt0019class'
-export const DISPLAY_STYLE_ID: string = 'zzxt0019style'
-export const CSS_INNER_HTML: { hide: string, debug: string } = {
-    hide: '.zzxt0019class { display: none !important; }',
-    debug: '.zzxt0019class { background-color: yellow !important; border: 5px groove yellow; }'
+export const AppId: string = 'zzxt0019-bilishield-app'
+export const DisplayClass: string = 'zzxt0019-bilishield-class'
+export const DisplayStyleId: string = 'zzxt0019-bilishield-style'
+export const DisplayStyleAttribute: string = 'zzxt0019-bilishield-display'
+export const CssInnerHtml: { hide: string, debug: string } = {
+    hide: `.${DisplayClass} { display: none !important; }`,
+    debug: `.${DisplayClass} { background-color: yellow !important; border: 5px groove yellow; }`
 }
