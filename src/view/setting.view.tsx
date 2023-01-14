@@ -30,6 +30,7 @@ export function SettingView(props: {
                          Settings.addSettingValue(props.setting.key + '.hide', (e.target as any).textContent);
                          updateHideSettings();
                      }}
+                     onAuxClick={() => setInputValue(setting)}
                      onClose={() => {
                          Settings.delSettingValue(props.setting, setting)
                          updateSettings()
@@ -43,6 +44,7 @@ export function SettingView(props: {
                          Settings.delSettingValue(props.setting.key + '.hide', setting);
                          updateHideSettings();
                      }}
+                     onAuxClick={() => setInputValue(setting)}
                      onClose={() => {
                          Settings.delSettingValue(props.setting, setting)
                          updateSettings()

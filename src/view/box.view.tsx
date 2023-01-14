@@ -74,11 +74,8 @@ export function BoxView(props: {
                     })]}>
                     </Tabs>
                     <Row>
-                        <Col span={16}>
-                            <div style={{fontSize: 8, color: 'white'}}>
-                                {'version: ' + GM_info.script.version}
-                            </div>
-                        </Col>
+                        <Col span={8}></Col>
+                        <Col span={8}></Col>
                         <Col span={8}>
                             <Button block
                                     onClick={() => {

@@ -4,7 +4,7 @@ import {PlusOutlined} from "@ant-design/icons";
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 
 export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
-    const {commit} = props;
+    const {commit, update} = props;
     const uu: UidUsername = React.useState(new UidUsername())[0];
     const [uid, setUid] = React.useState('');
     const [username, setUsername] = React.useState<string | undefined>(undefined);
@@ -15,6 +15,11 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
         let username: string | undefined = await uu.uid2username(uid);
         username = username === '' ? undefined : username;
         return username;
+    }
+    update.uid = (uid: string) => {
+        setUid(uid);
+        uid2username(String(uid)).then(setUsername);
+        setSearchType('username2uid');
     }
     return <>
         <Col span={18}>
@@ -98,25 +103,22 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                 block
                 disabled={!uid || !username}
                 icon={<PlusOutlined/>}
-                onMouseUp={async (event) => {
-                    if (event.button === 2) {
-                        // 单击右键
-                        switch (searchType) {
-                            case 'username2uid':  // 清空
-                                setUid('');
-                                setUsername(undefined);
-                                setUserInfos([]);
-                                setUserInfoEnd(false);
-                                break;
-                            case 'uid2username':  // 取消准备
-                                setSearchType('username2uid');
-                                uu.username2infos(username ?? '').then(setUserInfos);
-                                setUserInfoEnd(false);
-                                break;
-                        }
+                onAuxClick={() => {
+                    switch (searchType) {
+                        case 'username2uid':  // 清空
+                            setUid('');
+                            setUsername(undefined);
+                            setUserInfos([]);
+                            setUserInfoEnd(false);
+                            break;
+                        case 'uid2username':  // 取消准备
+                            setSearchType('username2uid');
+                            uu.username2infos(username ?? '').then(setUserInfos);
+                            setUserInfoEnd(false);
+                            break;
                     }
                 }}
-                onClick={async () => {
+                onClick={() => {
                     if (uid) {  // 有输入uid再处理
                         switch (searchType) {
                             case 'username2uid':  // 准备
@@ -137,5 +139,6 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
 }
 
 export interface UidUsernameSearchViewProps {
+    update: { uid: (uid: string) => void };
     commit: (uid: string) => void;
 }

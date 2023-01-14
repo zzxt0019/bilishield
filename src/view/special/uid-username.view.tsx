@@ -13,6 +13,10 @@ export function UidUsernameView(props: {
     const [settings, setSettings] = React.useState<{ uid: string, username: string, }[]>([]);
     const [hide, setHide] = React.useState(true);  // 是否显示隐藏的tag标签
     const [hideSettings, setHideSettings] = React.useState<string[]>([]);  // 隐藏的uid
+    const updateSearchView: { uid: (uid: string) => void } = {
+        uid: () => {
+        }
+    }
     /**
      * 更新配置展示
      */
@@ -50,6 +54,9 @@ export function UidUsernameView(props: {
                              Settings.addSettingValue('uid.hide', item.uid);
                              updateHideSettings();
                          }}
+                         onAuxClick={() => {
+                             updateSearchView.uid(item.uid);
+                         }}
                          onClose={() => {
                              // 删除, 删除uid
                              uu.del('uid')(item.uid)
@@ -69,6 +76,9 @@ export function UidUsernameView(props: {
                              Settings.delSettingValue('uid.hide', item.uid);
                              updateHideSettings();
                          }}
+                         onAuxClick={() => {
+                             updateSearchView.uid(item.uid);
+                         }}
                          onClose={() => {
                              // 删除, 删除uid和uid.hide
                              uu.del('uid')(item.uid);
@@ -81,7 +91,7 @@ export function UidUsernameView(props: {
             )}
         </Card>
         <Row>
-            <UidUsernameSearchView commit={uid => {
+            <UidUsernameSearchView update={updateSearchView} commit={uid => {
                 uu.add('uid')(uid);
                 updateSettings();
                 updateBox();
