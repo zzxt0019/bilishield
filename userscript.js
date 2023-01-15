@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673586159827
+// @version         1.1.1673757768434
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
 // @updateURL       https://zzxt0019.github.io/bilishield/userscript.min.js
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
 // @supportURL      https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-13 13:02:39.827
+// @homepage        https://github.com/zzxt0019/bilishield
+// @description     bilibili屏蔽 更新时间: 2023-01-15 12:42:48.434
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -43353,6 +43354,7 @@ function SettingView(props) {
       Settings.addSettingValue(props.setting.key + '.hide', e.target.textContent);
       updateHideSettings();
     },
+    onAuxClick: () => setInputValue(setting),
     onClose: () => {
       Settings.delSettingValue(props.setting, setting);
       updateSettings();
@@ -43369,6 +43371,7 @@ function SettingView(props) {
       Settings.delSettingValue(props.setting.key + '.hide', setting);
       updateHideSettings();
     },
+    onAuxClick: () => setInputValue(setting),
     onClose: () => {
       Settings.delSettingValue(props.setting, setting);
       updateSettings();
@@ -49139,7 +49142,8 @@ var uid_username_search_view_awaiter = undefined && undefined.__awaiter || funct
 
 function UidUsernameSearchView(props) {
   const {
-    commit
+    commit,
+    update
   } = props;
   const uu = react.useState(new UidUsername())[0];
   const [uid, setUid] = react.useState('');
@@ -49152,6 +49156,11 @@ function UidUsernameSearchView(props) {
     username = username === '' ? undefined : username;
     return username;
   });
+  update.uid = uid => {
+    setUid(uid);
+    uid2username(String(uid)).then(setUsername);
+    setSearchType('username2uid');
+  };
   return react.createElement(react.Fragment, null, react.createElement(es_col, {
     span: 18
   }, react.createElement(es_row, null, react.createElement(input, {
@@ -49239,27 +49248,24 @@ function UidUsernameSearchView(props) {
     block: true,
     disabled: !uid || !username,
     icon: react.createElement(es_icons_PlusOutlined, null),
-    onMouseUp: event => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
-      if (event.button === 2) {
-        // 单击右键
-        switch (searchType) {
-          case 'username2uid':
-            // 清空
-            setUid('');
-            setUsername(undefined);
-            setUserInfos([]);
-            setUserInfoEnd(false);
-            break;
-          case 'uid2username':
-            // 取消准备
-            setSearchType('username2uid');
-            uu.username2infos(username !== null && username !== void 0 ? username : '').then(setUserInfos);
-            setUserInfoEnd(false);
-            break;
-        }
+    onAuxClick: () => {
+      switch (searchType) {
+        case 'username2uid':
+          // 清空
+          setUid('');
+          setUsername(undefined);
+          setUserInfos([]);
+          setUserInfoEnd(false);
+          break;
+        case 'uid2username':
+          // 取消准备
+          setSearchType('username2uid');
+          uu.username2infos(username !== null && username !== void 0 ? username : '').then(setUserInfos);
+          setUserInfoEnd(false);
+          break;
       }
-    }),
-    onClick: () => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
+    },
+    onClick: () => {
       if (uid) {
         // 有输入uid再处理
         switch (searchType) {
@@ -49277,7 +49283,7 @@ function UidUsernameSearchView(props) {
             break;
         }
       }
-    })
+    }
   })));
 }
 ;// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx
@@ -49322,6 +49328,9 @@ function UidUsernameView(props) {
   const [settings, setSettings] = react.useState([]);
   const [hide, setHide] = react.useState(true); // 是否显示隐藏的tag标签
   const [hideSettings, setHideSettings] = react.useState([]); // 隐藏的uid
+  const updateSearchView = {
+    uid: () => {}
+  };
   /**
    * 更新配置展示
    */
@@ -49366,6 +49375,9 @@ function UidUsernameView(props) {
       Settings.addSettingValue('uid.hide', item.uid);
       updateHideSettings();
     },
+    onAuxClick: () => {
+      updateSearchView.uid(item.uid);
+    },
     onClose: () => {
       // 删除, 删除uid
       uu.del('uid')(item.uid);
@@ -49391,6 +49403,9 @@ function UidUsernameView(props) {
       Settings.delSettingValue('uid.hide', item.uid);
       updateHideSettings();
     },
+    onAuxClick: () => {
+      updateSearchView.uid(item.uid);
+    },
     onClose: () => {
       // 删除, 删除uid和uid.hide
       uu.del('uid')(item.uid);
@@ -49401,6 +49416,7 @@ function UidUsernameView(props) {
     },
     key: item.username
   }, item.username)))), react.createElement(es_row, null, react.createElement(UidUsernameSearchView, {
+    update: updateSearchView,
     commit: uid => {
       uu.add('uid')(uid);
       updateSettings();
@@ -49555,13 +49571,10 @@ function BoxView(props) {
       };
     })]
   }), react.createElement(es_row, null, react.createElement(es_col, {
-    span: 16
-  }, react.createElement("div", {
-    style: {
-      fontSize: 8,
-      color: 'white'
-    }
-  }, 'version: ' + GM_info.script.version)), react.createElement(es_col, {
+    span: 8
+  }), react.createElement(es_col, {
+    span: 8
+  }), react.createElement(es_col, {
     span: 8
   }, react.createElement(es_button, {
     block: true,
