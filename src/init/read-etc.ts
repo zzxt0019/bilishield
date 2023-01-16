@@ -18,8 +18,8 @@ export function readEtc() {
     Object.keys(ruleData).forEach(ruleKey => {
         let rule0 = ruleData[ruleKey]
         rule0.key = ruleKey
-        if (rule0.setting) {
-            rule0.setting = Settings.getSystemSettings().get(rule0.setting)
+        if (rule0.checker?.setting) {
+            rule0.checker.setting = Settings.getSystemSettings().get(rule0.checker.setting);
         }
         pageMap.get(rule0.page)?.insert(new Rule(rule0))
     })

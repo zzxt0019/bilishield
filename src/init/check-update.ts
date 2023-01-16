@@ -35,8 +35,12 @@ export async function checkVersion() {
         let data: any = {page: {}, rule: {}, setting: {}};
         Object.entries(yamlJson).forEach(([key, value]) => {
             Object.keys(value as any).forEach(fileName => {
-                data[key] = {...data[key], ...yaml.parse(GM_getResourceText(key + '-' + fileName))};
-            })
+                if (key === 'rule') {
+                    data[key] = {...data[key], ...ruleKey(yaml.parse(GM_getResourceText(key + '-' + fileName)), fileName.substring(0, fileName.lastIndexOf('.')))};
+                } else {
+                    data[key] = {...data[key], ...yaml.parse(GM_getResourceText(key + '-' + fileName))};
+                }
+            });
         });
         Object.entries(data).forEach(([key, value]) => {
             GM_setValue('script.' + key, value);
