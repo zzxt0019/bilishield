@@ -1,6 +1,6 @@
 import {Setting, Settings} from "@/config/setting/setting";
 import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined} from '@ant-design/icons';
-import {Button, Card, Col, Input, Row, Tag} from "antd";
+import {Button, Card, Col, Input, Row, Tag, Typography} from "antd";
 import React from "react";
 import {SettingData} from "@/config/setting/setting-data";
 
@@ -24,7 +24,7 @@ export function SettingView(props: {
                 settings.filter(setting => !hide || !setting.hide)
                     .sort(setting => setting.hide ? 1 : -1)
                     .map(setting =>
-                        <Tag closable={true} key={setting.key} style={{userSelect: 'none'}}
+                        <Tag closable={true} key={setting.key} style={{userSelect: 'none', maxWidth: '300px',whiteSpace: 'normal'}}
                              color={setting.hide ? '#00000080' : undefined}
                              onDoubleClick={() => {
                                  Settings.updateSettingData(props.setting.key, {key: setting.key, hide: !setting.hide});
