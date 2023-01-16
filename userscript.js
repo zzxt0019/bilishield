@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673757768434
+// @version         1.1.1673861297267
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-15 12:42:48.434
+// @description     bilibili屏蔽 更新时间: 2023-01-16 17:28:17.267
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -4379,25 +4379,36 @@ class DefaultSettings {
    *   原始的4个配置方法
    *******************/
   // 原始的获取配置值
-  static _getSettingValue(param) {
-    let key = typeof param === 'string' ? param : param.key;
-    return GM_getValue('settings.' + key, []);
+  static _selectSettingData(paramKey) {
+    return GM_getValue('settings.' + paramKey, []);
   }
   // 原始的设置配置值
-  static _setSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    GM_setValue('settings.' + key, data);
+  static _resetSettingData(paramKey, data) {
+    GM_setValue('settings.' + paramKey, data);
   }
   // 原始的添加配置值
-  static _addSettingValue(param, data) {
-    let oldData = DefaultSettings._getSettingValue(param);
-    oldData.push(...(typeof data === 'string' ? [data] : data));
-    DefaultSettings._setSettingValue(param, [...new Set(oldData)]);
+  static _insertSettingData(paramKey, newData) {
+    let oldData = DefaultSettings._selectSettingData(paramKey);
+    let oldKeys = new Set(oldData.map(sd => sd.key));
+    oldData.push(...newData.filter(sd => !oldKeys.has(sd.key)));
+    DefaultSettings._resetSettingData(paramKey, oldData);
+  }
+  static _updateSettingData(paramKey, newData) {
+    let oldData = DefaultSettings._selectSettingData(paramKey);
+    let newMap = new Map();
+    newData.forEach(sd => newMap.set(sd.key, sd));
+    oldData.forEach(sd => {
+      if (newMap.has(sd.key)) {
+        sd.hide = newMap.get(sd.key).hide;
+        sd.expireTime = newMap.get(sd.key).expireTime;
+      }
+    });
+    DefaultSettings._resetSettingData(paramKey, oldData);
   }
   // 原始的删除配置值
-  static _delSettingValue(param, data) {
-    let delSet = new Set(typeof data === 'string' ? [data] : data);
-    DefaultSettings._setSettingValue(param, DefaultSettings._getSettingValue(param).filter(item => !delSet.has(item)));
+  static _deleteSettingData(paramKey, key) {
+    let delKeys = new Set(key);
+    DefaultSettings._resetSettingData(paramKey, DefaultSettings._selectSettingData(paramKey).filter(item => !delKeys.has(item.key)));
   }
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-setting.ts
@@ -4433,42 +4444,48 @@ var __awaiter = undefined && undefined.__awaiter || function (thisArg, _argument
 
 
 class UidUsername extends SpecialSetting {
-  get(key) {
-    return () => __awaiter(this, void 0, void 0, function* () {
+  select(key) {
+    return __awaiter(this, void 0, void 0, function* () {
       if (key === 'uid') {
-        return GM_getValue('settings.uid', []);
+        let uids = GM_getValue('settings.uid', []);
+        uids.forEach(uid => uid.uid = uid.key);
+        return uids;
       } else if (key === 'username') {
-        let uids = yield this.get('uid')();
-        return Promise.all(uids.map(uid => this.uid2username(uid)));
+        let uids = yield this.select('uid');
+        return yield Promise.all(uids.map(uid => {
+          return new Promise(res => {
+            this.uid2username(uid.key).then(username => res({
+              key: uid.key,
+              username: username,
+              hide: uid.hide,
+              expireTime: uid.expireTime
+            }));
+          });
+        }));
       }
       return [];
     });
   }
-  set(key) {
-    return uid => {
-      DefaultSettings._setSettingValue('uid', uid);
-    };
+  reset(key, uid) {
+    DefaultSettings._resetSettingData('uid', uid);
   }
-  add(key) {
-    return uid => {
-      DefaultSettings._addSettingValue('uid', uid);
-    };
+  insert(key, uid) {
+    DefaultSettings._insertSettingData('uid', uid);
   }
-  del(key) {
-    return uid => {
-      DefaultSettings._delSettingValue('uid', uid);
-    };
+  update(key, uid) {
+    DefaultSettings._updateSettingData('uid', uid);
+  }
+  delete(key, uid) {
+    DefaultSettings._deleteSettingData('uid', uid);
   }
   type(key) {
-    return () => {
-      if (key === 'uid') {
-        return 'equal';
-      } else if (key === 'username') {
-        return 'like';
-      } else {
-        return 'like';
-      }
-    };
+    if (key === 'uid') {
+      return 'equal';
+    } else if (key === 'username') {
+      return 'like';
+    } else {
+      return 'like';
+    }
   }
   uid2username(_uid) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -4580,15 +4597,23 @@ class BiliUp {
   }
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
-var _a;
 
-class SpecialSettings {}
-_a = SpecialSettings;
-SpecialSettings.sp = new Map();
-(() => {
-  _a.sp.set('uid', new UidUsername());
-  _a.sp.set('username', _a.sp.get('uid'));
-})();
+const Specials = {
+  uid: new UidUsername(),
+  username: new UidUsername()
+};
+const SpecialKeySet = new Set(Object.keys(Specials));
+function isSpecialKeys(key) {
+  return SpecialKeySet.has(key);
+}
+;// CONCATENATED MODULE: ./src/config/setting/setting-data.ts
+class SettingDataBase {
+  constructor(settingData) {
+    this.key = settingData.key;
+    this.hide = settingData.hide;
+    this.expireTime = settingData.expireTime;
+  }
+}
 ;// CONCATENATED MODULE: ./src/config/setting/setting.ts
 var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
@@ -4619,6 +4644,7 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
 };
 
 
+
 /**
  * 数据配置
  */
@@ -4642,50 +4668,108 @@ class Settings {
     }
     return Settings.settingMap;
   }
-  // 加入特殊配置后的获取配置值
-  static getSettingValue(param) {
-    return setting_awaiter(this, void 0, void 0, function* () {
-      let key = typeof param === 'string' ? param : param.key;
-      if (SpecialSettings.sp.has(key)) {
-        return SpecialSettings.sp.get(key).get(key)();
+  static toSettingData(data) {
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        return [];
       } else {
-        return DefaultSettings._getSettingValue(param);
+        if (typeof data[0] === 'string') {
+          return data.map(str => new SettingDataBase({
+            key: str
+          }));
+        } else {
+          return data;
+        }
+      }
+    } else {
+      if (typeof data === 'string') {
+        return [{
+          key: data
+        }];
+      } else {
+        return [data];
+      }
+    }
+  }
+  static toSettingKey(data) {
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        return [];
+      } else {
+        if (typeof data[0] === 'string') {
+          return data;
+        } else {
+          return data.map(sd => sd.key);
+        }
+      }
+    } else {
+      if (typeof data === 'string') {
+        return [data];
+      } else {
+        return [data.key];
+      }
+    }
+  }
+  // 加入特殊配置后的获取配置值
+  static selectSettingData(paramKey) {
+    return setting_awaiter(this, void 0, void 0, function* () {
+      if (isSpecialKeys(paramKey)) {
+        return yield Specials[paramKey].select(paramKey);
+      } else {
+        return DefaultSettings._selectSettingData(paramKey);
+      }
+    });
+  }
+  static selectSettingDataString(paramKey) {
+    return setting_awaiter(this, void 0, void 0, function* () {
+      if (isSpecialKeys(paramKey)) {
+        return (yield this.selectSettingData(paramKey)).map(item => item[paramKey]);
+      } else {
+        return (yield this.selectSettingData(paramKey)).map(item => item.key);
       }
     });
   }
   // 加入特殊配置后的设置配置值
-  static setSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).set(key)(data);
+  static resetSettingData(paramKey, data) {
+    let settingData = this.toSettingData(data);
+    if (isSpecialKeys(paramKey)) {
+      return Specials[paramKey].reset(paramKey, settingData);
     } else {
-      DefaultSettings._setSettingValue(param, data);
+      DefaultSettings._resetSettingData(paramKey, settingData);
     }
   }
   // 加入特殊配置后的添加配置值
-  static addSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).add(key)(data);
+  static insertSettingData(paramKey, data) {
+    let settingData = this.toSettingData(data);
+    if (isSpecialKeys(paramKey)) {
+      return Specials[paramKey].insert(paramKey, settingData);
     } else {
-      DefaultSettings._addSettingValue(param, data);
+      DefaultSettings._insertSettingData(paramKey, settingData);
+    }
+  }
+  // 加入特殊配置后的修改配置值
+  static updateSettingData(paramKey, data) {
+    let settingData = this.toSettingData(data);
+    if (isSpecialKeys(paramKey)) {
+      return Specials[paramKey].update(paramKey, settingData);
+    } else {
+      DefaultSettings._updateSettingData(paramKey, settingData);
     }
   }
   // 加入特殊配置后的删除配置值
-  static delSettingValue(param, data) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).del(key)(data);
+  static deleteSettingData(paramKey, data) {
+    let settingKey = this.toSettingKey(data);
+    if (isSpecialKeys(paramKey)) {
+      return Specials[paramKey].delete(paramKey, settingKey);
     } else {
-      DefaultSettings._delSettingValue(param, data);
+      DefaultSettings._deleteSettingData(paramKey, settingKey);
     }
   }
-  static getCheckType(param) {
-    let key = typeof param === 'string' ? param : param.key;
-    if (SpecialSettings.sp.has(key)) {
-      return SpecialSettings.sp.get(key).type(key)();
+  static getCheckType(paramKey) {
+    if (isSpecialKeys(paramKey)) {
+      return Specials[paramKey].type(paramKey);
     } else {
-      return Settings.getSystemSettings().get(key).type;
+      return Settings.getSystemSettings().get(paramKey).type;
     }
   }
 }
@@ -4797,8 +4881,8 @@ class DoRuleN extends DoRule {
       }
       // 是innerHTML 判断innerHTML是否在data的范围
       if (checker.innerHTML && checker.setting) {
-        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting);
+        for (const settingData of yield Settings.selectSettingDataString(checker.setting.key)) {
+          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting.key);
           switch (type) {
             case 'equal':
               if (element.innerHTML === settingData) {
@@ -4820,8 +4904,8 @@ class DoRuleN extends DoRule {
       }
       // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
       if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
-        for (const settingData of yield Settings.getSettingValue(checker.setting)) {
-          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting);
+        for (const settingData of yield Settings.selectSettingDataString(checker.setting.key)) {
+          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting.key);
           let value = element.getAttribute(checker.attribute);
           switch (type) {
             case 'equal':
@@ -4890,7 +4974,7 @@ class LivePageRule extends SpecialRule {
         /**
          * 屏蔽带粉丝牌子的发言
          */
-        if ((yield Settings.getSettingValue('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
+        if ((yield Settings.selectSettingDataString('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
           try {
             /**
              * 记录发言存入map 计数 + 1
@@ -4940,7 +5024,7 @@ class LivePageRule extends SpecialRule {
   }
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
-var special_rules_a;
+var _a;
 
 // import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
 class SpecialRules {
@@ -4948,11 +5032,11 @@ class SpecialRules {
     this.sp.set(specialRule.pageKey, specialRule);
   }
 }
-special_rules_a = SpecialRules;
+_a = SpecialRules;
 SpecialRules.sp = new Map();
 (() => {
   // this.init(new BaiduTest())
-  special_rules_a.init(new LivePageRule());
+  _a.init(new LivePageRule());
 })();
 ;// CONCATENATED MODULE: ./src/observer/observer.ts
 class Observer {
@@ -5154,13 +5238,13 @@ function readEtc() {
   });
   let ruleData = GM_getValue('script.rule');
   Object.keys(ruleData).forEach(ruleKey => {
-    var _a;
+    var _a, _b;
     let rule0 = ruleData[ruleKey];
     rule0.key = ruleKey;
-    if (rule0.setting) {
-      rule0.setting = Settings.getSystemSettings().get(rule0.setting);
+    if ((_a = rule0.checker) === null || _a === void 0 ? void 0 : _a.setting) {
+      rule0.checker.setting = Settings.getSystemSettings().get(rule0.checker.setting);
     }
-    (_a = pageMap.get(rule0.page)) === null || _a === void 0 ? void 0 : _a.insert(new Rule(rule0));
+    (_b = pageMap.get(rule0.page)) === null || _b === void 0 ? void 0 : _b.insert(new Rule(rule0));
   });
   return pageMap;
 }
@@ -12849,7 +12933,11 @@ function checkVersion() {
       };
       Object.entries(yamlJson).forEach(([key, value]) => {
         Object.keys(value).forEach(fileName => {
-          data[key] = Object.assign(Object.assign({}, data[key]), parse(GM_getResourceText(key + '-' + fileName)));
+          if (key === 'rule') {
+            data[key] = Object.assign(Object.assign({}, data[key]), ruleKey(parse(GM_getResourceText(key + '-' + fileName)), fileName.substring(0, fileName.lastIndexOf('.'))));
+          } else {
+            data[key] = Object.assign(Object.assign({}, data[key]), parse(GM_getResourceText(key + '-' + fileName)));
+          }
         });
       });
       Object.entries(data).forEach(([key, value]) => {
@@ -43333,51 +43421,35 @@ function SettingView(props) {
   const [settings, setSettings] = react.useState([]);
   const [inputValue, setInputValue] = react.useState('');
   const [hide, setHide] = react.useState(true);
-  const [hideSettings, setHideSettings] = react.useState([]);
   const updateSettings = () => {
-    Settings.getSettingValue(setting).then(setSettings);
-  };
-  const updateHideSettings = () => {
-    Settings.getSettingValue(setting.key + '.hide').then(setHideSettings);
+    Settings.selectSettingData(setting.key).then(setSettings);
   };
   react.useEffect(() => {
     updateSettings();
-    updateHideSettings();
   }, []);
-  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(setting => !hideSettings.includes(setting)).map(setting => react.createElement(tag, {
+  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(setting => !hide || !setting.hide).sort(setting => setting.hide ? 1 : -1).map(setting => react.createElement(tag, {
     closable: true,
-    key: setting,
+    key: setting.key,
     style: {
       userSelect: 'none'
     },
-    onDoubleClick: e => {
-      Settings.addSettingValue(props.setting.key + '.hide', e.target.textContent);
-      updateHideSettings();
-    },
-    onAuxClick: () => setInputValue(setting),
-    onClose: () => {
-      Settings.delSettingValue(props.setting, setting);
-      updateSettings();
-      updateBox();
-    }
-  }, setting)), !hide && settings.filter(setting => hideSettings.includes(setting)).map(setting => react.createElement(tag, {
-    closable: true,
-    key: setting,
-    style: {
-      userSelect: 'none'
-    },
-    color: '#00000080',
+    color: setting.hide ? '#00000080' : undefined,
     onDoubleClick: () => {
-      Settings.delSettingValue(props.setting.key + '.hide', setting);
-      updateHideSettings();
+      Settings.updateSettingData(props.setting.key, {
+        key: setting.key,
+        hide: !setting.hide
+      });
+      updateSettings();
     },
-    onAuxClick: () => setInputValue(setting),
+    onAuxClick: () => setInputValue(setting.key),
     onClose: () => {
-      Settings.delSettingValue(props.setting, setting);
+      Settings.deleteSettingData(props.setting.key, {
+        key: setting.key
+      });
       updateSettings();
       updateBox();
     }
-  }, setting))), react.createElement(es_row, null, react.createElement(es_col, {
+  }, setting.key))), react.createElement(es_row, null, react.createElement(es_col, {
     span: 18
   }, react.createElement(input, {
     type: 'text',
@@ -43391,11 +43463,13 @@ function SettingView(props) {
     block: true,
     icon: react.createElement(es_icons_PlusOutlined, null),
     // 输入框为空 或者 输入框与已有配置相同  disabled
-    disabled: !inputValue || settings.filter(setting => setting === inputValue).length > 0,
+    disabled: !inputValue || settings.filter(setting => setting.key === inputValue).length > 0,
     onClick: () => {
       // 添加 保存到GM
       if (inputValue) {
-        Settings.addSettingValue(setting, inputValue);
+        Settings.insertSettingData(setting.key, {
+          key: inputValue
+        });
       }
       setInputValue('');
       updateSettings();
@@ -49169,6 +49243,8 @@ function UidUsernameSearchView(props) {
     value: uid,
     placeholder: 'uid',
     onChange: e => {
+      // todo 快速输入"234" 因23无用户 调用接口响应慢, 234有用户 有缓存 读取缓存响应快
+      //    因而先 set 234的用户名 再set 23 的用户名
       let value = e.target.value;
       setSearchType('uid2username');
       if (value === '') {
@@ -49319,48 +49395,25 @@ var uid_username_view_awaiter = undefined && undefined.__awaiter || function (th
 
 
 
-
 function UidUsernameView(props) {
   const {
     updateBox
   } = props;
-  const uu = react.useState(new UidUsername())[0];
   const [settings, setSettings] = react.useState([]);
   const [hide, setHide] = react.useState(true); // 是否显示隐藏的tag标签
-  const [hideSettings, setHideSettings] = react.useState([]); // 隐藏的uid
   const updateSearchView = {
     uid: () => {}
   };
   /**
    * 更新配置展示
    */
-  const updateSettings = () => {
-    uu.get('uid')().then(uids => {
-      Promise.all(uids.map(uid => uu.uid2username(uid))).then(usernames => {
-        let settings = [];
-        uids.forEach((uid, i) => {
-          settings.push({
-            uid,
-            username: usernames[i]
-          });
-        });
-        setSettings(settings);
-      });
-    });
-  };
-  /**
-   * 更新隐藏展示
-   */
-  const updateHideSettings = () => {
-    Settings.getSettingValue('uid.hide').then(hideSettings => setHideSettings(hideSettings));
-  };
+  const updateSettings = () => Settings.selectSettingData('username').then(setSettings);
   react.useEffect(() => {
     updateSettings();
-    updateHideSettings();
   }, []);
-  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(item => !hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
-    title: item.uid,
-    key: item.uid,
+  return react.createElement(react.Fragment, null, react.createElement(card, null, settings.filter(item => !hide || !item.hide).sort(item => item.hide ? 1 : -1).map(item => react.createElement(es_tooltip, {
+    title: item.key,
+    key: item.key,
     getPopupContainer: e => e,
     mouseEnterDelay: 0,
     trigger: 'click',
@@ -49370,55 +49423,29 @@ function UidUsernameView(props) {
     style: {
       userSelect: 'none'
     },
+    color: item.hide ? '#00000080' : undefined,
     onDoubleClick: () => {
-      // 双击隐藏, 添加uid.hide
-      Settings.addSettingValue('uid.hide', item.uid);
-      updateHideSettings();
+      // 双击隐藏/显示
+      Settings.updateSettingData('uid', {
+        key: item.key,
+        hide: !item.hide
+      });
+      updateSettings();
     },
     onAuxClick: () => {
-      updateSearchView.uid(item.uid);
+      updateSearchView.uid(item.key);
     },
     onClose: () => {
       // 删除, 删除uid
-      uu.del('uid')(item.uid);
+      Settings.deleteSettingData('uid', item.key);
       updateSettings();
-      updateBox();
-    },
-    key: item.username
-  }, item.username))), !hide && settings.filter(item => hideSettings.includes(item.uid)).map(item => react.createElement(es_tooltip, {
-    title: item.uid,
-    key: item.uid,
-    getPopupContainer: e => e,
-    mouseEnterDelay: 0,
-    trigger: 'click',
-    showArrow: false
-  }, react.createElement(tag, {
-    closable: true,
-    style: {
-      userSelect: 'none'
-    },
-    color: '#00000080',
-    onDoubleClick: () => {
-      // 双击显示, 删除uid.hide
-      Settings.delSettingValue('uid.hide', item.uid);
-      updateHideSettings();
-    },
-    onAuxClick: () => {
-      updateSearchView.uid(item.uid);
-    },
-    onClose: () => {
-      // 删除, 删除uid和uid.hide
-      uu.del('uid')(item.uid);
-      Settings.delSettingValue('uid.hide', item.uid);
-      updateSettings();
-      updateHideSettings();
       updateBox();
     },
     key: item.username
   }, item.username)))), react.createElement(es_row, null, react.createElement(UidUsernameSearchView, {
     update: updateSearchView,
     commit: uid => {
-      uu.add('uid')(uid);
+      Settings.insertSettingData('uid', uid);
       updateSettings();
       updateBox();
     }
@@ -49434,8 +49461,7 @@ function UidUsernameView(props) {
     icon: react.createElement(icons_SyncOutlined, null),
     onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
       // 刷新, uid排序
-      yield uu.get('uid')().then(array => uu.set('uid')(array.map(Number).sort((a, b) => a - b).map(String)));
-      yield Settings.getSettingValue('uid.hide').then(array => Settings.setSettingValue('uid.hide', array.map(Number).sort((a, b) => a - b).map(String)));
+      yield Settings.selectSettingData('uid').then(array => Settings.resetSettingData('uid', array.sort((sd1, sd2) => Number(sd1.key) - Number(sd2.key))));
       GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
       updateSettings();
     })
