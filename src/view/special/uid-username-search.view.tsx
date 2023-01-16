@@ -27,6 +27,8 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                 {/* uid输入框 */}
                 <Input size={'small'} allowClear={true} value={uid} placeholder={'uid'}
                        onChange={(e) => {
+                           // todo 快速输入"234" 因23无用户 调用接口响应慢, 234有用户 有缓存 读取缓存响应快
+                           //    因而先 set 234的用户名 再set 23 的用户名
                            let value = e.target.value
                            setSearchType('uid2username');
                            if (value === '') {
