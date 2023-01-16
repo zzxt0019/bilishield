@@ -1,7 +1,7 @@
 import {DefaultSettings} from "./default-setting";
-import {SpecialSetting} from "./special/special-setting";
-import {SpecialSettings} from './special/special-settings';
+import {isSpecialKeys, SpecialKeys, Specials} from './special/special-settings';
 import {CheckType} from "@/config/rule/checker";
+import {SettingData, SettingDataBase} from "@/config/setting/setting-data";
 
 /**
  * 数据配置
@@ -34,52 +34,110 @@ export class Settings {
         return Settings.settingMap
     }
 
-    // 加入特殊配置后的获取配置值
-    static async getSettingValue(param: string | Setting): Promise<string[]> {
-        let key = typeof param === 'string' ? param : param.key
-        if (SpecialSettings.sp.has(key)) {
-            return (SpecialSettings.sp.get(key) as SpecialSetting).get(key)()
+    static toSettingData(data: string | string[] | SettingData | SettingData[]): SettingData[] {
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                return [];
+            } else {
+                if (typeof data[0] === 'string') {
+                    return (data as string[]).map(str => new SettingDataBase({key: str}));
+                } else {
+                    return data as SettingData[];
+                }
+            }
         } else {
-            return DefaultSettings._getSettingValue(param)
+            if (typeof data === 'string') {
+                return [{key: data}];
+            } else {
+                return [data];
+            }
+        }
+    }
+
+    static toSettingKey(data: string | string[] | SettingData | SettingData[]): string[] {
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                return [];
+            } else {
+                if (typeof data[0] === 'string') {
+                    return data as string[];
+                } else {
+                    return (data as SettingData[]).map(sd => sd.key);
+                }
+            }
+        } else {
+            if (typeof data === 'string') {
+                return [data];
+            } else {
+                return [data.key];
+            }
+        }
+    }
+
+    // 加入特殊配置后的获取配置值
+    static async selectSettingData<T extends (Exclude<string, SpecialKeys> | SpecialKeys)>(paramKey: T)
+        : Promise<(T extends SpecialKeys ? SettingData<T> : SettingData)[]> {
+        if (isSpecialKeys(paramKey)) {
+            return await Specials[paramKey as SpecialKeys].select(paramKey as SpecialKeys) as any
+        } else {
+            return DefaultSettings._selectSettingData(paramKey as string) as any
+        }
+    }
+
+    static async selectSettingDataString<T extends Exclude<string, SpecialKeys> | SpecialKeys>(paramKey: string)
+        : Promise<string[]> {
+        if (isSpecialKeys(paramKey)) {
+            return (await this.selectSettingData(paramKey)).map(item => (item as any)[paramKey]);
+        } else {
+            return (await this.selectSettingData(paramKey)).map(item => item.key);
         }
     }
 
     // 加入特殊配置后的设置配置值
-    static setSettingValue(param: string | Setting, data: string[]): void {
-        let key = typeof param === 'string' ? param : param.key
-        if (SpecialSettings.sp.has(key)) {
-            return (SpecialSettings.sp.get(key) as SpecialSetting).set(key)(data)
+    static resetSettingData(paramKey: string, data: SettingData[] | string[]): void {
+        let settingData = this.toSettingData(data);
+        if (isSpecialKeys(paramKey)) {
+            return Specials[paramKey as SpecialKeys].reset(paramKey as SpecialKeys, settingData);
         } else {
-            DefaultSettings._setSettingValue(param, data)
+            DefaultSettings._resetSettingData(paramKey, settingData);
         }
     }
 
     // 加入特殊配置后的添加配置值
-    static addSettingValue(param: string | Setting, data: string | string[]): void {
-        let key = typeof param === 'string' ? param : param.key
-        if (SpecialSettings.sp.has(key)) {
-            return (SpecialSettings.sp.get(key) as SpecialSetting).add(key)(data)
+    static insertSettingData(paramKey: string, data: SettingData | SettingData[] | string | string[]): void {
+        let settingData = this.toSettingData(data);
+        if (isSpecialKeys(paramKey)) {
+            return Specials[paramKey as SpecialKeys].insert(paramKey as SpecialKeys, settingData);
         } else {
-            DefaultSettings._addSettingValue(param, data)
+            DefaultSettings._insertSettingData(paramKey, settingData)
+        }
+    }
+
+    // 加入特殊配置后的修改配置值
+    static updateSettingData(paramKey: string, data: SettingData | SettingData[] | string | string[]): void {
+        let settingData = this.toSettingData(data);
+        if (isSpecialKeys(paramKey)) {
+            return Specials[paramKey as SpecialKeys].update(paramKey as SpecialKeys, settingData);
+        } else {
+            DefaultSettings._updateSettingData(paramKey, settingData)
         }
     }
 
     // 加入特殊配置后的删除配置值
-    static delSettingValue(param: string | Setting, data: string | string[]): void {
-        let key = typeof param === 'string' ? param : param.key
-        if (SpecialSettings.sp.has(key)) {
-            return (SpecialSettings.sp.get(key) as SpecialSetting).del(key)(data)
+    static deleteSettingData(paramKey: string, data: SettingData | SettingData[] | string | string[]): void {
+        let settingKey = this.toSettingKey(data);
+        if (isSpecialKeys(paramKey)) {
+            return Specials[paramKey as SpecialKeys].delete(paramKey as SpecialKeys, settingKey);
         } else {
-            DefaultSettings._delSettingValue(param, data)
+            DefaultSettings._deleteSettingData(paramKey, settingKey);
         }
     }
 
-    static getCheckType(param: string | Setting): CheckType {
-        let key = typeof param === 'string' ? param : param.key
-        if (SpecialSettings.sp.has(key)) {
-            return (SpecialSettings.sp.get(key) as SpecialSetting).type(key)()
+    static getCheckType(paramKey: string): CheckType {
+        if (isSpecialKeys(paramKey)) {
+            return Specials[paramKey as SpecialKeys].type(paramKey as SpecialKeys);
         } else {
-            return (Settings.getSystemSettings().get(key) as Setting).type
+            return (Settings.getSystemSettings().get(paramKey) as Setting).type;
         }
     }
 }

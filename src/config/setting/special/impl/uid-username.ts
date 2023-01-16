@@ -1,48 +1,55 @@
 import {DefaultSettings} from "../../default-setting";
 import {SpecialSetting} from "../special-setting";
 import {CheckType} from "@/config/rule/checker";
+import {SettingData} from "@/config/setting/setting-data";
 
 
 export class UidUsername extends SpecialSetting {
-    get(key: 'uid' | 'username'): () => Promise<string[]> {
-        return async () => {
-            if (key === 'uid') {
-                return GM_getValue('settings.uid', [])
-            } else if (key === 'username') {
-                let uids = await this.get('uid')()
-                return Promise.all(uids.map(uid => this.uid2username(uid)))
-            }
-            return []
+    async select<T extends 'uid' | 'username'>(key: T): Promise<SettingData<T>[]> {
+        if (key === 'uid') {
+            let uids = GM_getValue('settings.uid', []);
+            uids.forEach(uid => (uid as any).uid = (uid as any).key);
+            return uids;
+        } else if (key === 'username') {
+            let uids: SettingData<'uid'>[] = await this.select('uid');
+            return await Promise.all(uids.map(uid => {
+                    return new Promise<SettingData<'username'>>((res) => {
+                        this.uid2username(uid.key).then(username => res({
+                            key: uid.key,
+                            username: username,
+                            hide: uid.hide,
+                            expireTime: uid.expireTime,
+                        }))
+                    })
+                }
+            )) as SettingData<T>[];
         }
+        return []
     }
 
-    set(key: 'uid'): (uid: string[]) => void {
-        return (uid: string[]) => {
-            DefaultSettings._setSettingValue('uid', uid)
-        }
+    reset(key: 'uid', uid: SettingData[]): void {
+        DefaultSettings._resetSettingData('uid', uid);
     }
 
-    add(key: 'uid'): (uid: string | string[]) => void {
-        return (uid: string | string[]) => {
-            DefaultSettings._addSettingValue('uid', uid)
-        }
+    insert(key: 'uid', uid: SettingData[]): void {
+        DefaultSettings._insertSettingData('uid', uid);
     }
 
-    del(key: 'uid'): (uid: string | string[]) => void {
-        return (uid: string | string[]) => {
-            DefaultSettings._delSettingValue('uid', uid)
-        }
+    update(key: 'uid', uid: SettingData[]): void {
+        DefaultSettings._updateSettingData('uid', uid);
     }
 
-    type(key: 'uid' | 'username'): () => CheckType {
-        return () => {
-            if (key === 'uid') {
-                return 'equal'
-            } else if (key === 'username') {
-                return 'like'
-            } else {
-                return 'like'
-            }
+    delete(key: 'uid', uid: string[]): void {
+        DefaultSettings._deleteSettingData('uid', uid);
+    }
+
+    type(key: 'uid' | 'username'): CheckType {
+        if (key === 'uid') {
+            return 'equal'
+        } else if (key === 'username') {
+            return 'like'
+        } else {
+            return 'like'
         }
     }
 

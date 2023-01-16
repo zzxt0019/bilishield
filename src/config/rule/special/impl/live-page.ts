@@ -11,7 +11,7 @@ export class LivePageRule extends SpecialRule {
                 /**
                  * 屏蔽带粉丝牌子的发言
                  */
-                if ((await Settings.getSettingValue('uid')).includes(node.querySelector('[data-anchor-id]')?.getAttribute('data-anchor-id') as string)) {
+                if ((await Settings.selectSettingDataString('uid')).includes(node.querySelector('[data-anchor-id]')?.getAttribute('data-anchor-id') as string)) {
                     try {
                         /**
                          * 记录发言存入map 计数 + 1

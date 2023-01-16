@@ -86,8 +86,8 @@ export class DoRuleN extends DoRule {
         }
         // 是innerHTML 判断innerHTML是否在data的范围
         if (checker.innerHTML && checker.setting) {
-            for (const settingData of await Settings.getSettingValue(checker.setting)) {
-                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting);
+            for (const settingData of await Settings.selectSettingDataString(checker.setting.key)) {
+                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting.key);
                 switch (type) {
                     case 'equal':
                         if (element.innerHTML === settingData) {
@@ -109,8 +109,8 @@ export class DoRuleN extends DoRule {
         }
         // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
         if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
-            for (const settingData of await Settings.getSettingValue(checker.setting)) {
-                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting);
+            for (const settingData of await Settings.selectSettingDataString(checker.setting.key)) {
+                let type: CheckType = checker.type ?? Settings.getCheckType(checker.setting.key);
                 let value: string = element.getAttribute(checker.attribute) as string
                 switch (type) {
                     case 'equal':

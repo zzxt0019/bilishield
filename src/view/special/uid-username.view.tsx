@@ -21,12 +21,12 @@ export function UidUsernameView(props: {
      * 更新配置展示
      */
     const updateSettings = () => {
-        uu.get('uid')().then(uids => {
-            Promise.all(uids.map(uid => uu.uid2username(uid)))
+        Settings.selectSettingData('username').then(results => {
+            Promise.all(results.map(uid => uu.uid2username(uid.key)))
                 .then((usernames) => {
                     let settings: { uid: string, username: string, }[] = []
-                    uids.forEach((uid, i) => {
-                        settings.push({uid, username: usernames[i]})
+                    results.forEach((uid, i) => {
+                        settings.push({uid: uid.key, username: usernames[i]})
                     })
                     setSettings(settings)
                 })
@@ -36,7 +36,7 @@ export function UidUsernameView(props: {
      * 更新隐藏展示
      */
     const updateHideSettings = () => {
-        Settings.getSettingValue('uid.hide').then(hideSettings => setHideSettings(hideSettings));
+        Settings.selectSettingDataString('uid.hide').then(hideSettings => setHideSettings(hideSettings));
     }
     React.useEffect(() => {
         updateSettings();
@@ -51,7 +51,7 @@ export function UidUsernameView(props: {
                     <Tag closable={true} style={{userSelect: 'none'}}
                          onDoubleClick={() => {
                              // 双击隐藏, 添加uid.hide
-                             Settings.addSettingValue('uid.hide', item.uid);
+                             Settings.insertSettingData('uid.hide', {key: item.uid});
                              updateHideSettings();
                          }}
                          onAuxClick={() => {
@@ -59,7 +59,7 @@ export function UidUsernameView(props: {
                          }}
                          onClose={() => {
                              // 删除, 删除uid
-                             uu.del('uid')(item.uid)
+                             Settings.deleteSettingData('uid', item.uid);
                              updateSettings()
                              updateBox()
                          }} key={item.username}>{item.username}</Tag>
@@ -73,7 +73,7 @@ export function UidUsernameView(props: {
                          color={'#00000080'}
                          onDoubleClick={() => {
                              // 双击显示, 删除uid.hide
-                             Settings.delSettingValue('uid.hide', item.uid);
+                             Settings.deleteSettingData('uid.hide', {key: item.uid});
                              updateHideSettings();
                          }}
                          onAuxClick={() => {
@@ -81,8 +81,8 @@ export function UidUsernameView(props: {
                          }}
                          onClose={() => {
                              // 删除, 删除uid和uid.hide
-                             uu.del('uid')(item.uid);
-                             Settings.delSettingValue('uid.hide', item.uid);
+                             Settings.deleteSettingData('uid', item.uid);
+                             Settings.deleteSettingData('uid.hide', item.uid);
                              updateSettings();
                              updateHideSettings();
                              updateBox()
@@ -92,7 +92,7 @@ export function UidUsernameView(props: {
         </Card>
         <Row>
             <UidUsernameSearchView update={updateSearchView} commit={uid => {
-                uu.add('uid')(uid);
+                Settings.insertSettingData('uid', uid);
                 updateSettings();
                 updateBox();
             }}></UidUsernameSearchView>
@@ -105,8 +105,12 @@ export function UidUsernameView(props: {
                     icon={<SyncOutlined/>}
                     onClick={async () => {
                         // 刷新, uid排序
-                        await uu.get('uid')().then(array => uu.set('uid')(array.map(Number).sort((a, b) => a - b).map(String)));
-                        await Settings.getSettingValue('uid.hide').then(array => Settings.setSettingValue('uid.hide', array.map(Number).sort((a, b) => a - b).map(String)));
+                        await Settings.selectSettingData('uid').then(array => Settings.resetSettingData('uid', array.map(Number).sort((a, b) => a - b).map(num => {
+                            return {key: String(num)}
+                        })));
+                        await Settings.selectSettingDataString('uid.hide').then(array => Settings.resetSettingData('uid.hide', array.map(Number).sort((a, b) => a - b).map(num => {
+                            return {key: String(num)}
+                        })));
                         GM_listValues()
                             .filter(item => item.startsWith('uid_'))
                             .forEach(item => GM_deleteValue(item))

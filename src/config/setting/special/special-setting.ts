@@ -1,13 +1,17 @@
 import {CheckType} from "@/config/rule/checker";
+import {SettingData} from "@/config/setting/setting-data";
+import {SpecialKeys} from "@/config/setting/special/special-settings";
 
 export abstract class SpecialSetting {
-    abstract get(key: string): () => Promise<string[]>
+    abstract select<T extends SpecialKeys>(key: T): Promise<SettingData<T>[]>
 
-    abstract set(key: string): (data: any) => void
+    abstract reset(key: SpecialKeys, data: any): void
 
-    abstract add(key: string): (data: any) => void
+    abstract insert(key: SpecialKeys, data: any): void
 
-    abstract del(key: string): (data: any) => void
+    abstract update(key: SpecialKeys, data: any): void
 
-    abstract type(key: string): () => CheckType
+    abstract delete(key: SpecialKeys, data: any): void
+
+    abstract type(key: SpecialKeys): CheckType
 }

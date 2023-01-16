@@ -13,10 +13,10 @@ export function SettingView(props: {
     const [hide, setHide] = React.useState(true);
     const [hideSettings, setHideSettings] = React.useState<string[]>([]);
     const updateSettings = () => {
-        Settings.getSettingValue(setting).then(setSettings);
+        Settings.selectSettingDataString(setting.key).then(setSettings);
     };
     const updateHideSettings = () => {
-        Settings.getSettingValue(setting.key + '.hide').then(setHideSettings);
+        Settings.selectSettingDataString(setting.key + '.hide').then(setHideSettings);
     }
     React.useEffect(() => {
         updateSettings();
@@ -27,12 +27,12 @@ export function SettingView(props: {
             {settings.filter(setting => !hideSettings.includes(setting)).map(setting =>
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
                      onDoubleClick={(e) => {
-                         Settings.addSettingValue(props.setting.key + '.hide', (e.target as any).textContent);
+                         Settings.insertSettingData(props.setting.key + '.hide', (e.target as any).textContent);
                          updateHideSettings();
                      }}
                      onAuxClick={() => setInputValue(setting)}
                      onClose={() => {
-                         Settings.delSettingValue(props.setting, setting)
+                         Settings.deleteSettingData(props.setting.key, {key: setting})
                          updateSettings()
                          updateBox()
                      }}>{setting}</Tag>
@@ -41,12 +41,12 @@ export function SettingView(props: {
                 <Tag closable={true} key={setting} style={{userSelect: 'none'}}
                      color={'#00000080'}
                      onDoubleClick={() => {
-                         Settings.delSettingValue(props.setting.key + '.hide', setting);
+                         Settings.deleteSettingData(props.setting.key + '.hide', {key: setting});
                          updateHideSettings();
                      }}
                      onAuxClick={() => setInputValue(setting)}
                      onClose={() => {
-                         Settings.delSettingValue(props.setting, setting)
+                         Settings.deleteSettingData(props.setting.key, {key: setting})
                          updateSettings()
                          updateBox()
                      }}>{setting}</Tag>
@@ -68,7 +68,7 @@ export function SettingView(props: {
                     onClick={() => {
                         // 添加 保存到GM
                         if (inputValue) {
-                            Settings.addSettingValue(setting, inputValue)
+                            Settings.insertSettingData(setting.key, {key: inputValue})
                         }
                         setInputValue('')
                         updateSettings()
