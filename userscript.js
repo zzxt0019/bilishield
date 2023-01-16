@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673861297267
+// @version         1.1.1673865285269
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-16 17:28:17.267
+// @description     bilibili屏蔽 更新时间: 2023-01-16 18:34:45.269
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -43431,7 +43431,9 @@ function SettingView(props) {
     closable: true,
     key: setting.key,
     style: {
-      userSelect: 'none'
+      userSelect: 'none',
+      maxWidth: '300px',
+      whiteSpace: 'normal'
     },
     color: setting.hide ? '#00000080' : undefined,
     onDoubleClick: () => {
