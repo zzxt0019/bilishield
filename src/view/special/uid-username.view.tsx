@@ -1,18 +1,16 @@
-import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {EyeInvisibleOutlined, EyeOutlined, SyncOutlined} from '@ant-design/icons';
 import {Button, Card, Col, Row, Tag, Tooltip} from "antd";
 import React from "react";
 import {Settings} from "@/config/setting/setting";
 import {UidUsernameSearchView} from "@/view/special/uid-username-search.view";
+import {SettingData} from "@/config/setting/setting-data";
 
 export function UidUsernameView(props: {
     updateBox: () => void
 }) {
     const {updateBox} = props;
-    const uu: UidUsername = React.useState(new UidUsername())[0];
-    const [settings, setSettings] = React.useState<{ uid: string, username: string, }[]>([]);
+    const [settings, setSettings] = React.useState<SettingData<'username'>[]>([]);
     const [hide, setHide] = React.useState(true);  // 是否显示隐藏的tag标签
-    const [hideSettings, setHideSettings] = React.useState<string[]>([]);  // 隐藏的uid
     const updateSearchView: { uid: (uid: string) => void } = {
         uid: () => {
         }
@@ -20,75 +18,37 @@ export function UidUsernameView(props: {
     /**
      * 更新配置展示
      */
-    const updateSettings = () => {
-        Settings.selectSettingData('username').then(results => {
-            Promise.all(results.map(uid => uu.uid2username(uid.key)))
-                .then((usernames) => {
-                    let settings: { uid: string, username: string, }[] = []
-                    results.forEach((uid, i) => {
-                        settings.push({uid: uid.key, username: usernames[i]})
-                    })
-                    setSettings(settings)
-                })
-        })
-    }
-    /**
-     * 更新隐藏展示
-     */
-    const updateHideSettings = () => {
-        Settings.selectSettingDataString('uid.hide').then(hideSettings => setHideSettings(hideSettings));
-    }
+    const updateSettings = () => Settings.selectSettingData('username').then(setSettings);
     React.useEffect(() => {
         updateSettings();
-        updateHideSettings();
     }, [])
     return <>
         <Card>
-            {/* 展示Tag */}
-            {settings.filter(item => !hideSettings.includes(item.uid)).map(item =>
-                <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
-                         trigger='click' showArrow={false}>
-                    <Tag closable={true} style={{userSelect: 'none'}}
-                         onDoubleClick={() => {
-                             // 双击隐藏, 添加uid.hide
-                             Settings.insertSettingData('uid.hide', {key: item.uid});
-                             updateHideSettings();
-                         }}
-                         onAuxClick={() => {
-                             updateSearchView.uid(item.uid);
-                         }}
-                         onClose={() => {
-                             // 删除, 删除uid
-                             Settings.deleteSettingData('uid', item.uid);
-                             updateSettings()
-                             updateBox()
-                         }} key={item.username}>{item.username}</Tag>
-                </Tooltip>
-            )}
-            {/* 隐藏Tag */}
-            {!hide && settings.filter(item => hideSettings.includes(item.uid)).map(item =>
-                <Tooltip title={item.uid} key={item.uid} getPopupContainer={e => e} mouseEnterDelay={0}
-                         trigger='click' showArrow={false}>
-                    <Tag closable={true} style={{userSelect: 'none'}}
-                         color={'#00000080'}
-                         onDoubleClick={() => {
-                             // 双击显示, 删除uid.hide
-                             Settings.deleteSettingData('uid.hide', {key: item.uid});
-                             updateHideSettings();
-                         }}
-                         onAuxClick={() => {
-                             updateSearchView.uid(item.uid);
-                         }}
-                         onClose={() => {
-                             // 删除, 删除uid和uid.hide
-                             Settings.deleteSettingData('uid', item.uid);
-                             Settings.deleteSettingData('uid.hide', item.uid);
-                             updateSettings();
-                             updateHideSettings();
-                             updateBox()
-                         }} key={item.username}>{item.username}</Tag>
-                </Tooltip>
-            )}
+            {
+                settings.filter(item => !hide || !item.hide)
+                    .sort(item => item.hide ? 1 : -1)
+                    .map(item =>
+                        <Tooltip title={item.key} key={item.key} getPopupContainer={e => e} mouseEnterDelay={0}
+                                 trigger='click' showArrow={false}>
+                            <Tag closable={true} style={{userSelect: 'none'}}
+                                 color={item.hide ? '#00000080' : undefined}
+                                 onDoubleClick={() => {
+                                     // 双击隐藏/显示
+                                     Settings.updateSettingData('uid', {key: item.key, hide: !item.hide});
+                                     updateSettings();
+                                 }}
+                                 onAuxClick={() => {
+                                     updateSearchView.uid(item.key);
+                                 }}
+                                 onClose={() => {
+                                     // 删除, 删除uid
+                                     Settings.deleteSettingData('uid', item.key);
+                                     updateSettings();
+                                     updateBox();
+                                 }}
+                                 key={item.username}>{item.username}</Tag>
+                        </Tooltip>)
+            }
         </Card>
         <Row>
             <UidUsernameSearchView update={updateSearchView} commit={uid => {
@@ -105,12 +65,9 @@ export function UidUsernameView(props: {
                     icon={<SyncOutlined/>}
                     onClick={async () => {
                         // 刷新, uid排序
-                        await Settings.selectSettingData('uid').then(array => Settings.resetSettingData('uid', array.map(Number).sort((a, b) => a - b).map(num => {
-                            return {key: String(num)}
-                        })));
-                        await Settings.selectSettingDataString('uid.hide').then(array => Settings.resetSettingData('uid.hide', array.map(Number).sort((a, b) => a - b).map(num => {
-                            return {key: String(num)}
-                        })));
+                        await Settings.selectSettingData('uid')
+                            .then(array => Settings.resetSettingData('uid',
+                                array.sort((sd1, sd2) => Number(sd1.key) - Number(sd2.key))));
                         GM_listValues()
                             .filter(item => item.startsWith('uid_'))
                             .forEach(item => GM_deleteValue(item))
