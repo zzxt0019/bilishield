@@ -11,10 +11,7 @@ export function UidUsernameView(props: {
     const {updateBox} = props;
     const [settings, setSettings] = React.useState<SettingData<'username'>[]>([]);
     const [hide, setHide] = React.useState(true);  // 是否显示隐藏的tag标签
-    const updateSearchView: { uid: (uid: string) => void } = {
-        uid: () => {
-        }
-    }
+    const usvFunctions: any = {};
     /**
      * 更新配置展示
      */
@@ -38,7 +35,7 @@ export function UidUsernameView(props: {
                                      updateSettings();
                                  }}
                                  onAuxClick={() => {
-                                     updateSearchView.uid(item.key);
+                                     usvFunctions.setUid && usvFunctions.setUid(item.key);
                                  }}
                                  onClose={() => {
                                      // 删除, 删除uid
@@ -51,7 +48,7 @@ export function UidUsernameView(props: {
             }
         </Card>
         <Row>
-            <UidUsernameSearchView update={updateSearchView} commit={uid => {
+            <UidUsernameSearchView functions={usvFunctions} commit={uid => {
                 Settings.insertSettingData('uid', uid);
                 updateSettings();
                 updateBox();

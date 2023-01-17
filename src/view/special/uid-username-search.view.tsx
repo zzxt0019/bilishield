@@ -4,7 +4,7 @@ import {PlusOutlined} from "@ant-design/icons";
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 
 export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
-    const {commit, update} = props;
+    const {commit, functions} = props;
     const uu: UidUsername = React.useState(new UidUsername())[0];
     const [uid, setUid] = React.useState('');
     const [username, setUsername] = React.useState<string | undefined>(undefined);
@@ -16,10 +16,13 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
         username = username === '' ? undefined : username;
         return username;
     }
-    update.uid = (uid: string) => {
+    functions.setUid = (uid: string) => {
         setUid(uid);
-        uid2username(String(uid)).then(setUsername);
-        setSearchType('username2uid');
+        uid2username(String(uid)).then(username => {
+            setUsername(username);
+            setSearchType('username2uid');
+            username && uu.username2infos(username).then(setUserInfos);
+        });
     }
     return <>
         <Col span={18}>
@@ -29,7 +32,7 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                        onChange={(e) => {
                            // todo 快速输入"234" 因23无用户 调用接口响应慢, 234有用户 有缓存 读取缓存响应快
                            //    因而先 set 234的用户名 再set 23 的用户名
-                           let value = e.target.value
+                           let value = e.target.value;
                            setSearchType('uid2username');
                            if (value === '') {
                                // 清空, 清空所有
@@ -141,6 +144,6 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
 }
 
 export interface UidUsernameSearchViewProps {
-    update: { uid: (uid: string) => void };
+    functions: { setUid?: (uid: string) => void };
     commit: (uid: string) => void;
 }
