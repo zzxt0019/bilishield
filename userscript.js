@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673865370209
+// @version         1.1.1673947765665
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-16 18:36:10.209
+// @description     bilibili屏蔽 更新时间: 2023-01-17 17:29:25.665
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -48678,6 +48678,47 @@ RefAutoComplete.Option = auto_complete_Option;
 RefAutoComplete._InternalPanelDoNotUseOrYouWillBeFired = auto_complete_PurePanel;
 if (false) {}
 /* harmony default export */ const auto_complete = (RefAutoComplete);
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons-svg/es/asn/UserDeleteOutlined.js
+// This icon file is generated automatically.
+var UserDeleteOutlined = { "icon": { "tag": "svg", "attrs": { "viewBox": "64 64 896 896", "focusable": "false" }, "children": [{ "tag": "path", "attrs": { "d": "M678.3 655.4c24.2-13 51.9-20.4 81.4-20.4h.1c3 0 4.4-3.6 2.2-5.6a371.67 371.67 0 00-103.7-65.8c-.4-.2-.8-.3-1.2-.5C719.2 518 759.6 444.7 759.6 362c0-137-110.8-248-247.5-248S264.7 225 264.7 362c0 82.7 40.4 156 102.6 201.1-.4.2-.8.3-1.2.5-44.7 18.9-84.8 46-119.3 80.6a373.42 373.42 0 00-80.4 119.5A373.6 373.6 0 00137 901.8a8 8 0 008 8.2h59.9c4.3 0 7.9-3.5 8-7.8 2-77.2 32.9-149.5 87.6-204.3C357 641.2 432.2 610 512.2 610c56.7 0 111.1 15.7 158 45.1a8.1 8.1 0 008.1.3zM512.2 534c-45.8 0-88.9-17.9-121.4-50.4A171.2 171.2 0 01340.5 362c0-45.9 17.9-89.1 50.3-121.6S466.3 190 512.2 190s88.9 17.9 121.4 50.4A171.2 171.2 0 01683.9 362c0 45.9-17.9 89.1-50.3 121.6C601.1 516.1 558 534 512.2 534zM880 772H640c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h240c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8z" } }] }, "name": "user-delete", "theme": "outlined" };
+/* harmony default export */ const asn_UserDeleteOutlined = (UserDeleteOutlined);
+
+;// CONCATENATED MODULE: ./node_modules/@ant-design/icons/es/icons/UserDeleteOutlined.js
+
+// GENERATE BY ./scripts/generate.ts
+// DON NOT EDIT IT MANUALLY
+
+
+
+var UserDeleteOutlined_UserDeleteOutlined = function UserDeleteOutlined(props, ref) {
+  return /*#__PURE__*/react.createElement(AntdIcon, _objectSpread2(_objectSpread2({}, props), {}, {
+    ref: ref,
+    icon: asn_UserDeleteOutlined
+  }));
+};
+UserDeleteOutlined_UserDeleteOutlined.displayName = 'UserDeleteOutlined';
+/* harmony default export */ const icons_UserDeleteOutlined = (/*#__PURE__*/react.forwardRef(UserDeleteOutlined_UserDeleteOutlined));
+;// CONCATENATED MODULE: ./src/utils/promise-util.ts
+function abortPromise(p1) {
+  let abort;
+  const p2 = new Promise((resolve, reject) => abort = reject);
+  const p = Promise.race([p1, p2]);
+  return [p, abort];
+}
+function finalPromise(p, key) {
+  var _a, _b;
+  if (!promise_util_map.has(key)) {
+    promise_util_map.set(key, []);
+  }
+  let promise;
+  while (promise = (_a = promise_util_map.get(key)) === null || _a === void 0 ? void 0 : _a.pop()) {
+    promise[1]('too late');
+  }
+  promise = abortPromise(p);
+  (_b = promise_util_map.get(key)) === null || _b === void 0 ? void 0 : _b.push(promise);
+  return promise[0];
+}
+const promise_util_map = new Map();
 ;// CONCATENATED MODULE: ./src/view/special/uid-username-search.view.tsx
 var uid_username_search_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
   function adopt(value) {
@@ -48710,10 +48751,11 @@ var uid_username_search_view_awaiter = undefined && undefined.__awaiter || funct
 
 
 
+
 function UidUsernameSearchView(props) {
   const {
     commit,
-    update
+    functions
   } = props;
   const uu = react.useState(new UidUsername())[0];
   const [uid, setUid] = react.useState('');
@@ -48726,10 +48768,13 @@ function UidUsernameSearchView(props) {
     username = username === '' ? undefined : username;
     return username;
   });
-  update.uid = uid => {
+  functions.setUid = uid => {
     setUid(uid);
-    uid2username(String(uid)).then(setUsername);
-    setSearchType('username2uid');
+    uid2username(String(uid)).then(username => {
+      setUsername(username);
+      setSearchType('username2uid');
+      username && uu.username2infos(username).then(setUserInfos);
+    });
   };
   return react.createElement(react.Fragment, null, react.createElement(es_col, {
     span: 18
@@ -48739,8 +48784,6 @@ function UidUsernameSearchView(props) {
     value: uid,
     placeholder: 'uid',
     onChange: e => {
-      // todo 快速输入"234" 因23无用户 调用接口响应慢, 234有用户 有缓存 读取缓存响应快
-      //    因而先 set 234的用户名 再set 23 的用户名
       let value = e.target.value;
       setSearchType('uid2username');
       if (value === '') {
@@ -48752,17 +48795,17 @@ function UidUsernameSearchView(props) {
       } else if (/^[1-9](\d+)?$/.test(value)) {
         // 手动更改uid后, 清空username选项
         setUid(String(value));
-        uid2username(String(value)).then(setUsername);
         setUserInfos([]);
         setUserInfoEnd(false);
+        finalPromise(uid2username(String(value))).then(setUsername);
       } else {
         // 不是正整数 => 不改变(变为上一次的值)
         setUid(uid);
         // 上一次是username搜索, 清空备选列
         if (searchType === 'username2uid') {
-          uid2username(uid).then(setUsername);
           setUserInfos([]);
           setUserInfoEnd(false);
+          finalPromise(uid2username(String(value))).then(setUsername);
         }
       }
     }
@@ -48772,7 +48815,7 @@ function UidUsernameSearchView(props) {
       width: '100%'
     },
     showSearch: true,
-    placeholder: 'username',
+    placeholder: searchType === 'uid2username' && uid !== '' ? react.createElement(react.Fragment, null, react.createElement(icons_UserDeleteOutlined, null), " \u7528\u6237\u4E0D\u5B58\u5728 ( \u15DC \u2038 \u15DC )") : 'username',
     allowClear: true,
     getPopupContainer: target => target,
     value: username,
@@ -48781,7 +48824,7 @@ function UidUsernameSearchView(props) {
       setSearchType('username2uid');
       setUid('');
       setUsername(keyword);
-      uu.username2infos(keyword).then(setUserInfos);
+      finalPromise(uu.username2infos(keyword)).then(setUserInfos);
       setUserInfoEnd(false);
     },
     onSelect: uid => {
@@ -48897,9 +48940,7 @@ function UidUsernameView(props) {
   } = props;
   const [settings, setSettings] = react.useState([]);
   const [hide, setHide] = react.useState(true); // 是否显示隐藏的tag标签
-  const updateSearchView = {
-    uid: () => {}
-  };
+  const usvFunctions = {};
   /**
    * 更新配置展示
    */
@@ -48929,7 +48970,7 @@ function UidUsernameView(props) {
       updateSettings();
     },
     onAuxClick: () => {
-      updateSearchView.uid(item.key);
+      usvFunctions.setUid && usvFunctions.setUid(item.key);
     },
     onClose: () => {
       // 删除, 删除uid
@@ -48939,7 +48980,7 @@ function UidUsernameView(props) {
     },
     key: item.username
   }, item.username)))), react.createElement(es_row, null, react.createElement(UidUsernameSearchView, {
-    update: updateSearchView,
+    functions: usvFunctions,
     commit: uid => {
       Settings.insertSettingData('uid', uid);
       updateSettings();
