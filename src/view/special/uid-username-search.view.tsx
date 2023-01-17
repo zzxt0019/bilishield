@@ -1,6 +1,6 @@
 import React from "react";
-import {AutoComplete, Button, Col, Input, Row} from "antd";
-import {PlusOutlined} from "@ant-design/icons";
+import {AutoComplete, Button, Col, ConfigProvider, Input, Row} from "antd";
+import {PlusOutlined, UserDeleteOutlined} from "@ant-design/icons";
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {finalPromise} from "@/utils/promise-util";
 
@@ -58,7 +58,9 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
             </Row>
             <Row>
                 {/* username输入框 */}
-                <AutoComplete size={'small'} style={{width: '100%'}} showSearch={true} placeholder={'username'}
+                <AutoComplete size={'small'} style={{width: '100%'}} showSearch={true}
+                              placeholder={searchType === 'uid2username' && uid !== '' ? <><UserDeleteOutlined/> 用户不存在
+                                  ( ᗜ ‸ ᗜ )</> : 'username'}
                               allowClear={true}
                               getPopupContainer={target => target} value={username}
                               disabled={searchType === 'uid2username' && uid !== ''}
