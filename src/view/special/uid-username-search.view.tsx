@@ -2,6 +2,7 @@ import React from "react";
 import {AutoComplete, Button, Col, Input, Row} from "antd";
 import {PlusOutlined} from "@ant-design/icons";
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
+import {finalPromise} from "@/utils/promise-util";
 
 export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
     const {commit, functions} = props;
@@ -30,8 +31,6 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                 {/* uid输入框 */}
                 <Input size={'small'} allowClear={true} value={uid} placeholder={'uid'}
                        onChange={(e) => {
-                           // todo 快速输入"234" 因23无用户 调用接口响应慢, 234有用户 有缓存 读取缓存响应快
-                           //    因而先 set 234的用户名 再set 23 的用户名
                            let value = e.target.value;
                            setSearchType('uid2username');
                            if (value === '') {
@@ -43,16 +42,16 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                            } else if (/^[1-9](\d+)?$/.test(value)) {
                                // 手动更改uid后, 清空username选项
                                setUid(String(value));
-                               uid2username(String(value)).then(setUsername)
                                setUserInfos([])
                                setUserInfoEnd(false);
+                               finalPromise(uid2username(String(value))).then(setUsername);
                            } else {  // 不是正整数 => 不改变(变为上一次的值)
                                setUid(uid);
                                // 上一次是username搜索, 清空备选列
                                if (searchType === 'username2uid') {
-                                   uid2username(uid).then(setUsername);
                                    setUserInfos([]);
                                    setUserInfoEnd(false);
+                                   finalPromise(uid2username(String(value))).then(setUsername);
                                }
                            }
                        }}></Input>
@@ -67,7 +66,7 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                                   setSearchType('username2uid');
                                   setUid('');
                                   setUsername(keyword);
-                                  uu.username2infos(keyword).then(setUserInfos);
+                                  finalPromise(uu.username2infos(keyword)).then(setUserInfos);
                                   setUserInfoEnd(false);
                               }}
                               onSelect={(uid) => {
@@ -140,7 +139,7 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                     }
                 }}></Button>
         </Col>
-    </>
+    </>;
 }
 
 export interface UidUsernameSearchViewProps {
