@@ -3,6 +3,7 @@ import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined} from '@ant-design/icons
 import {Button, Card, Col, Input, Row, Tag} from "antd";
 import React from "react";
 import {SettingData} from "@/config/setting/setting-data";
+import {AdvanceSettingView} from "@/view/advance-setting.view";
 
 export function SettingView(props: {
     setting: Setting,
@@ -72,5 +73,6 @@ export function SettingView(props: {
                 </Button>
             </Col>
         </Row>
+        <AdvanceSettingView></AdvanceSettingView>
     </>;
 }

@@ -3,30 +3,13 @@ import * as path from 'path'
 import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
 import CopyPlugin from "copy-webpack-plugin";
+import {date2string} from "@/utils/datetime-util";
 
 const userscript = 'userscript';
 
-function dateFormat(date: Date, formatter: string = 'yyyy-MM-dd HH:mm:ss.SSS') {
-    let year = String(date.getFullYear());
-    let month = (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1);
-    let day = (date.getDate() < 10 ? '0' : '') + date.getDate();
-    let hour = (date.getHours() < 10 ? '0' : '') + date.getHours();
-    let minute = (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
-    let second = (date.getSeconds() < 10 ? '0' : '') + date.getSeconds();
-    let millisecond = (date.getMilliseconds() < 100 ? '0' : '') + (date.getMilliseconds() < 10 ? '0' : '') + date.getMilliseconds();
-    return formatter
-        .replaceAll('yyyy', year)
-        .replaceAll('MM', month)
-        .replaceAll('dd', day)
-        .replaceAll('HH', hour)
-        .replaceAll('mm', minute)
-        .replaceAll('ss', second)
-        .replaceAll('SSS', millisecond);
-}
-
 const banner = fs.readFileSync(path.resolve(__dirname, './src/userscript-info.js'), 'utf-8')
     .replace('${timestamp}', String(new Date().getTime()))
-    .replace('${date}', String(dateFormat(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
+    .replace('${date}', String(date2string(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
     .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
 
 const config: Configuration = {
