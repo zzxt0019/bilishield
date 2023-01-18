@@ -62,7 +62,7 @@ export class UidUsername extends SpecialSetting {
         let uid = Number(_uid)
         let obj = GM_getValue('uid_' + uid)
         let biliUp: BiliUp = obj as BiliUp
-        if (biliUp && new Date().getTime() < biliUp.expiretime) {
+        if (biliUp && new Date().getTime() < biliUp.expireTime) {
             return biliUp.username
         }
         // 异步查询
@@ -116,7 +116,7 @@ export class UidUsername extends SpecialSetting {
                     UidUsername.apiIndex = apiIndex
                     let username = api.username(json)
                     // 保存至GM
-                    let biliUp = {uid, username, expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000}
+                    let biliUp = {uid, username, expireTime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000}
                     GM_setValue('uid_' + uid, biliUp)
                     res(username)
                 } else if (api.change(json)) {
@@ -159,6 +159,6 @@ export class UidUsername extends SpecialSetting {
 }
 
 class BiliUp {
-    constructor(public uid: string, public username: string, public expiretime: number) {
+    constructor(public uid: string, public username: string, public expireTime: number) {
     }
 }
