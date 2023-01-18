@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1673947765665
+// @version         1.1.1674006846515
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.min.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-17 17:29:25.665
+// @description     bilibili屏蔽 更新时间: 2023-01-18 09:54:06.515
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -4497,7 +4497,7 @@ class UidUsername extends SpecialSetting {
       let uid = Number(_uid);
       let obj = GM_getValue('uid_' + uid);
       let biliUp = obj;
-      if (biliUp && new Date().getTime() < biliUp.expiretime) {
+      if (biliUp && new Date().getTime() < biliUp.expireTime) {
         return biliUp.username;
       }
       // 异步查询
@@ -4555,7 +4555,7 @@ class UidUsername extends SpecialSetting {
           let biliUp = {
             uid,
             username,
-            expiretime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000
+            expireTime: new Date().getTime() + Math.random() * 24 * 60 * 60 * 1000
           };
           GM_setValue('uid_' + uid, biliUp);
           res(username);
@@ -4590,10 +4590,10 @@ UidUsername.apis = [{
 }];
 
 class BiliUp {
-  constructor(uid, username, expiretime) {
+  constructor(uid, username, expireTime) {
     this.uid = uid;
     this.username = username;
-    this.expiretime = expiretime;
+    this.expireTime = expireTime;
   }
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
