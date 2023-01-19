@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 function dev() {
+    console.info('dev 开始...')
     if (!fs.existsSync(path.resolve(__dirname, '../build'))) {
         fs.mkdirSync(path.resolve(__dirname, '../build'), {recursive: true});
     }
@@ -19,6 +20,7 @@ function dev() {
     })
     let info = text.replace('//${zzxt0019}', replace);
     fs.writeFileSync(path.resolve(__dirname, '../build/userscript-info-local-copy.js'), info);
+    console.info('dev 结束...')
 }
 
 dev()

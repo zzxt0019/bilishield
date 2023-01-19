@@ -46,9 +46,11 @@ ${body}
 }
 
 function build() {
+    console.info('build 开始 ...')
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(dataJson()));
     createMarked();
     fs.copyFileSync(path.resolve(__dirname, '../node_modules/highlight.js/styles/' + _css), path.resolve(__dirname, `../build/${_html}/${_css}`));
+    console.info('build 结束 ...')
 }
 
 build();
