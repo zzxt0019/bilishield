@@ -7,7 +7,7 @@ import {SettingData} from "@/config/setting/setting-data";
 export class UidUsername extends SpecialSetting {
     async select<T extends 'uid' | 'username'>(key: T): Promise<SettingData<T>[]> {
         if (key === 'uid') {
-            let uids = GM_getValue('settings.uid', []);
+            let uids = DefaultSettings._selectSettingData<T>('uid');
             uids.forEach(uid => (uid as any).uid = (uid as any).key);
             return uids;
         } else if (key === 'username') {

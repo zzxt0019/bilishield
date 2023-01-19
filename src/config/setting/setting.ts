@@ -62,7 +62,7 @@ export class Settings {
                 if (typeof data[0] === 'string') {
                     return data as string[];
                 } else {
-                    return (data as SettingData[]).map(sd => sd.key);
+                    return (data as SettingData[]).map(datum => datum.key);
                 }
             }
         } else {

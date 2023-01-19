@@ -10,5 +10,6 @@ export class SettingDataBase {
     }
 }
 
+export type SettingDataType = Exclude<string | undefined, 'key' | 'hide' | 'expireTime'>;
 export type SettingData<T extends Exclude<string | undefined, 'key' | 'hide' | 'expireTime'> = undefined> =
     T extends undefined ? SettingDataBase : (SettingDataBase & Record<Extract<T, string>, string>);
