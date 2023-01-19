@@ -2,8 +2,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import {BannerPlugin, type Configuration} from 'webpack'
 import {ESBuildMinifyPlugin} from 'esbuild-loader';
-import CopyPlugin from "copy-webpack-plugin";
-import {date2string} from "@/utils/datetime-util";
+import CopyPlugin from 'copy-webpack-plugin';
+
+const {date2string} = require('./src/utils/datetime-util.ts');
 
 const userscript = 'userscript';
 
