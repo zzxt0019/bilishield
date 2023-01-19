@@ -1,9 +1,10 @@
-import {EyeInvisibleOutlined, EyeOutlined, SyncOutlined} from '@ant-design/icons';
-import {Button, Card, Col, Row, Tag, Tooltip} from "antd";
+import {CaretDownOutlined, EyeInvisibleOutlined, EyeOutlined, SyncOutlined} from '@ant-design/icons';
+import {Button, Card, Col, Divider, Row, Tag, Tooltip} from "antd";
 import React from "react";
 import {Settings} from "@/config/setting/setting";
 import {UidUsernameSearchView} from "@/view/special/uid-username-search.view";
 import {SettingData} from "@/config/setting/setting-data";
+import {AdvanceSettingView} from "@/view/advance-setting.view";
 
 export function UidUsernameView(props: {
     updateBox: () => void
@@ -11,6 +12,8 @@ export function UidUsernameView(props: {
     const {updateBox} = props;
     const [settings, setSettings] = React.useState<SettingData<'username'>[]>([]);
     const [hide, setHide] = React.useState(true);  // 是否显示隐藏的tag标签
+    const [hideAdvance, setHideAdvance] = React.useState(true);
+    const [expireTime, setExpireTime] = React.useState<number>()
     const usvFunctions: any = {};
     /**
      * 更新配置展示
@@ -49,7 +52,7 @@ export function UidUsernameView(props: {
         </Card>
         <Row>
             <UidUsernameSearchView functions={usvFunctions} commit={uid => {
-                Settings.insertSettingData('uid', uid);
+                Settings.insertSettingData('uid', {key: uid, expireTime});
                 updateSettings();
                 updateBox();
             }}></UidUsernameSearchView>
@@ -82,5 +85,10 @@ export function UidUsernameView(props: {
                 </Button>
             </Col>
         </Row>
+        {!hideAdvance &&
+            <AdvanceSettingView expireTime={(expireTime) => setExpireTime(expireTime)}></AdvanceSettingView>}
+        <Divider>
+            <CaretDownOutlined rotate={hideAdvance ? 0 : 180} onClick={() => setHideAdvance(hide => !hide)}/>
+        </Divider>
     </>;
 }

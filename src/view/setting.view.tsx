@@ -1,6 +1,6 @@
 import {Setting, Settings} from "@/config/setting/setting";
-import {EyeInvisibleOutlined, EyeOutlined, PlusOutlined} from '@ant-design/icons';
-import {Button, Card, Col, Input, Row, Tag} from "antd";
+import {CaretDownOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined} from '@ant-design/icons';
+import {Button, Card, Col, Divider, Input, Row, Tag} from "antd";
 import React from "react";
 import {SettingData} from "@/config/setting/setting-data";
 import {AdvanceSettingView} from "@/view/advance-setting.view";
@@ -13,6 +13,8 @@ export function SettingView(props: {
     const [settings, setSettings] = React.useState<SettingData[]>([]);
     const [inputValue, setInputValue] = React.useState('');
     const [hide, setHide] = React.useState(true);
+    const [hideAdvance, setHideAdvance] = React.useState(true);
+    const [expireTime, setExpireTime] = React.useState<number>();
     const updateSettings = () => {
         Settings.selectSettingData(setting.key).then(setSettings);
     };
@@ -34,7 +36,7 @@ export function SettingView(props: {
                              }}
                              onAuxClick={() => setInputValue(setting.key)}
                              onClose={() => {
-                                 Settings.deleteSettingData(props.setting.key, {key: setting.key})
+                                 Settings.deleteSettingData(props.setting.key, setting.key)
                                  updateSettings();
                                  updateBox();
                              }}
@@ -58,7 +60,7 @@ export function SettingView(props: {
                     onClick={() => {
                         // 添加 保存到GM
                         if (inputValue) {
-                            Settings.insertSettingData(setting.key, {key: inputValue})
+                            Settings.insertSettingData(setting.key, {key: inputValue, expireTime})
                         }
                         setInputValue('')
                         updateSettings()
@@ -73,6 +75,10 @@ export function SettingView(props: {
                 </Button>
             </Col>
         </Row>
-        <AdvanceSettingView></AdvanceSettingView>
+        {!hideAdvance &&
+            <AdvanceSettingView expireTime={(expireTime) => setExpireTime(expireTime)}></AdvanceSettingView>}
+        <Divider>
+            <CaretDownOutlined rotate={hideAdvance ? 0 : 180} onClick={() => setHideAdvance(hide => !hide)}/>
+        </Divider>
     </>;
 }
