@@ -8,8 +8,9 @@ const {date2string} = require('./src/utils/datetime-util.ts');
 
 const userscript = 'userscript';
 
-const banner = fs.readFileSync(path.resolve(__dirname, './src/userscript-info.js'), 'utf-8')
+const banner = (fileName: string) => fs.readFileSync(path.resolve(__dirname, './src/userscript-info.js'), 'utf-8')
     .replace('${timestamp}', String(new Date().getTime()))
+    .replaceAll('${userscriptName}', fileName)
     .replace('${date}', String(date2string(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
     .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
 
@@ -35,8 +36,8 @@ const config: Configuration = {
         minimizer: [
             new ESBuildMinifyPlugin({
                 target: 'es2016',
-                banner,
-                include: new RegExp(userscript + '\.min\.js'),
+                include: userscript + '.min.js',
+                banner: banner(userscript + '.min.js'),
             })
         ]
     },
@@ -54,7 +55,7 @@ const config: Configuration = {
         new BannerPlugin({
             raw: true,
             include: userscript + '.js',
-            banner,
+            banner: banner(userscript + '.js'),
         }),
         new CopyPlugin({
             patterns: [{
