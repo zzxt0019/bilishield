@@ -1,5 +1,6 @@
 import {Settings} from '@/config/setting/setting';
 import {SpecialRule} from "../special-rule";
+import * as MainStatic from '@/main-static'
 
 export class LivePageRule extends SpecialRule {
     pageKey = 'bilibili_live'
@@ -27,7 +28,7 @@ export class LivePageRule extends SpecialRule {
                         for (let i = 0; i < nodeList.length; i++) {
                             const node = nodeList[i];
                             if (node.innerHTML === text) {
-                                node.remove()
+                                node.classList.add(MainStatic.DisplayClass);
                                 if (this.danmakuMap.get(text) as number === 1) {
                                     this.danmakuMap.delete(text)
                                 } else {
@@ -37,12 +38,12 @@ export class LivePageRule extends SpecialRule {
                             }
                         }
                     } catch (e) {
-                        console.error(e)
+                        console.error(e, node);
                     } finally {
-                        console.log(true, node)
-                        // 无论如何都要删除这条
-                        return true
+                        console.log(true, node);
                     }
+                    // 无论如何都要删除这条
+                    return true
                 }
                 return false;
             }
@@ -60,5 +61,9 @@ export class LivePageRule extends SpecialRule {
             }
         }
     ]
+    /*
+    todo 直播页改动
+      .bilibili-danmaku.mode-roll 滚动直播 innerHTML内容会突然删掉 应该先记录并
+     */
 
 }
