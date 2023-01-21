@@ -9,7 +9,7 @@ export function AdvanceSettingView(props: AdvanceSettingViewProps) {
         date: new Date(Date.now() + 24 * 60 * 60 * 1000),
         millisecond: 24 * 60 * 60 * 1000,
     });
-    const [type, setType] = React.useState<'date2time' | 'time2date' | undefined>('date2time');
+    const [type, setType] = React.useState<'date2time' | 'time2date' | undefined>('time2date');
     const [fresh, refresh] = React.useState(false);
     const list = (from: number, to: number) => {
         let arr = []
