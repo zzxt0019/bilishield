@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1674201326451
+// @version         1.1.1674267265022
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-20 15:55:26.451
+// @description     bilibili屏蔽 更新时间: 2023-01-21 10:14:25.022
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -50452,7 +50452,7 @@ function AdvanceSettingView(props) {
     date: new Date(Date.now() + 24 * 60 * 60 * 1000),
     millisecond: 24 * 60 * 60 * 1000
   });
-  const [type, setType] = react.useState('date2time');
+  const [type, setType] = react.useState('time2date');
   const [fresh, refresh] = react.useState(false);
   const list = (from, to) => {
     let arr = [];
