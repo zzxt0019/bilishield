@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1674267265022
+// @version         1.1.1674310670463
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-21 10:14:25.022
+// @description     bilibili屏蔽 更新时间: 2023-01-21 22:17:50.463
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -5024,6 +5024,7 @@ var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _
 };
 
 
+
 class LivePageRule extends SpecialRule {
   constructor() {
     super(...arguments);
@@ -5052,7 +5053,7 @@ class LivePageRule extends SpecialRule {
             for (let i = 0; i < nodeList.length; i++) {
               const node = nodeList[i];
               if (node.innerHTML === text) {
-                node.remove();
+                node.classList.add(DisplayClass);
                 if (this.danmakuMap.get(text) === 1) {
                   this.danmakuMap.delete(text);
                 } else {
@@ -5062,12 +5063,12 @@ class LivePageRule extends SpecialRule {
               }
             }
           } catch (e) {
-            console.error(e);
+            console.error(e, node);
           } finally {
             console.log(true, node);
-            // 无论如何都要删除这条
-            return true;
           }
+          // 无论如何都要删除这条
+          return true;
         }
         return false;
       })
@@ -5083,6 +5084,10 @@ class LivePageRule extends SpecialRule {
         return false;
       })
     }];
+    /*
+    todo 直播页改动
+      .bilibili-danmaku.mode-roll 滚动直播 innerHTML内容会突然删掉 应该先记录并
+     */
   }
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
