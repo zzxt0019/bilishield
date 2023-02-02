@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1674310670463
+// @version         1.1.1675352542289
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-01-21 22:17:50.463
+// @description     bilibili屏蔽 更新时间: 2023-02-02 23:42:22.289
 
 // @match           *://*.bilibili.com/*
 // @noframes
@@ -4405,19 +4405,23 @@ const CssInnerHtml = {
 ;// CONCATENATED MODULE: ./src/config/page/special/special-pages.ts
 // import {BaiduPage} from "@/config/page/special/impl/baidu-page";
 class SpecialPages {
+  static sp = new Map();
   static init(specialPage) {
     this.sp.set(specialPage.key, specialPage);
   }
+  static
+    // this.init(new BaiduPage())  // 测试使用
+  {}
 }
-SpecialPages.sp = new Map();
-(() => {
-  // this.init(new BaiduPage())  // 测试使用
-})();
 ;// CONCATENATED MODULE: ./src/config/rule/rule.ts
 /**
  * 规则配置
  */
 class Rule {
+  key; // 规则key yaml的key 相当于id
+  name; // 规则名称 用于展示
+  mainSelector; // 主选择器 目标的主体
+  checker; // 选择器 判断条件
   constructor(rule) {
     this.key = rule.key;
     this.name = rule.name;
@@ -4476,57 +4480,28 @@ class DefaultSettings {
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-setting.ts
 class SpecialSetting {}
 ;// CONCATENATED MODULE: ./src/config/setting/special/impl/uid-username.ts
-var __awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 class UidUsername extends SpecialSetting {
-  select(key) {
-    return __awaiter(this, void 0, void 0, function* () {
-      if (key === 'uid') {
-        let uids = DefaultSettings._selectSettingData('uid');
-        uids.forEach(uid => uid.uid = uid.key);
-        return uids;
-      } else if (key === 'username') {
-        let uids = yield this.select('uid');
-        return yield Promise.all(uids.map(uid => {
-          return new Promise(res => {
-            this.uid2username(uid.key).then(username => res({
-              key: uid.key,
-              username: username,
-              hide: uid.hide,
-              expireTime: uid.expireTime
-            }));
-          });
-        }));
-      }
-      return [];
-    });
+  async select(key) {
+    if (key === 'uid') {
+      let uids = DefaultSettings._selectSettingData('uid');
+      uids.forEach(uid => uid.uid = uid.key);
+      return uids;
+    } else if (key === 'username') {
+      let uids = await this.select('uid');
+      return await Promise.all(uids.map(uid => {
+        return new Promise(res => {
+          this.uid2username(uid.key).then(username => res({
+            key: uid.key,
+            username: username,
+            hide: uid.hide,
+            expireTime: uid.expireTime
+          }));
+        });
+      }));
+    }
+    return [];
   }
   reset(key, uid) {
     DefaultSettings._resetSettingData('uid', uid);
@@ -4549,50 +4524,45 @@ class UidUsername extends SpecialSetting {
       return 'like';
     }
   }
-  uid2username(_uid) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // 输入错误
-      if (_uid === '') {
-        return '';
-      }
-      // 缓存在有效期内, 取缓存
-      let uid = Number(_uid);
-      let obj = GM_getValue('uid_' + uid);
-      let biliUp = obj;
-      if (biliUp && new Date().getTime() < biliUp.expireTime) {
-        return biliUp.username;
-      }
-      // 异步查询
-      return new Promise((res, rej) => {
-        this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex);
-      }).catch(() => Promise.resolve(''));
-    });
+  async uid2username(_uid) {
+    // 输入错误
+    if (_uid === '') {
+      return '';
+    }
+    // 缓存在有效期内, 取缓存
+    let uid = Number(_uid);
+    let obj = GM_getValue('uid_' + uid);
+    let biliUp = obj;
+    if (biliUp && new Date().getTime() < biliUp.expireTime) {
+      return biliUp.username;
+    }
+    // 异步查询
+    return new Promise((res, rej) => {
+      this.queryUsername(res, rej, uid, UidUsername.apiIndex, UidUsername.apiIndex);
+    }).catch(() => Promise.resolve(''));
   }
-  username2infos(username, page = 1) {
-    return __awaiter(this, void 0, void 0, function* () {
-      return new Promise((res, rej) => {
-        GM_xmlhttpRequest({
-          method: 'GET',
-          url: 'http://api.bilibili.com/x/web-interface/search/type?search_type=bili_user&page=' + page + '&keyword=' + username,
-          onload: response => {
-            var _a;
-            let json = JSON.parse(response.responseText);
-            if (json.code === 0 && ((_a = json.data) === null || _a === void 0 ? void 0 : _a.result)) {
-              let results = [];
-              for (let i = 0; i < json.data.result.length; i++) {
-                results.push({
-                  uid: json.data.result[i].mid,
-                  username: json.data.result[i].uname
-                });
-              }
-              res(results);
-            } else {
-              rej();
+  async username2infos(username, page = 1) {
+    return new Promise((res, rej) => {
+      GM_xmlhttpRequest({
+        method: 'GET',
+        url: 'http://api.bilibili.com/x/web-interface/search/type?search_type=bili_user&page=' + page + '&keyword=' + username,
+        onload: response => {
+          let json = JSON.parse(response.responseText);
+          if (json.code === 0 && json.data?.result) {
+            let results = [];
+            for (let i = 0; i < json.data.result.length; i++) {
+              results.push({
+                uid: json.data.result[i].mid,
+                username: json.data.result[i].uname
+              });
             }
+            res(results);
+          } else {
+            rej();
           }
-        });
-      }).catch(() => Promise.resolve([]));
-    });
+        }
+      });
+    }).catch(() => Promise.resolve([]));
   }
   /**
    * 查询用户名
@@ -4637,21 +4607,24 @@ class UidUsername extends SpecialSetting {
       }
     });
   }
+  static apiIndex = 0;
+  static apis = [{
+    url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
+    success: json => json.code === 0,
+    username: json => json.data.card.name,
+    change: json => json.code === -412 // 请求被拦截
+  }, {
+    url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
+    success: json => json.code === 0,
+    username: json => json.data.name,
+    change: json => json.code === -412 // 请求被拦截
+  }];
 }
-UidUsername.apiIndex = 0;
-UidUsername.apis = [{
-  url: uid => 'http://api.bilibili.com/x/web-interface/card?mid=' + uid,
-  success: json => json.code === 0,
-  username: json => json.data.card.name,
-  change: json => json.code === -412 // 请求被拦截
-}, {
-  url: uid => 'https://api.bilibili.com/x/space/acc/info?mid=' + uid,
-  success: json => json.code === 0,
-  username: json => json.data.name,
-  change: json => json.code === -412 // 请求被拦截
-}];
 
 class BiliUp {
+  uid;
+  username;
+  expireTime;
   constructor(uid, username, expireTime) {
     this.uid = uid;
     this.username = username;
@@ -4670,6 +4643,9 @@ function isSpecialKeys(key) {
 }
 ;// CONCATENATED MODULE: ./src/config/setting/setting-data.ts
 class SettingDataBase {
+  key;
+  hide;
+  expireTime;
   constructor(settingData) {
     this.key = settingData.key;
     this.hide = settingData.hide;
@@ -4677,33 +4653,6 @@ class SettingDataBase {
   }
 }
 ;// CONCATENATED MODULE: ./src/config/setting/setting.ts
-var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
@@ -4711,6 +4660,9 @@ var setting_awaiter = undefined && undefined.__awaiter || function (thisArg, _ar
  * 数据配置
  */
 class Setting {
+  key;
+  name;
+  type;
   constructor(setting) {
     this.key = setting.key;
     this.name = setting.name;
@@ -4718,6 +4670,7 @@ class Setting {
   }
 }
 class Settings {
+  static settingMap;
   static getSystemSettings() {
     if (!Settings.settingMap) {
       let obj = GM_getValue('script.setting');
@@ -4726,6 +4679,13 @@ class Settings {
         let setting = obj[key];
         setting.key = key;
         Settings.settingMap.set(key, setting);
+      });
+      ['uid', 'username'].forEach(key => {
+        Settings.settingMap.set(key, new Setting({
+          key: key,
+          name: key,
+          type: Specials[key].type(key)
+        }));
       });
     }
     return Settings.settingMap;
@@ -4773,23 +4733,19 @@ class Settings {
     }
   }
   // 加入特殊配置后的获取配置值
-  static selectSettingData(paramKey) {
-    return setting_awaiter(this, void 0, void 0, function* () {
-      if (isSpecialKeys(paramKey)) {
-        return yield Specials[paramKey].select(paramKey);
-      } else {
-        return DefaultSettings._selectSettingData(paramKey);
-      }
-    });
+  static async selectSettingData(paramKey) {
+    if (isSpecialKeys(paramKey)) {
+      return await Specials[paramKey].select(paramKey);
+    } else {
+      return DefaultSettings._selectSettingData(paramKey);
+    }
   }
-  static selectSettingDataString(paramKey) {
-    return setting_awaiter(this, void 0, void 0, function* () {
-      if (isSpecialKeys(paramKey)) {
-        return (yield this.selectSettingData(paramKey)).map(item => item[paramKey]);
-      } else {
-        return (yield this.selectSettingData(paramKey)).map(item => item.key);
-      }
-    });
+  static async selectSettingDataString(paramKey) {
+    if (isSpecialKeys(paramKey)) {
+      return (await this.selectSettingData(paramKey)).map(item => item[paramKey]);
+    } else {
+      return (await this.selectSettingData(paramKey)).map(item => item.key);
+    }
   }
   // 加入特殊配置后的设置配置值
   static resetSettingData(paramKey, data) {
@@ -4836,39 +4792,13 @@ class Settings {
   }
 }
 ;// CONCATENATED MODULE: ./src/config/rule/do-rule.ts
-var do_rule_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 /**
  * 执行的规则
  */
 class DoRule {
+  mainSelector;
   constructor(mainSelector) {
     this.mainSelector = mainSelector;
   }
@@ -4876,12 +4806,10 @@ class DoRule {
    * 隐藏主体元素
    * @param mainElement 主体元素
    */
-  display(mainElement) {
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      if ((yield this.bingo(mainElement)) && !mainElement.classList.contains(DisplayClass)) {
-        mainElement.classList.add(DisplayClass);
-      }
-    });
+  async display(mainElement) {
+    if ((await this.bingo(mainElement)) && !mainElement.classList.contains(DisplayClass)) {
+      mainElement.classList.add(DisplayClass);
+    }
   }
   /**
    * 显示主体元素
@@ -4897,33 +4825,33 @@ class DoRule {
  * 执行的多规则
  */
 class DoRuleN extends DoRule {
+  mainSelector;
+  checkers;
   constructor(mainSelector, checkers) {
     super(mainSelector);
     this.mainSelector = mainSelector;
     this.checkers = checkers;
   }
-  bingo(mainElement) {
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      // 所有检查器之中满足一个即为中奖
-      for (const checker of this.checkers) {
-        if (checker.innerSelector) {
-          // 有内部选择器, 选择所有内部元素判断, 满足一个即为中奖
-          let elements = mainElement.querySelectorAll(checker.innerSelector);
-          for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
-            if (yield this.bingo0(element, checker)) {
-              return true;
-            }
-          }
-        } else {
-          // 没有内部选择器, 即为当前元素, 判断
-          if (yield this.bingo0(mainElement, checker)) {
+  async bingo(mainElement) {
+    // 所有检查器之中满足一个即为中奖
+    for (const checker of this.checkers) {
+      if (checker.innerSelector) {
+        // 有内部选择器, 选择所有内部元素判断, 满足一个即为中奖
+        let elements = mainElement.querySelectorAll(checker.innerSelector);
+        for (let i = 0; i < elements.length; i++) {
+          const element = elements[i];
+          if (await this.bingo0(element, checker)) {
             return true;
           }
         }
+      } else {
+        // 没有内部选择器, 即为当前元素, 判断
+        if (await this.bingo0(mainElement, checker)) {
+          return true;
+        }
       }
-      return false;
-    });
+    }
+    return false;
   }
   /**
    * 判断当前一个元素是否中奖
@@ -4931,180 +4859,140 @@ class DoRuleN extends DoRule {
    * @param checker 内部检查器
    * @returns 是否中奖
    */
-  bingo0(element, checker) {
-    var _a, _b;
-    return do_rule_awaiter(this, void 0, void 0, function* () {
-      if (checker.bingo) {
-        return yield checker.bingo(element);
-      }
-      // 如果是always 中奖
-      if (checker.always) {
-        return true;
-      }
-      // 是innerHTML 判断innerHTML是否在data的范围
-      if (checker.innerHTML && checker.setting) {
-        for (const settingData of yield Settings.selectSettingDataString(checker.setting.key)) {
-          let type = (_a = checker.type) !== null && _a !== void 0 ? _a : Settings.getCheckType(checker.setting.key);
-          switch (type) {
-            case 'equal':
-              if (element.innerHTML === settingData) {
-                return true;
-              }
-              break;
-            case 'like':
-              if (element.innerHTML.includes(settingData)) {
-                return true;
-              }
-              break;
-            case 'regexp':
-              if (new RegExp(settingData, 'i').test(element.innerHTML)) {
-                return true;
-              }
-              break;
-          }
+  async bingo0(element, checker) {
+    if (checker.bingo) {
+      return await checker.bingo(element);
+    }
+    // 如果是always 中奖
+    if (checker.always) {
+      return true;
+    }
+    // 是innerHTML 判断innerHTML是否在data的范围
+    if (checker.innerHTML && checker.setting) {
+      for (const settingData of await Settings.selectSettingDataString(checker.setting.key)) {
+        let type = checker.type ?? Settings.getCheckType(checker.setting.key);
+        switch (type) {
+          case 'equal':
+            if (element.innerHTML === settingData) {
+              return true;
+            }
+            break;
+          case 'like':
+            if (element.innerHTML.includes(settingData)) {
+              return true;
+            }
+            break;
+          case 'regexp':
+            if (new RegExp(settingData, 'i').test(element.innerHTML)) {
+              return true;
+            }
+            break;
         }
       }
-      // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
-      if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
-        for (const settingData of yield Settings.selectSettingDataString(checker.setting.key)) {
-          let type = (_b = checker.type) !== null && _b !== void 0 ? _b : Settings.getCheckType(checker.setting.key);
-          let value = element.getAttribute(checker.attribute);
-          switch (type) {
-            case 'equal':
-              if (value === settingData) {
-                return true;
-              }
-              break;
-            case 'like':
-              if (value.includes(settingData)) {
-                return true;
-              }
-              break;
-            case 'regexp':
-              if (new RegExp(settingData, 'i').test(value)) {
-                return true;
-              }
-              break;
-          }
+    }
+    // 有attribute 判断attribute的value是否在data的范围  元素有这个属性
+    if (checker.attribute && checker.setting && element.hasAttribute(checker.attribute)) {
+      for (const settingData of await Settings.selectSettingDataString(checker.setting.key)) {
+        let type = checker.type ?? Settings.getCheckType(checker.setting.key);
+        let value = element.getAttribute(checker.attribute);
+        switch (type) {
+          case 'equal':
+            if (value === settingData) {
+              return true;
+            }
+            break;
+          case 'like':
+            if (value.includes(settingData)) {
+              return true;
+            }
+            break;
+          case 'regexp':
+            if (new RegExp(settingData, 'i').test(value)) {
+              return true;
+            }
+            break;
         }
       }
-      return false;
-    });
+    }
+    return false;
   }
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rule.ts
 class SpecialRule {}
 ;// CONCATENATED MODULE: ./src/config/rule/special/impl/live-page.ts
-var live_page_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
 class LivePageRule extends SpecialRule {
-  constructor() {
-    super(...arguments);
-    this.pageKey = 'bilibili_live';
-    this.danmakuMap = new Map();
-    this.spCheckers = [{
-      mainSelector: '.chat-item.danmaku-item',
-      bingo: node => live_page_awaiter(this, void 0, void 0, function* () {
-        var _a;
-        /**
-         * 屏蔽带粉丝牌子的发言
-         */
-        if ((yield Settings.selectSettingDataString('uid')).includes((_a = node.querySelector('[data-anchor-id]')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-anchor-id'))) {
-          try {
-            /**
-             * 记录发言存入map 计数 + 1
-             */
-            let text = String(node.getAttribute('data-danmaku')); // 记录发言
-            let lastCount = this.danmakuMap.get(text);
-            this.danmakuMap.set(text, lastCount ? lastCount + 1 : 1); // danmakuMap 对应发言的 count + 1
-            /**
-             * 清除中央弹幕
-             * 删除与发言相同内容,同时计数 - 1
-             */
-            let nodeList = document.querySelectorAll('.bilibili-danmaku.mode-roll');
-            for (let i = 0; i < nodeList.length; i++) {
-              const node = nodeList[i];
-              if (node.innerHTML === text) {
-                node.classList.add(DisplayClass);
-                if (this.danmakuMap.get(text) === 1) {
-                  this.danmakuMap.delete(text);
-                } else {
-                  this.danmakuMap.set(text, this.danmakuMap.get(text) - 1);
-                }
-                break;
+  pageKey = 'bilibili_live';
+  danmakuMap = new Map();
+  spCheckers = [{
+    mainSelector: '.chat-item.danmaku-item',
+    bingo: async node => {
+      /**
+       * 屏蔽带粉丝牌子的发言
+       */
+      if ((await Settings.selectSettingDataString('uid')).includes(node.querySelector('[data-anchor-id]')?.getAttribute('data-anchor-id'))) {
+        try {
+          /**
+           * 记录发言存入map 计数 + 1
+           */
+          let text = String(node.getAttribute('data-danmaku')); // 记录发言
+          let lastCount = this.danmakuMap.get(text);
+          this.danmakuMap.set(text, lastCount ? lastCount + 1 : 1); // danmakuMap 对应发言的 count + 1
+          /**
+           * 清除中央弹幕
+           * 删除与发言相同内容,同时计数 - 1
+           */
+          let nodeList = document.querySelectorAll('.bilibili-danmaku.mode-roll');
+          for (let i = 0; i < nodeList.length; i++) {
+            const node = nodeList[i];
+            if (node.innerHTML === text) {
+              node.classList.add(DisplayClass);
+              if (this.danmakuMap.get(text) === 1) {
+                this.danmakuMap.delete(text);
+              } else {
+                this.danmakuMap.set(text, this.danmakuMap.get(text) - 1);
               }
+              break;
             }
-          } catch (e) {
-            console.error(e, node);
-          } finally {
-            console.log(true, node);
           }
-          // 无论如何都要删除这条
-          return true;
+        } catch (e) {
+          console.error(e, node);
+        } finally {
+          console.log(true, node);
         }
-        return false;
-      })
-    }, {
-      mainSelector: '.bilibili-danmaku.mode-roll',
-      bingo: element => live_page_awaiter(this, void 0, void 0, function* () {
-        let text = element.innerHTML;
-        let lastCount = this.danmakuMap.get(text);
-        if (lastCount) {
-          this.danmakuMap.set(text, lastCount - 1); // 计数 - 1
-          return true;
-        }
-        return false;
-      })
-    }];
-    /*
-    todo 直播页改动
-      .bilibili-danmaku.mode-roll 滚动直播 innerHTML内容会突然删掉 应该先记录并
-     */
-  }
+        // 无论如何都要删除这条
+        return true;
+      }
+      return false;
+    }
+  }, {
+    mainSelector: '.bilibili-danmaku.mode-roll',
+    bingo: async element => {
+      let text = element.innerHTML;
+      let lastCount = this.danmakuMap.get(text);
+      if (lastCount) {
+        this.danmakuMap.set(text, lastCount - 1); // 计数 - 1
+        return true;
+      }
+      return false;
+    }
+  }];
 }
 ;// CONCATENATED MODULE: ./src/config/rule/special/special-rules.ts
-var _a;
 
 // import {BaiduTest} from "@/config/rule/special/impl/baidu-test";
 class SpecialRules {
+  static sp = new Map();
   static init(specialRule) {
     this.sp.set(specialRule.pageKey, specialRule);
   }
+  static {
+    // this.init(new BaiduTest())
+    this.init(new LivePageRule());
+  }
 }
-_a = SpecialRules;
-SpecialRules.sp = new Map();
-(() => {
-  // this.init(new BaiduTest())
-  _a.init(new LivePageRule());
-})();
 ;// CONCATENATED MODULE: ./src/observer/observer.ts
 class Observer {
   windowKey(window0) {
@@ -5127,10 +5015,7 @@ class Observer {
 
 
 class MyObserver extends Observer {
-  constructor() {
-    super(...arguments);
-    this.observerMap = new Map();
-  }
+  observerMap = new Map();
   start(rule, window) {
     let key = this.wrKey(rule, window);
     if (!this.observerMap.has(key)) {
@@ -5153,9 +5038,8 @@ class MyObserver extends Observer {
     }
   }
   stop(rule, window) {
-    var _a;
     let key = this.wrKey(rule, window);
-    (_a = this.observerMap.get(key)) === null || _a === void 0 ? void 0 : _a.disconnect();
+    this.observerMap.get(key)?.disconnect();
     this.observerMap.delete(key);
   }
 }
@@ -5183,14 +5067,14 @@ class ArriveObserver extends Observer {
  * 页面配置
  */
 class Page {
+  key; // 页面key yaml的key 相当于id
+  name; // 页面名称 用于展示
+  regexp; // 正则表达式 真实页面是否匹配配置页面
+  observer = new ArriveObserver();
+  iframeObserver = new MyObserver();
   constructor(page) {
-    var _a;
-    this.observer = new ArriveObserver();
-    this.iframeObserver = new MyObserver();
-    this.working = false;
-    this.checkerMap = new Map();
     this.key = page.key;
-    this.name = (_a = page.name) !== null && _a !== void 0 ? _a : page.key;
+    this.name = page.name ?? page.key;
     this.regexp = new RegExp(page.regexp.pattern, page.regexp.modifiers);
     // 添加特殊规则 特殊规则优先处理
     if (SpecialRules.sp.has(this.key)) {
@@ -5210,6 +5094,8 @@ class Page {
   isCurrent() {
     return this.regexp.test(location.href);
   }
+  working = false;
+  checkerMap = new Map();
   insert(rule) {
     let _checkers = this.checkerMap.get(rule.mainSelector);
     let checkers = _checkers ? _checkers : [];
@@ -5305,13 +5191,12 @@ function readEtc() {
   });
   let ruleData = GM_getValue('script.rule');
   Object.keys(ruleData).forEach(ruleKey => {
-    var _a, _b;
     let rule0 = ruleData[ruleKey];
     rule0.key = ruleKey;
-    if ((_a = rule0.checker) === null || _a === void 0 ? void 0 : _a.setting) {
+    if (rule0.checker?.setting) {
       rule0.checker.setting = Settings.getSystemSettings().get(rule0.checker.setting);
     }
-    (_b = pageMap.get(rule0.page)) === null || _b === void 0 ? void 0 : _b.insert(new Rule(rule0));
+    pageMap.get(rule0.page)?.insert(new Rule(rule0));
   });
   return pageMap;
 }
@@ -12925,93 +12810,74 @@ function public_api_stringify(value, replacer, options) {
 
 
 ;// CONCATENATED MODULE: ./src/init/check-update.ts
-var check_update_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
+
+async function checkVersion() {
+  let version = GM_getValue('script.version') ?? '1.0';
+  if (GM_info.script.version > version) {
+    // 存储版本 < 当前版本 => 更新配置
+    let dataJsonRes = await fetch(GM_info.script.icon64?.substring(0, 0x25) + '/data.json');
+    let yamlJson = (await dataJsonRes.json()).yaml;
+    let promises = [];
+    let keys = [];
+    Object.entries(yamlJson).forEach(([key, value]) => {
+      Object.keys(value).forEach(fileName => {
+        keys.push({
+          key,
+          fileName
+        });
+        promises.push(fetch(GM_info.script.icon64?.substring(0, 0x25) + '/yaml/' + key + '/' + fileName));
+      });
+    });
+    let data = {};
+    let responses = await Promise.all(promises);
+    for (let i = 0; i < responses.length; i++) {
+      let res = responses[i];
+      let text = await res.text();
+      let key = keys[i];
+      if (key.key === 'rule') {
+        data[key.key] = {
+          ...data[key.key],
+          ...ruleKey(parse(text), key.fileName.substring(0, key.fileName.lastIndexOf('.')))
+        };
+      } else {
+        data[key.key] = {
+          ...data[key.key],
+          ...parse(text)
+        };
+      }
+    }
+    Object.entries(data).forEach(([key, value]) => {
+      GM_setValue('script.' + key, value);
+    });
+    GM_setValue('script.version', GM_info.script.version);
+  } else if (GM_info.script.version < version) {
+    // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
+    let dataJson = GM_getResourceText('data.json');
+    let yamlJson = JSON.parse(dataJson).yaml;
+    let data = {
+      page: {},
+      rule: {},
+      setting: {}
+    };
+    Object.entries(yamlJson).forEach(([key, value]) => {
+      Object.keys(value).forEach(fileName => {
+        if (key === 'rule') {
+          data[key] = {
+            ...data[key],
+            ...ruleKey(parse(GM_getResourceText(key + '-' + fileName)), fileName.substring(0, fileName.lastIndexOf('.')))
+          };
+        } else {
+          data[key] = {
+            ...data[key],
+            ...parse(GM_getResourceText(key + '-' + fileName))
+          };
+        }
+      });
+    });
+    Object.entries(data).forEach(([key, value]) => {
+      GM_setValue('script.' + key, value);
     });
   }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
-
-function checkVersion() {
-  var _a, _b;
-  return check_update_awaiter(this, void 0, void 0, function* () {
-    let version = (_a = GM_getValue('script.version')) !== null && _a !== void 0 ? _a : '1.0';
-    if (GM_info.script.version > version) {
-      // 存储版本 < 当前版本 => 更新配置
-      let dataJsonRes = yield fetch(((_b = GM_info.script.icon64) === null || _b === void 0 ? void 0 : _b.substring(0, 0x25)) + '/data.json');
-      let yamlJson = (yield dataJsonRes.json()).yaml;
-      let promises = [];
-      let keys = [];
-      Object.entries(yamlJson).forEach(([key, value]) => {
-        Object.keys(value).forEach(fileName => {
-          var _a;
-          keys.push({
-            key,
-            fileName
-          });
-          promises.push(fetch(((_a = GM_info.script.icon64) === null || _a === void 0 ? void 0 : _a.substring(0, 0x25)) + '/yaml/' + key + '/' + fileName));
-        });
-      });
-      let data = {};
-      let responses = yield Promise.all(promises);
-      for (let i = 0; i < responses.length; i++) {
-        let res = responses[i];
-        let text = yield res.text();
-        let key = keys[i];
-        if (key.key === 'rule') {
-          data[key.key] = Object.assign(Object.assign({}, data[key.key]), ruleKey(parse(text), key.fileName.substring(0, key.fileName.lastIndexOf('.'))));
-        } else {
-          data[key.key] = Object.assign(Object.assign({}, data[key.key]), parse(text));
-        }
-      }
-      Object.entries(data).forEach(([key, value]) => {
-        GM_setValue('script.' + key, value);
-      });
-      GM_setValue('script.version', GM_info.script.version);
-    } else if (GM_info.script.version < version) {
-      // 存储版本 > 当前版本(本地测试版本为0.0) => 是本地测试, 读取本地yaml
-      let dataJson = GM_getResourceText('data.json');
-      let yamlJson = JSON.parse(dataJson).yaml;
-      let data = {
-        page: {},
-        rule: {},
-        setting: {}
-      };
-      Object.entries(yamlJson).forEach(([key, value]) => {
-        Object.keys(value).forEach(fileName => {
-          if (key === 'rule') {
-            data[key] = Object.assign(Object.assign({}, data[key]), ruleKey(parse(GM_getResourceText(key + '-' + fileName)), fileName.substring(0, fileName.lastIndexOf('.'))));
-          } else {
-            data[key] = Object.assign(Object.assign({}, data[key]), parse(GM_getResourceText(key + '-' + fileName)));
-          }
-        });
-      });
-      Object.entries(data).forEach(([key, value]) => {
-        GM_setValue('script.' + key, value);
-      });
-    }
-  });
 }
 function ruleKey(oldJson, key) {
   let newJson = {};
@@ -14532,7 +14398,7 @@ function declaration (value, root, parent, length) {
 function utils_lintWarning(message, info) {
   var path = info.path,
       parentSelectors = info.parentSelectors;
-  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in '".concat(path, "': ") : '').concat(message).concat(parentSelectors.length ? " Selector info: ".concat(parentSelectors.join(' -> '), ")") : ''));
+  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in ".concat(path, ": ") : '').concat(message).concat(parentSelectors.length ? " Selector: ".concat(parentSelectors.join(' | ')) : ''));
 }
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/contentQuotesLinter.js
 
@@ -14562,6 +14428,41 @@ var hashedAnimationLinter_linter = function linter(key, value, info) {
 };
 
 /* harmony default export */ const hashedAnimationLinter = ((/* unused pure expression or super */ null && (hashedAnimationLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/legacyNotSelectorLinter.js
+
+
+function isConcatSelector(selector) {
+  var _selector$match;
+
+  var notContent = ((_selector$match = selector.match(/:not\(([^)]*)\)/)) === null || _selector$match === void 0 ? void 0 : _selector$match[1]) || ''; // split selector. e.g.
+  // `h1#a.b` => ['h1', #a', '.b']
+
+  var splitCells = notContent.split(/(\[[^[]*])|(?=[.#])/).filter(function (str) {
+    return str;
+  });
+  return splitCells.length > 1;
+}
+
+function parsePath(info) {
+  return info.parentSelectors.reduce(function (prev, cur) {
+    if (!prev) {
+      return cur;
+    }
+
+    return cur.includes('&') ? cur.replace(/&/g, prev) : "".concat(prev, " ").concat(cur);
+  }, '');
+}
+
+var legacyNotSelectorLinter_linter = function linter(key, value, info) {
+  var parentSelectorPath = parsePath(info);
+  var notList = parentSelectorPath.match(/:not\([^)]*\)/g) || [];
+
+  if (notList.length > 0 && notList.some(isConcatSelector)) {
+    lintWarning("Concat ':not' selector not support in legacy browsers.", info);
+  }
+};
+
+/* harmony default export */ const legacyNotSelectorLinter = ((/* unused pure expression or super */ null && (legacyNotSelectorLinter_linter)));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/logicalPropertiesLinter.js
 
 
@@ -14656,7 +14557,24 @@ var logicalPropertiesLinter_linter = function linter(key, value, info) {
 };
 
 /* harmony default export */ const logicalPropertiesLinter = ((/* unused pure expression or super */ null && (logicalPropertiesLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/parentSelectorLinter.js
+
+
+var parentSelectorLinter_linter = function linter(key, value, info) {
+  if (info.parentSelectors.some(function (selector) {
+    var selectors = selector.split(',');
+    return selectors.some(function (item) {
+      return item.split('&').length > 2;
+    });
+  })) {
+    lintWarning('Should not use more than one `&` in a selector.', info);
+  }
+};
+
+/* harmony default export */ const parentSelectorLinter = ((/* unused pure expression or super */ null && (parentSelectorLinter_linter)));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/index.js
+
+
 
 
 
@@ -20012,7 +19930,7 @@ const useLocaleReceiver = (componentName, defaultLocale) => {
   return [getLocale];
 };
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.1.5');
+/* harmony default export */ const version = ('5.1.7');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -20989,7 +20907,7 @@ const seedToken = Object.assign(Object.assign({}, defaultPresetColors), {
   motionEaseInOut: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
   motionEaseOutBack: 'cubic-bezier(0.12, 0.4, 0.29, 1.46)',
   motionEaseInBack: 'cubic-bezier(0.71, -0.46, 0.88, 0.6)',
-  motionEaseInQuint: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
+  motionEaseInQuint: 'cubic-bezier(0.755, 0.05, 0.855, 0.06)',
   motionEaseOutQuint: 'cubic-bezier(0.23, 1, 0.32, 1)',
   // Radius
   borderRadius: 6,
@@ -22207,9 +22125,6 @@ const resetIcon = () => ({
   },
   svg: {
     display: 'inline-block'
-  },
-  '& &-icon': {
-    display: 'block'
   }
 });
 const clearFix = () => ({
@@ -22280,7 +22195,7 @@ const genCommonStyle = (token, componentPrefixCls) => {
   };
 };
 const genFocusOutline = token => ({
-  outline: `${token.lineWidth * 4}px solid ${token.colorPrimaryBorder}`,
+  outline: `${token.lineWidthBold}px solid ${token.colorPrimaryBorder}`,
   outlineOffset: 1,
   transition: 'outline-offset 0s, outline 0s'
 });
@@ -22300,7 +22215,11 @@ const style_useStyle = iconPrefixCls => {
     hashId: '',
     path: ['ant-design-icons', iconPrefixCls]
   }, () => [{
-    [`.${iconPrefixCls}`]: resetIcon()
+    [`.${iconPrefixCls}`]: Object.assign(Object.assign({}, resetIcon()), {
+      [`.${iconPrefixCls} .${iconPrefixCls}-icon`]: {
+        display: 'block'
+      }
+    })
   }]);
 };
 /* harmony default export */ const style = (style_useStyle);
@@ -23244,9 +23163,14 @@ var iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  f
 var useInsertStyles = function useInsertStyles() {
   var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : iconStyles;
   var _useContext = (0,react.useContext)(Context),
-    csp = _useContext.csp;
+    csp = _useContext.csp,
+    prefixCls = _useContext.prefixCls;
+  var mergedStyleStr = styleStr;
+  if (prefixCls) {
+    mergedStyleStr = mergedStyleStr.replace(/anticon/g, prefixCls);
+  }
   (0,react.useEffect)(function () {
-    updateCSS(styleStr, '@ant-design-icons', {
+    updateCSS(mergedStyleStr, '@ant-design-icons', {
       prepend: true,
       csp: csp
     });
@@ -30652,9 +30576,6 @@ ForwardOverflow.INVALIDATE = INVALIDATE; // Convert to generic type
 ;// CONCATENATED MODULE: ./node_modules/rc-overflow/es/index.js
 
 /* harmony default export */ const rc_overflow_es = (es_Overflow);
-// EXTERNAL MODULE: ./node_modules/shallowequal/index.js
-var shallowequal = __webpack_require__(6774);
-var shallowequal_default = /*#__PURE__*/__webpack_require__.n(shallowequal);
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/IdContext.js
 
 var IdContext = /*#__PURE__*/react.createContext(null);
@@ -30662,13 +30583,12 @@ function getMenuId(uuid, eventKey) {
   if (uuid === undefined) {
     return null;
   }
-
   return "".concat(uuid, "-").concat(eventKey);
 }
+
 /**
  * Get `data-menu-id`
  */
-
 function useMenuId(eventKey) {
   var id = react.useContext(IdContext);
   return getMenuId(id, eventKey);
@@ -30681,30 +30601,25 @@ var MenuContext_excluded = ["children", "locked"];
 
 
 var MenuContext = /*#__PURE__*/react.createContext(null);
-
 function mergeProps(origin, target) {
   var clone = objectSpread2_objectSpread2({}, origin);
-
   Object.keys(target).forEach(function (key) {
     var value = target[key];
-
     if (value !== undefined) {
       clone[key] = value;
     }
   });
   return clone;
 }
-
 function InheritableContextProvider(_ref) {
   var children = _ref.children,
-      locked = _ref.locked,
-      restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuContext_excluded);
-
+    locked = _ref.locked,
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuContext_excluded);
   var context = react.useContext(MenuContext);
   var inheritableContext = useMemo_useMemo(function () {
     return mergeProps(context, restProps);
   }, [context, restProps], function (prev, next) {
-    return !locked && (prev[0] !== next[0] || !shallowequal_default()(prev[1], next[1]));
+    return !locked && (prev[0] !== next[0] || !es_isEqual(prev[1], next[1], true));
   });
   return /*#__PURE__*/react.createElement(MenuContext.Provider, {
     value: inheritableContext
@@ -30713,20 +30628,25 @@ function InheritableContextProvider(_ref) {
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PathContext.js
 
 
-var EmptyList = []; // ========================= Path Register =========================
+var EmptyList = [];
+
+// ========================= Path Register =========================
 
 var PathRegisterContext = /*#__PURE__*/react.createContext(null);
 function useMeasure() {
   return react.useContext(PathRegisterContext);
-} // ========================= Path Tracker ==========================
+}
 
+// ========================= Path Tracker ==========================
 var PathTrackerContext = /*#__PURE__*/react.createContext(EmptyList);
 function useFullPath(eventKey) {
   var parentKeyPath = react.useContext(PathTrackerContext);
   return react.useMemo(function () {
     return eventKey !== undefined ? [].concat(_toConsumableArray(parentKeyPath), [eventKey]) : parentKeyPath;
   }, [parentKeyPath, eventKey]);
-} // =========================== Path User ===========================
+}
+
+// =========================== Path User ===========================
 
 var PathUserContext = /*#__PURE__*/react.createContext(null);
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/context/PrivateContext.js
@@ -30739,32 +30659,31 @@ var PrivateContext = /*#__PURE__*/react.createContext({});
 
 
 
- // destruct to reduce minify size
 
+
+// destruct to reduce minify size
 var useAccessibility_LEFT = es_KeyCode.LEFT,
-    RIGHT = es_KeyCode.RIGHT,
-    UP = es_KeyCode.UP,
-    DOWN = es_KeyCode.DOWN,
-    ENTER = es_KeyCode.ENTER,
-    useAccessibility_ESC = es_KeyCode.ESC,
-    HOME = es_KeyCode.HOME,
-    END = es_KeyCode.END;
+  RIGHT = es_KeyCode.RIGHT,
+  UP = es_KeyCode.UP,
+  DOWN = es_KeyCode.DOWN,
+  ENTER = es_KeyCode.ENTER,
+  useAccessibility_ESC = es_KeyCode.ESC,
+  HOME = es_KeyCode.HOME,
+  END = es_KeyCode.END;
 var ArrowKeys = [UP, DOWN, useAccessibility_LEFT, RIGHT];
-
 function useAccessibility_getOffset(mode, isRootLevel, isRtl, which) {
   var _inline, _horizontal, _vertical, _offsets;
-
   var prev = 'prev';
   var next = 'next';
   var children = 'children';
-  var parent = 'parent'; // Inline enter is special that we use unique operation
+  var parent = 'parent';
 
+  // Inline enter is special that we use unique operation
   if (mode === 'inline' && which === ENTER) {
     return {
       inlineTrigger: true
     };
   }
-
   var inline = (_inline = {}, _defineProperty(_inline, UP, prev), _defineProperty(_inline, DOWN, next), _inline);
   var horizontal = (_horizontal = {}, _defineProperty(_horizontal, useAccessibility_LEFT, isRtl ? next : prev), _defineProperty(_horizontal, RIGHT, isRtl ? prev : next), _defineProperty(_horizontal, DOWN, children), _defineProperty(_horizontal, ENTER, children), _horizontal);
   var vertical = (_vertical = {}, _defineProperty(_vertical, UP, prev), _defineProperty(_vertical, DOWN, next), _defineProperty(_vertical, ENTER, children), _defineProperty(_vertical, useAccessibility_ESC, parent), _defineProperty(_vertical, useAccessibility_LEFT, isRtl ? children : parent), _defineProperty(_vertical, RIGHT, isRtl ? parent : children), _vertical);
@@ -30777,99 +30696,83 @@ function useAccessibility_getOffset(mode, isRootLevel, isRtl, which) {
     verticalSub: vertical
   };
   var type = (_offsets = offsets["".concat(mode).concat(isRootLevel ? '' : 'Sub')]) === null || _offsets === void 0 ? void 0 : _offsets[which];
-
   switch (type) {
     case prev:
       return {
         offset: -1,
         sibling: true
       };
-
     case next:
       return {
         offset: 1,
         sibling: true
       };
-
     case parent:
       return {
         offset: -1,
         sibling: false
       };
-
     case children:
       return {
         offset: 1,
         sibling: false
       };
-
     default:
       return null;
   }
 }
-
 function findContainerUL(element) {
   var current = element;
-
   while (current) {
     if (current.getAttribute('data-menu-list')) {
       return current;
     }
-
     current = current.parentElement;
-  } // Normally should not reach this line
+  }
 
+  // Normally should not reach this line
   /* istanbul ignore next */
-
-
   return null;
 }
+
 /**
  * Find focused element within element set provided
  */
-
-
 function getFocusElement(activeElement, elements) {
   var current = activeElement || document.activeElement;
-
   while (current) {
     if (elements.has(current)) {
       return current;
     }
-
     current = current.parentElement;
   }
-
   return null;
 }
+
 /**
  * Get focusable elements from the element set under provided container
  */
-
-
 function getFocusableElements(container, elements) {
   var list = getFocusNodeList(container, true);
   return list.filter(function (ele) {
     return elements.has(ele);
   });
 }
-
 function getNextFocusElement(parentQueryContainer, elements, focusMenuElement) {
   var offset = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
-
   // Key on the menu item will not get validate parent container
   if (!parentQueryContainer) {
     return null;
-  } // List current level menu item elements
+  }
 
+  // List current level menu item elements
+  var sameLevelFocusableMenuElementList = getFocusableElements(parentQueryContainer, elements);
 
-  var sameLevelFocusableMenuElementList = getFocusableElements(parentQueryContainer, elements); // Find next focus index
-
+  // Find next focus index
   var count = sameLevelFocusableMenuElementList.length;
   var focusIndex = sameLevelFocusableMenuElementList.findIndex(function (ele) {
     return focusMenuElement === ele;
   });
-
   if (offset < 0) {
     if (focusIndex === -1) {
       focusIndex = count - 1;
@@ -30879,21 +30782,18 @@ function getNextFocusElement(parentQueryContainer, elements, focusMenuElement) {
   } else if (offset > 0) {
     focusIndex += 1;
   }
+  focusIndex = (focusIndex + count) % count;
 
-  focusIndex = (focusIndex + count) % count; // Focus menu item
-
+  // Focus menu item
   return sameLevelFocusableMenuElementList[focusIndex];
 }
-
 function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, containerRef, getKeys, getKeyPath, triggerActiveKey, triggerAccessibilityOpen, originOnKeyDown) {
   var rafRef = react.useRef();
   var activeRef = react.useRef();
   activeRef.current = activeKey;
-
   var cleanRaf = function cleanRaf() {
     es_raf.cancel(rafRef.current);
   };
-
   react.useEffect(function () {
     return function () {
       cleanRaf();
@@ -30901,13 +30801,13 @@ function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, container
   }, []);
   return function (e) {
     var which = e.which;
-
     if ([].concat(ArrowKeys, [ENTER, useAccessibility_ESC, HOME, END]).includes(which)) {
       // Convert key to elements
       var elements;
       var key2element;
-      var element2key; // >>> Wrap as function since we use raf for some case
+      var element2key;
 
+      // >>> Wrap as function since we use raf for some case
       var refreshElements = function refreshElements() {
         elements = new Set();
         key2element = new Map();
@@ -30915,7 +30815,6 @@ function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, container
         var keys = getKeys();
         keys.forEach(function (key) {
           var element = document.querySelector("[data-menu-id='".concat(getMenuId(id, key), "']"));
-
           if (element) {
             elements.add(element);
             element2key.set(element, key);
@@ -30924,41 +30823,40 @@ function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, container
         });
         return elements;
       };
+      refreshElements();
 
-      refreshElements(); // First we should find current focused MenuItem/SubMenu element
-
+      // First we should find current focused MenuItem/SubMenu element
       var activeElement = key2element.get(activeKey);
       var focusMenuElement = getFocusElement(activeElement, elements);
       var focusMenuKey = element2key.get(focusMenuElement);
-      var offsetObj = useAccessibility_getOffset(mode, getKeyPath(focusMenuKey, true).length === 1, isRtl, which); // Some mode do not have fully arrow operation like inline
+      var offsetObj = useAccessibility_getOffset(mode, getKeyPath(focusMenuKey, true).length === 1, isRtl, which);
 
+      // Some mode do not have fully arrow operation like inline
       if (!offsetObj && which !== HOME && which !== END) {
         return;
-      } // Arrow prevent default to avoid page scroll
+      }
 
-
+      // Arrow prevent default to avoid page scroll
       if (ArrowKeys.includes(which) || [HOME, END].includes(which)) {
         e.preventDefault();
       }
-
       var tryFocus = function tryFocus(menuElement) {
         if (menuElement) {
-          var focusTargetElement = menuElement; // Focus to link instead of menu item if possible
+          var focusTargetElement = menuElement;
 
+          // Focus to link instead of menu item if possible
           var link = menuElement.querySelector('a');
-
           if (link !== null && link !== void 0 && link.getAttribute('href')) {
             focusTargetElement = link;
           }
-
           var targetKey = element2key.get(menuElement);
           triggerActiveKey(targetKey);
+
           /**
            * Do not `useEffect` here since `tryFocus` may trigger async
            * which makes React sync update the `activeKey`
            * that force render before `useRef` set the next activeKey
            */
-
           cleanRaf();
           rafRef.current = es_raf(function () {
             if (activeRef.current === targetKey) {
@@ -30967,35 +30865,34 @@ function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, container
           });
         }
       };
-
       if ([HOME, END].includes(which) || offsetObj.sibling || !focusMenuElement) {
         // ========================== Sibling ==========================
         // Find walkable focus menu element container
         var parentQueryContainer;
-
         if (!focusMenuElement || mode === 'inline') {
           parentQueryContainer = containerRef.current;
         } else {
           parentQueryContainer = findContainerUL(focusMenuElement);
-        } // Get next focus element
+        }
 
-
+        // Get next focus element
         var targetElement;
         var focusableElements = getFocusableElements(parentQueryContainer, elements);
-
         if (which === HOME) {
           targetElement = focusableElements[0];
         } else if (which === END) {
           targetElement = focusableElements[focusableElements.length - 1];
         } else {
           targetElement = getNextFocusElement(parentQueryContainer, elements, focusMenuElement, offsetObj.offset);
-        } // Focus menu item
+        }
+        // Focus menu item
+        tryFocus(targetElement);
 
-
-        tryFocus(targetElement); // ======================= InlineTrigger =======================
+        // ======================= InlineTrigger =======================
       } else if (offsetObj.inlineTrigger) {
         // Inline trigger no need switch to sub menu item
-        triggerAccessibilityOpen(focusMenuKey); // =========================== Level ===========================
+        triggerAccessibilityOpen(focusMenuKey);
+        // =========================== Level ===========================
       } else if (offsetObj.offset > 0) {
         triggerAccessibilityOpen(focusMenuKey, true);
         cleanRaf();
@@ -31003,23 +30900,26 @@ function useAccessibility_useAccessibility(mode, activeKey, isRtl, id, container
           // Async should resync elements
           refreshElements();
           var controlId = focusMenuElement.getAttribute('aria-controls');
-          var subQueryContainer = document.getElementById(controlId); // Get sub focusable menu item
+          var subQueryContainer = document.getElementById(controlId);
 
-          var targetElement = getNextFocusElement(subQueryContainer, elements); // Focus menu item
+          // Get sub focusable menu item
+          var targetElement = getNextFocusElement(subQueryContainer, elements);
 
+          // Focus menu item
           tryFocus(targetElement);
         }, 5);
       } else if (offsetObj.offset < 0) {
         var keyPath = getKeyPath(focusMenuKey, true);
         var parentKey = keyPath[keyPath.length - 2];
-        var parentMenuElement = key2element.get(parentKey); // Focus menu item
+        var parentMenuElement = key2element.get(parentKey);
 
+        // Focus menu item
         triggerAccessibilityOpen(parentKey, false);
         tryFocus(parentMenuElement);
       }
-    } // Pass origin key down event
+    }
 
-
+    // Pass origin key down event
     originOnKeyDown === null || originOnKeyDown === void 0 ? void 0 : originOnKeyDown(e);
   };
 }
@@ -31036,43 +30936,35 @@ function nextSlice(callback) {
 
 
 var PATH_SPLIT = '__RC_UTIL_PATH_SPLIT__';
-
 var getPathStr = function getPathStr(keyPath) {
   return keyPath.join(PATH_SPLIT);
 };
-
 var getPathKeys = function getPathKeys(keyPathStr) {
   return keyPathStr.split(PATH_SPLIT);
 };
-
 var OVERFLOW_KEY = 'rc-menu-more';
 function useKeyRecords() {
   var _React$useState = react.useState({}),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      internalForceUpdate = _React$useState2[1];
-
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    internalForceUpdate = _React$useState2[1];
   var key2pathRef = (0,react.useRef)(new Map());
   var path2keyRef = (0,react.useRef)(new Map());
-
   var _React$useState3 = react.useState([]),
-      _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
-      overflowKeys = _React$useState4[0],
-      setOverflowKeys = _React$useState4[1];
-
+    _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
+    overflowKeys = _React$useState4[0],
+    setOverflowKeys = _React$useState4[1];
   var updateRef = (0,react.useRef)(0);
   var destroyRef = (0,react.useRef)(false);
-
   var forceUpdate = function forceUpdate() {
     if (!destroyRef.current) {
       internalForceUpdate({});
     }
   };
-
   var registerPath = (0,react.useCallback)(function (key, keyPath) {
     // Warning for invalidate or duplicated `key`
-    if (false) {} // Fill map
+    if (false) {}
 
-
+    // Fill map
     var connectedPath = getPathStr(keyPath);
     path2keyRef.current.set(connectedPath, key);
     key2pathRef.current.set(key, connectedPath);
@@ -31095,11 +30987,9 @@ function useKeyRecords() {
   var getKeyPath = (0,react.useCallback)(function (eventKey, includeOverflow) {
     var fullPath = key2pathRef.current.get(eventKey) || '';
     var keys = getPathKeys(fullPath);
-
     if (includeOverflow && overflowKeys.includes(keys[0])) {
       keys.unshift(OVERFLOW_KEY);
     }
-
     return keys;
   }, [overflowKeys]);
   var isSubPathKey = (0,react.useCallback)(function (pathKeys, eventKey) {
@@ -31108,31 +30998,25 @@ function useKeyRecords() {
       return pathKeyList.includes(eventKey);
     });
   }, [getKeyPath]);
-
   var getKeys = function getKeys() {
     var keys = _toConsumableArray(key2pathRef.current.keys());
-
     if (overflowKeys.length) {
       keys.push(OVERFLOW_KEY);
     }
-
     return keys;
   };
+
   /**
    * Find current key related child path keys
    */
-
-
   var getSubPathKeys = (0,react.useCallback)(function (key) {
     var connectedPath = "".concat(key2pathRef.current.get(key)).concat(PATH_SPLIT);
     var pathKeys = new Set();
-
     _toConsumableArray(path2keyRef.current.keys()).forEach(function (pathKey) {
       if (pathKey.startsWith(connectedPath)) {
         pathKeys.add(path2keyRef.current.get(pathKey));
       }
     });
-
     return pathKeys;
   }, []);
   react.useEffect(function () {
@@ -31154,21 +31038,19 @@ function useKeyRecords() {
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useMemoCallback.js
 
+
 /**
  * Cache callback function that always return same ref instead.
  * This is used for context optimization.
  */
-
 function useMemoCallback(func) {
   var funRef = react.useRef(func);
   funRef.current = func;
   var callback = react.useCallback(function () {
     var _funRef$current;
-
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
-
     return (_funRef$current = funRef.current) === null || _funRef$current === void 0 ? void 0 : _funRef$current.call.apply(_funRef$current, [funRef].concat(args));
   }, []);
   return func ? callback : undefined;
@@ -31181,12 +31063,11 @@ var uniquePrefix = Math.random().toFixed(5).toString().slice(2);
 var internalId = 0;
 function useUUID(id) {
   var _useMergedState = useMergedState(id, {
-    value: id
-  }),
-      _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
-      uuid = _useMergedState2[0],
-      setUUID = _useMergedState2[1];
-
+      value: id
+    }),
+    _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
+    uuid = _useMergedState2[0],
+    setUUID = _useMergedState2[1];
   react.useEffect(function () {
     internalId += 1;
     var newId =  false ? 0 : "".concat(uniquePrefix, "-").concat(internalId);
@@ -31210,14 +31091,14 @@ function omit_omit(obj, fields) {
 
 function useActive(eventKey, disabled, onMouseEnter, onMouseLeave) {
   var _React$useContext = react.useContext(MenuContext),
-      activeKey = _React$useContext.activeKey,
-      onActive = _React$useContext.onActive,
-      onInactive = _React$useContext.onInactive;
-
+    activeKey = _React$useContext.activeKey,
+    onActive = _React$useContext.onActive,
+    onInactive = _React$useContext.onInactive;
   var ret = {
     active: activeKey === eventKey
-  }; // Skip when disabled
+  };
 
+  // Skip when disabled
   if (!disabled) {
     ret.onMouseEnter = function (domEvent) {
       onMouseEnter === null || onMouseEnter === void 0 ? void 0 : onMouseEnter({
@@ -31226,7 +31107,6 @@ function useActive(eventKey, disabled, onMouseEnter, onMouseLeave) {
       });
       onActive(eventKey);
     };
-
     ret.onMouseLeave = function (domEvent) {
       onMouseLeave === null || onMouseLeave === void 0 ? void 0 : onMouseLeave({
         key: eventKey,
@@ -31235,22 +31115,20 @@ function useActive(eventKey, disabled, onMouseEnter, onMouseLeave) {
       onInactive(eventKey);
     };
   }
-
   return ret;
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/utils/warnUtil.js
 
 var warnUtil_excluded = ["item"];
 
+
 /**
  * `onClick` event return `info.item` which point to react node directly.
  * We should warning this since it will not work on FC.
  */
-
 function warnItemProp(_ref) {
   var item = _ref.item,
-      restInfo = objectWithoutProperties_objectWithoutProperties(_ref, warnUtil_excluded);
-
+    restInfo = objectWithoutProperties_objectWithoutProperties(_ref, warnUtil_excluded);
   Object.defineProperty(restInfo, 'item', {
     get: function get() {
       es_warning(false, '`info.item` is deprecated since we will move to function component that not provides React Node instance in future.');
@@ -31264,17 +31142,15 @@ function warnItemProp(_ref) {
 
 function Icon_Icon(_ref) {
   var icon = _ref.icon,
-      props = _ref.props,
-      children = _ref.children;
+    props = _ref.props,
+    children = _ref.children;
   var iconNode;
-
   if (typeof icon === 'function') {
     iconNode = /*#__PURE__*/react.createElement(icon, objectSpread2_objectSpread2({}, props));
   } else {
     // Compatible for origin definition
     iconNode = icon;
   }
-
   return iconNode || children || null;
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/hooks/useDirectionStyle.js
@@ -31282,14 +31158,12 @@ function Icon_Icon(_ref) {
 
 function useDirectionStyle(level) {
   var _React$useContext = react.useContext(MenuContext),
-      mode = _React$useContext.mode,
-      rtl = _React$useContext.rtl,
-      inlineIndent = _React$useContext.inlineIndent;
-
+    mode = _React$useContext.mode,
+    rtl = _React$useContext.rtl,
+    inlineIndent = _React$useContext.inlineIndent;
   if (mode !== 'inline') {
     return null;
   }
-
   var len = level;
   return rtl ? {
     paddingRight: len * inlineIndent
@@ -31308,9 +31182,8 @@ function useDirectionStyle(level) {
 
 
 var MenuItem_excluded = ["title", "attribute", "elementRef"],
-    MenuItem_excluded2 = ["style", "className", "eventKey", "warnKey", "disabled", "itemIcon", "children", "role", "onMouseEnter", "onMouseLeave", "onClick", "onKeyDown", "onFocus"],
-    MenuItem_excluded3 = ["active"];
-
+  MenuItem_excluded2 = ["style", "className", "eventKey", "warnKey", "disabled", "itemIcon", "children", "role", "onMouseEnter", "onMouseLeave", "onClick", "onKeyDown", "onFocus"],
+  MenuItem_excluded3 = ["active"];
 
 
 
@@ -31330,24 +31203,19 @@ var MenuItem_excluded = ["title", "attribute", "elementRef"],
 // This should be removed from doc & api in future.
 var LegacyMenuItem = /*#__PURE__*/function (_React$Component) {
   _inherits(LegacyMenuItem, _React$Component);
-
   var _super = _createSuper(LegacyMenuItem);
-
   function LegacyMenuItem() {
     _classCallCheck(this, LegacyMenuItem);
-
     return _super.apply(this, arguments);
   }
-
   _createClass(LegacyMenuItem, [{
     key: "render",
     value: function render() {
       var _this$props = this.props,
-          title = _this$props.title,
-          attribute = _this$props.attribute,
-          elementRef = _this$props.elementRef,
-          restProps = objectWithoutProperties_objectWithoutProperties(_this$props, MenuItem_excluded);
-
+        title = _this$props.title,
+        attribute = _this$props.attribute,
+        elementRef = _this$props.elementRef,
+        restProps = objectWithoutProperties_objectWithoutProperties(_this$props, MenuItem_excluded);
       var passedProps = omit_omit(restProps, ['eventKey']);
       es_warning(!attribute, '`attribute` of Menu.Item is deprecated. Please pass attribute directly.');
       return /*#__PURE__*/react.createElement(rc_overflow_es.Item, _extends({}, attribute, {
@@ -31357,55 +31225,48 @@ var LegacyMenuItem = /*#__PURE__*/function (_React$Component) {
       }));
     }
   }]);
-
   return LegacyMenuItem;
 }(react.Component);
 /**
  * Real Menu Item component
  */
-
-
 var InternalMenuItem = function InternalMenuItem(props) {
   var _classNames;
-
   var style = props.style,
-      className = props.className,
-      eventKey = props.eventKey,
-      warnKey = props.warnKey,
-      disabled = props.disabled,
-      itemIcon = props.itemIcon,
-      children = props.children,
-      role = props.role,
-      onMouseEnter = props.onMouseEnter,
-      onMouseLeave = props.onMouseLeave,
-      onClick = props.onClick,
-      onKeyDown = props.onKeyDown,
-      onFocus = props.onFocus,
-      restProps = objectWithoutProperties_objectWithoutProperties(props, MenuItem_excluded2);
-
+    className = props.className,
+    eventKey = props.eventKey,
+    warnKey = props.warnKey,
+    disabled = props.disabled,
+    itemIcon = props.itemIcon,
+    children = props.children,
+    role = props.role,
+    onMouseEnter = props.onMouseEnter,
+    onMouseLeave = props.onMouseLeave,
+    onClick = props.onClick,
+    onKeyDown = props.onKeyDown,
+    onFocus = props.onFocus,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, MenuItem_excluded2);
   var domDataId = useMenuId(eventKey);
-
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls,
-      onItemClick = _React$useContext.onItemClick,
-      contextDisabled = _React$useContext.disabled,
-      overflowDisabled = _React$useContext.overflowDisabled,
-      contextItemIcon = _React$useContext.itemIcon,
-      selectedKeys = _React$useContext.selectedKeys,
-      onActive = _React$useContext.onActive;
-
+    prefixCls = _React$useContext.prefixCls,
+    onItemClick = _React$useContext.onItemClick,
+    contextDisabled = _React$useContext.disabled,
+    overflowDisabled = _React$useContext.overflowDisabled,
+    contextItemIcon = _React$useContext.itemIcon,
+    selectedKeys = _React$useContext.selectedKeys,
+    onActive = _React$useContext.onActive;
   var _React$useContext2 = react.useContext(context_PrivateContext),
-      _internalRenderMenuItem = _React$useContext2._internalRenderMenuItem;
-
+    _internalRenderMenuItem = _React$useContext2._internalRenderMenuItem;
   var itemCls = "".concat(prefixCls, "-item");
   var legacyMenuItemRef = react.useRef();
   var elementRef = react.useRef();
   var mergedDisabled = contextDisabled || disabled;
-  var connectedKeys = useFullPath(eventKey); // ================================ Warn ================================
+  var connectedKeys = useFullPath(eventKey);
 
-  if (false) {} // ============================= Info =============================
+  // ================================ Warn ================================
+  if (false) {}
 
-
+  // ============================= Info =============================
   var getEventInfo = function getEventInfo(e) {
     return {
       key: eventKey,
@@ -31414,58 +31275,56 @@ var InternalMenuItem = function InternalMenuItem(props) {
       item: legacyMenuItemRef.current,
       domEvent: e
     };
-  }; // ============================= Icon =============================
+  };
 
+  // ============================= Icon =============================
+  var mergedItemIcon = itemIcon || contextItemIcon;
 
-  var mergedItemIcon = itemIcon || contextItemIcon; // ============================ Active ============================
-
+  // ============================ Active ============================
   var _useActive = useActive(eventKey, mergedDisabled, onMouseEnter, onMouseLeave),
-      active = _useActive.active,
-      activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, MenuItem_excluded3); // ============================ Select ============================
+    active = _useActive.active,
+    activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, MenuItem_excluded3);
 
+  // ============================ Select ============================
+  var selected = selectedKeys.includes(eventKey);
 
-  var selected = selectedKeys.includes(eventKey); // ======================== DirectionStyle ========================
+  // ======================== DirectionStyle ========================
+  var directionStyle = useDirectionStyle(connectedKeys.length);
 
-  var directionStyle = useDirectionStyle(connectedKeys.length); // ============================ Events ============================
-
+  // ============================ Events ============================
   var onInternalClick = function onInternalClick(e) {
     if (mergedDisabled) {
       return;
     }
-
     var info = getEventInfo(e);
     onClick === null || onClick === void 0 ? void 0 : onClick(warnItemProp(info));
     onItemClick(info);
   };
-
   var onInternalKeyDown = function onInternalKeyDown(e) {
     onKeyDown === null || onKeyDown === void 0 ? void 0 : onKeyDown(e);
-
     if (e.which === es_KeyCode.ENTER) {
-      var info = getEventInfo(e); // Legacy. Key will also trigger click event
+      var info = getEventInfo(e);
 
+      // Legacy. Key will also trigger click event
       onClick === null || onClick === void 0 ? void 0 : onClick(warnItemProp(info));
       onItemClick(info);
     }
   };
+
   /**
    * Used for accessibility. Helper will focus element without key board.
    * We should manually trigger an active
    */
-
-
   var onInternalFocus = function onInternalFocus(e) {
     onActive(eventKey);
     onFocus === null || onFocus === void 0 ? void 0 : onFocus(e);
-  }; // ============================ Render ============================
+  };
 
-
+  // ============================ Render ============================
   var optionRoleProps = {};
-
   if (props.role === 'option') {
     optionRoleProps['aria-selected'] = selected;
   }
-
   var renderNode = /*#__PURE__*/react.createElement(LegacyMenuItem, _extends({
     ref: legacyMenuItemRef,
     elementRef: elementRef,
@@ -31486,22 +31345,21 @@ var InternalMenuItem = function InternalMenuItem(props) {
     }),
     icon: mergedItemIcon
   }));
-
   if (_internalRenderMenuItem) {
     renderNode = _internalRenderMenuItem(renderNode, props, {
       selected: selected
     });
   }
-
   return renderNode;
 };
-
 function MenuItem(props) {
-  var eventKey = props.eventKey; // ==================== Record KeyPath ====================
+  var eventKey = props.eventKey;
 
+  // ==================== Record KeyPath ====================
   var measure = useMeasure();
-  var connectedKeyPath = useFullPath(eventKey); // eslint-disable-next-line consistent-return
+  var connectedKeyPath = useFullPath(eventKey);
 
+  // eslint-disable-next-line consistent-return
   react.useEffect(function () {
     if (measure) {
       measure.registerPath(eventKey, connectedKeyPath);
@@ -31510,15 +31368,13 @@ function MenuItem(props) {
       };
     }
   }, [connectedKeyPath]);
-
   if (measure) {
     return null;
-  } // ======================== Render ========================
+  }
 
-
+  // ======================== Render ========================
   return /*#__PURE__*/react.createElement(InternalMenuItem, props);
 }
-
 /* harmony default export */ const es_MenuItem = (MenuItem);
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/SubMenu/SubMenuList.js
 
@@ -31527,25 +31383,22 @@ var SubMenuList_excluded = ["className", "children"];
 
 
 
-
 var InternalSubMenuList = function InternalSubMenuList(_ref, ref) {
   var className = _ref.className,
-      children = _ref.children,
-      restProps = objectWithoutProperties_objectWithoutProperties(_ref, SubMenuList_excluded);
-
+    children = _ref.children,
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, SubMenuList_excluded);
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls,
-      mode = _React$useContext.mode,
-      rtl = _React$useContext.rtl;
-
+    prefixCls = _React$useContext.prefixCls,
+    mode = _React$useContext.mode,
+    rtl = _React$useContext.rtl;
   return /*#__PURE__*/react.createElement("ul", _extends({
-    className: classnames_default()(prefixCls, rtl && "".concat(prefixCls, "-rtl"), "".concat(prefixCls, "-sub"), "".concat(prefixCls, "-").concat(mode === 'inline' ? 'inline' : 'vertical'), className)
+    className: classnames_default()(prefixCls, rtl && "".concat(prefixCls, "-rtl"), "".concat(prefixCls, "-sub"), "".concat(prefixCls, "-").concat(mode === 'inline' ? 'inline' : 'vertical'), className),
+    role: "menu"
   }, restProps, {
     "data-menu-list": true,
     ref: ref
   }), children);
 };
-
 var SubMenuList = /*#__PURE__*/react.forwardRef(InternalSubMenuList);
 SubMenuList.displayName = 'SubMenuList';
 /* harmony default export */ const SubMenu_SubMenuList = (SubMenuList);
@@ -31562,41 +31415,34 @@ function parseChildren(children, keyPath) {
   return toArray_toArray(children).map(function (child, index) {
     if ( /*#__PURE__*/react.isValidElement(child)) {
       var _eventKey, _child$props;
-
       var key = child.key;
       var eventKey = (_eventKey = (_child$props = child.props) === null || _child$props === void 0 ? void 0 : _child$props.eventKey) !== null && _eventKey !== void 0 ? _eventKey : key;
       var emptyKey = eventKey === null || eventKey === undefined;
-
       if (emptyKey) {
         eventKey = "tmp_key-".concat([].concat(_toConsumableArray(keyPath), [index]).join('-'));
       }
-
       var cloneProps = {
         key: eventKey,
         eventKey: eventKey
       };
-
       if (false) {}
-
       return /*#__PURE__*/react.cloneElement(child, cloneProps);
     }
-
     return child;
   });
 }
-
 function convertItemsToNodes(list) {
   return (list || []).map(function (opt, index) {
     if (opt && typeof_typeof(opt) === 'object') {
       var _ref = opt,
-          label = _ref.label,
-          children = _ref.children,
-          key = _ref.key,
-          type = _ref.type,
-          restProps = objectWithoutProperties_objectWithoutProperties(_ref, nodeUtil_excluded);
+        label = _ref.label,
+        children = _ref.children,
+        key = _ref.key,
+        type = _ref.type,
+        restProps = objectWithoutProperties_objectWithoutProperties(_ref, nodeUtil_excluded);
+      var mergedKey = key !== null && key !== void 0 ? key : "tmp-".concat(index);
 
-      var mergedKey = key !== null && key !== void 0 ? key : "tmp-".concat(index); // MenuItemGroup & SubMenuItem
-
+      // MenuItemGroup & SubMenuItem
       if (children || type === 'group') {
         if (type === 'group') {
           // Group
@@ -31605,41 +31451,36 @@ function convertItemsToNodes(list) {
           }, restProps, {
             title: label
           }), convertItemsToNodes(children));
-        } // Sub Menu
+        }
 
-
+        // Sub Menu
         return /*#__PURE__*/react.createElement(SubMenu, _extends({
           key: mergedKey
         }, restProps, {
           title: label
         }), convertItemsToNodes(children));
-      } // MenuItem & Divider
+      }
 
-
+      // MenuItem & Divider
       if (type === 'divider') {
         return /*#__PURE__*/react.createElement(Divider, _extends({
           key: mergedKey
         }, restProps));
       }
-
       return /*#__PURE__*/react.createElement(es_MenuItem, _extends({
         key: mergedKey
       }, restProps), label);
     }
-
     return null;
   }).filter(function (opt) {
     return opt;
   });
 }
-
 function parseItems(children, items, keyPath) {
   var childNodes = children;
-
   if (items) {
     childNodes = convertItemsToNodes(items);
   }
-
   return parseChildren(childNodes, keyPath);
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/placements.js
@@ -31697,11 +31538,9 @@ function motionUtil_getMotion(mode, motion, defaultMotions) {
   if (motion) {
     return motion;
   }
-
   if (defaultMotions) {
     return defaultMotions[mode] || defaultMotions.other;
   }
-
   return undefined;
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/SubMenu/PopupTrigger.js
@@ -31723,43 +31562,47 @@ var popupPlacementMap = {
 };
 function PopupTrigger(_ref) {
   var prefixCls = _ref.prefixCls,
-      visible = _ref.visible,
-      children = _ref.children,
-      popup = _ref.popup,
-      popupClassName = _ref.popupClassName,
-      popupOffset = _ref.popupOffset,
-      disabled = _ref.disabled,
-      mode = _ref.mode,
-      onVisibleChange = _ref.onVisibleChange;
-
+    visible = _ref.visible,
+    children = _ref.children,
+    popup = _ref.popup,
+    popupClassName = _ref.popupClassName,
+    popupOffset = _ref.popupOffset,
+    disabled = _ref.disabled,
+    mode = _ref.mode,
+    onVisibleChange = _ref.onVisibleChange;
   var _React$useContext = react.useContext(MenuContext),
-      getPopupContainer = _React$useContext.getPopupContainer,
-      rtl = _React$useContext.rtl,
-      subMenuOpenDelay = _React$useContext.subMenuOpenDelay,
-      subMenuCloseDelay = _React$useContext.subMenuCloseDelay,
-      builtinPlacements = _React$useContext.builtinPlacements,
-      triggerSubMenuAction = _React$useContext.triggerSubMenuAction,
-      forceSubMenuRender = _React$useContext.forceSubMenuRender,
-      rootClassName = _React$useContext.rootClassName,
-      motion = _React$useContext.motion,
-      defaultMotions = _React$useContext.defaultMotions;
-
+    getPopupContainer = _React$useContext.getPopupContainer,
+    rtl = _React$useContext.rtl,
+    subMenuOpenDelay = _React$useContext.subMenuOpenDelay,
+    subMenuCloseDelay = _React$useContext.subMenuCloseDelay,
+    builtinPlacements = _React$useContext.builtinPlacements,
+    triggerSubMenuAction = _React$useContext.triggerSubMenuAction,
+    forceSubMenuRender = _React$useContext.forceSubMenuRender,
+    rootClassName = _React$useContext.rootClassName,
+    motion = _React$useContext.motion,
+    defaultMotions = _React$useContext.defaultMotions;
   var _React$useState = react.useState(false),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      innerVisible = _React$useState2[0],
-      setInnerVisible = _React$useState2[1];
-
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    innerVisible = _React$useState2[0],
+    setInnerVisible = _React$useState2[1];
   var placement = rtl ? objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, placementsRtl), builtinPlacements) : objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, placements_placements), builtinPlacements);
   var popupPlacement = popupPlacementMap[mode];
   var targetMotion = motionUtil_getMotion(mode, motion, defaultMotions);
-
-  var mergedMotion = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, targetMotion), {}, {
+  var targetMotionRef = react.useRef(targetMotion);
+  if (mode !== 'inline') {
+    /**
+     * PopupTrigger is only used for vertical and horizontal types.
+     * When collapsed is unfolded, the inline animation will destroy the vertical animation.
+     */
+    targetMotionRef.current = targetMotion;
+  }
+  var mergedMotion = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, targetMotionRef.current), {}, {
     leavedClassName: "".concat(prefixCls, "-hidden"),
     removeOnLeave: false,
     motionAppear: true
-  }); // Delay to change visible
+  });
 
-
+  // Delay to change visible
   var visibleRef = react.useRef();
   react.useEffect(function () {
     visibleRef.current = es_raf(function () {
@@ -31800,59 +31643,56 @@ function PopupTrigger(_ref) {
 
 function InlineSubMenuList(_ref) {
   var id = _ref.id,
-      open = _ref.open,
-      keyPath = _ref.keyPath,
-      children = _ref.children;
+    open = _ref.open,
+    keyPath = _ref.keyPath,
+    children = _ref.children;
   var fixedMode = 'inline';
-
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls,
-      forceSubMenuRender = _React$useContext.forceSubMenuRender,
-      motion = _React$useContext.motion,
-      defaultMotions = _React$useContext.defaultMotions,
-      mode = _React$useContext.mode; // Always use latest mode check
+    prefixCls = _React$useContext.prefixCls,
+    forceSubMenuRender = _React$useContext.forceSubMenuRender,
+    motion = _React$useContext.motion,
+    defaultMotions = _React$useContext.defaultMotions,
+    mode = _React$useContext.mode;
 
-
+  // Always use latest mode check
   var sameModeRef = react.useRef(false);
-  sameModeRef.current = mode === fixedMode; // We record `destroy` mark here since when mode change from `inline` to others.
+  sameModeRef.current = mode === fixedMode;
+
+  // We record `destroy` mark here since when mode change from `inline` to others.
   // The inline list should remove when motion end.
-
   var _React$useState = react.useState(!sameModeRef.current),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      destroy = _React$useState2[0],
-      setDestroy = _React$useState2[1];
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    destroy = _React$useState2[0],
+    setDestroy = _React$useState2[1];
+  var mergedOpen = sameModeRef.current ? open : false;
 
-  var mergedOpen = sameModeRef.current ? open : false; // ================================= Effect =================================
+  // ================================= Effect =================================
   // Reset destroy state when mode change back
-
   react.useEffect(function () {
     if (sameModeRef.current) {
       setDestroy(false);
     }
-  }, [mode]); // ================================= Render =================================
+  }, [mode]);
 
-  var mergedMotion = objectSpread2_objectSpread2({}, motionUtil_getMotion(fixedMode, motion, defaultMotions)); // No need appear since nest inlineCollapse changed
+  // ================================= Render =================================
+  var mergedMotion = objectSpread2_objectSpread2({}, motionUtil_getMotion(fixedMode, motion, defaultMotions));
 
-
+  // No need appear since nest inlineCollapse changed
   if (keyPath.length > 1) {
     mergedMotion.motionAppear = false;
-  } // Hide inline list when mode changed and motion end
+  }
 
-
+  // Hide inline list when mode changed and motion end
   var originOnVisibleChanged = mergedMotion.onVisibleChanged;
-
   mergedMotion.onVisibleChanged = function (newVisible) {
     if (!sameModeRef.current && !newVisible) {
       setDestroy(true);
     }
-
     return originOnVisibleChanged === null || originOnVisibleChanged === void 0 ? void 0 : originOnVisibleChanged(newVisible);
   };
-
   if (destroy) {
     return null;
   }
-
   return /*#__PURE__*/react.createElement(InheritableContextProvider, {
     mode: fixedMode,
     locked: !sameModeRef.current
@@ -31864,7 +31704,7 @@ function InlineSubMenuList(_ref) {
     leavedClassName: "".concat(prefixCls, "-hidden")
   }), function (_ref2) {
     var motionClassName = _ref2.className,
-        motionStyle = _ref2.style;
+      motionStyle = _ref2.style;
     return /*#__PURE__*/react.createElement(SubMenu_SubMenuList, {
       id: id,
       className: motionClassName,
@@ -31879,8 +31719,7 @@ function InlineSubMenuList(_ref) {
 
 
 var SubMenu_excluded = ["style", "className", "title", "eventKey", "warnKey", "disabled", "internalPopupClose", "children", "itemIcon", "expandIcon", "popupClassName", "popupOffset", "onClick", "onMouseEnter", "onMouseLeave", "onTitleClick", "onTitleMouseEnter", "onTitleMouseLeave"],
-    SubMenu_excluded2 = ["active"];
-
+  SubMenu_excluded2 = ["active"];
 
 
 
@@ -31900,82 +31739,78 @@ var SubMenu_excluded = ["style", "className", "title", "eventKey", "warnKey", "d
 
 var InternalSubMenu = function InternalSubMenu(props) {
   var _classNames;
-
   var style = props.style,
-      className = props.className,
-      title = props.title,
-      eventKey = props.eventKey,
-      warnKey = props.warnKey,
-      disabled = props.disabled,
-      internalPopupClose = props.internalPopupClose,
-      children = props.children,
-      itemIcon = props.itemIcon,
-      expandIcon = props.expandIcon,
-      popupClassName = props.popupClassName,
-      popupOffset = props.popupOffset,
-      onClick = props.onClick,
-      onMouseEnter = props.onMouseEnter,
-      onMouseLeave = props.onMouseLeave,
-      onTitleClick = props.onTitleClick,
-      onTitleMouseEnter = props.onTitleMouseEnter,
-      onTitleMouseLeave = props.onTitleMouseLeave,
-      restProps = objectWithoutProperties_objectWithoutProperties(props, SubMenu_excluded);
-
+    className = props.className,
+    title = props.title,
+    eventKey = props.eventKey,
+    warnKey = props.warnKey,
+    disabled = props.disabled,
+    internalPopupClose = props.internalPopupClose,
+    children = props.children,
+    itemIcon = props.itemIcon,
+    expandIcon = props.expandIcon,
+    popupClassName = props.popupClassName,
+    popupOffset = props.popupOffset,
+    onClick = props.onClick,
+    onMouseEnter = props.onMouseEnter,
+    onMouseLeave = props.onMouseLeave,
+    onTitleClick = props.onTitleClick,
+    onTitleMouseEnter = props.onTitleMouseEnter,
+    onTitleMouseLeave = props.onTitleMouseLeave,
+    restProps = objectWithoutProperties_objectWithoutProperties(props, SubMenu_excluded);
   var domDataId = useMenuId(eventKey);
-
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls,
-      mode = _React$useContext.mode,
-      openKeys = _React$useContext.openKeys,
-      contextDisabled = _React$useContext.disabled,
-      overflowDisabled = _React$useContext.overflowDisabled,
-      activeKey = _React$useContext.activeKey,
-      selectedKeys = _React$useContext.selectedKeys,
-      contextItemIcon = _React$useContext.itemIcon,
-      contextExpandIcon = _React$useContext.expandIcon,
-      onItemClick = _React$useContext.onItemClick,
-      onOpenChange = _React$useContext.onOpenChange,
-      onActive = _React$useContext.onActive;
-
+    prefixCls = _React$useContext.prefixCls,
+    mode = _React$useContext.mode,
+    openKeys = _React$useContext.openKeys,
+    contextDisabled = _React$useContext.disabled,
+    overflowDisabled = _React$useContext.overflowDisabled,
+    activeKey = _React$useContext.activeKey,
+    selectedKeys = _React$useContext.selectedKeys,
+    contextItemIcon = _React$useContext.itemIcon,
+    contextExpandIcon = _React$useContext.expandIcon,
+    onItemClick = _React$useContext.onItemClick,
+    onOpenChange = _React$useContext.onOpenChange,
+    onActive = _React$useContext.onActive;
   var _React$useContext2 = react.useContext(context_PrivateContext),
-      _internalRenderSubMenuItem = _React$useContext2._internalRenderSubMenuItem;
-
+    _internalRenderSubMenuItem = _React$useContext2._internalRenderSubMenuItem;
   var _React$useContext3 = react.useContext(PathUserContext),
-      isSubPathKey = _React$useContext3.isSubPathKey;
-
+    isSubPathKey = _React$useContext3.isSubPathKey;
   var connectedPath = useFullPath();
   var subMenuPrefixCls = "".concat(prefixCls, "-submenu");
   var mergedDisabled = contextDisabled || disabled;
   var elementRef = react.useRef();
-  var popupRef = react.useRef(); // ================================ Warn ================================
+  var popupRef = react.useRef();
 
-  if (false) {} // ================================ Icon ================================
+  // ================================ Warn ================================
+  if (false) {}
 
-
+  // ================================ Icon ================================
   var mergedItemIcon = itemIcon || contextItemIcon;
-  var mergedExpandIcon = expandIcon || contextExpandIcon; // ================================ Open ================================
+  var mergedExpandIcon = expandIcon || contextExpandIcon;
 
+  // ================================ Open ================================
   var originOpen = openKeys.includes(eventKey);
-  var open = !overflowDisabled && originOpen; // =============================== Select ===============================
+  var open = !overflowDisabled && originOpen;
 
-  var childrenSelected = isSubPathKey(selectedKeys, eventKey); // =============================== Active ===============================
+  // =============================== Select ===============================
+  var childrenSelected = isSubPathKey(selectedKeys, eventKey);
 
+  // =============================== Active ===============================
   var _useActive = useActive(eventKey, mergedDisabled, onTitleMouseEnter, onTitleMouseLeave),
-      active = _useActive.active,
-      activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, SubMenu_excluded2); // Fallback of active check to avoid hover on menu title or disabled item
+    active = _useActive.active,
+    activeProps = objectWithoutProperties_objectWithoutProperties(_useActive, SubMenu_excluded2);
 
-
+  // Fallback of active check to avoid hover on menu title or disabled item
   var _React$useState = react.useState(false),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      childrenActive = _React$useState2[0],
-      setChildrenActive = _React$useState2[1];
-
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    childrenActive = _React$useState2[0],
+    setChildrenActive = _React$useState2[1];
   var triggerChildrenActive = function triggerChildrenActive(newActive) {
     if (!mergedDisabled) {
       setChildrenActive(newActive);
     }
   };
-
   var onInternalMouseEnter = function onInternalMouseEnter(domEvent) {
     triggerChildrenActive(true);
     onMouseEnter === null || onMouseEnter === void 0 ? void 0 : onMouseEnter({
@@ -31983,7 +31818,6 @@ var InternalSubMenu = function InternalSubMenu(props) {
       domEvent: domEvent
     });
   };
-
   var onInternalMouseLeave = function onInternalMouseLeave(domEvent) {
     triggerChildrenActive(false);
     onMouseLeave === null || onMouseLeave === void 0 ? void 0 : onMouseLeave({
@@ -31991,62 +31825,62 @@ var InternalSubMenu = function InternalSubMenu(props) {
       domEvent: domEvent
     });
   };
-
   var mergedActive = react.useMemo(function () {
     if (active) {
       return active;
     }
-
     if (mode !== 'inline') {
       return childrenActive || isSubPathKey([activeKey], eventKey);
     }
-
     return false;
-  }, [mode, active, activeKey, childrenActive, eventKey, isSubPathKey]); // ========================== DirectionStyle ==========================
+  }, [mode, active, activeKey, childrenActive, eventKey, isSubPathKey]);
 
-  var directionStyle = useDirectionStyle(connectedPath.length); // =============================== Events ===============================
+  // ========================== DirectionStyle ==========================
+  var directionStyle = useDirectionStyle(connectedPath.length);
+
+  // =============================== Events ===============================
   // >>>> Title click
-
   var onInternalTitleClick = function onInternalTitleClick(e) {
     // Skip if disabled
     if (mergedDisabled) {
       return;
     }
-
     onTitleClick === null || onTitleClick === void 0 ? void 0 : onTitleClick({
       key: eventKey,
       domEvent: e
-    }); // Trigger open by click when mode is `inline`
+    });
 
+    // Trigger open by click when mode is `inline`
     if (mode === 'inline') {
       onOpenChange(eventKey, !originOpen);
     }
-  }; // >>>> Context for children click
+  };
 
-
+  // >>>> Context for children click
   var onMergedItemClick = useMemoCallback(function (info) {
     onClick === null || onClick === void 0 ? void 0 : onClick(warnItemProp(info));
     onItemClick(info);
-  }); // >>>>> Visible change
+  });
 
+  // >>>>> Visible change
   var onPopupVisibleChange = function onPopupVisibleChange(newVisible) {
     if (mode !== 'inline') {
       onOpenChange(eventKey, newVisible);
     }
   };
+
   /**
    * Used for accessibility. Helper will focus element without key board.
    * We should manually trigger an active
    */
-
-
   var onInternalFocus = function onInternalFocus() {
     onActive(eventKey);
-  }; // =============================== Render ===============================
+  };
 
+  // =============================== Render ===============================
+  var popupId = domDataId && "".concat(domDataId, "-popup");
 
-  var popupId = domDataId && "".concat(domDataId, "-popup"); // >>>>> Title
-
+  // >>>>> Title
   var titleNode = /*#__PURE__*/react.createElement("div", _extends({
     role: "menuitem",
     style: directionStyle,
@@ -32070,27 +31904,28 @@ var InternalSubMenu = function InternalSubMenu(props) {
     })
   }, /*#__PURE__*/react.createElement("i", {
     className: "".concat(subMenuPrefixCls, "-arrow")
-  }))); // Cache mode if it change to `inline` which do not have popup motion
+  })));
 
+  // Cache mode if it change to `inline` which do not have popup motion
   var triggerModeRef = react.useRef(mode);
-
   if (mode !== 'inline' && connectedPath.length > 1) {
     triggerModeRef.current = 'vertical';
   } else {
     triggerModeRef.current = mode;
   }
-
   if (!overflowDisabled) {
-    var triggerMode = triggerModeRef.current; // Still wrap with Trigger here since we need avoid react re-mount dom node
-    // Which makes motion failed
+    var triggerMode = triggerModeRef.current;
 
+    // Still wrap with Trigger here since we need avoid react re-mount dom node
+    // Which makes motion failed
     titleNode = /*#__PURE__*/react.createElement(PopupTrigger, {
       mode: triggerMode,
       prefixCls: subMenuPrefixCls,
       visible: !internalPopupClose && open && mode !== 'inline',
       popupClassName: popupClassName,
       popupOffset: popupOffset,
-      popup: /*#__PURE__*/react.createElement(InheritableContextProvider // Special handle of horizontal mode
+      popup: /*#__PURE__*/react.createElement(InheritableContextProvider
+      // Special handle of horizontal mode
       , {
         mode: triggerMode === 'horizontal' ? 'vertical' : triggerMode
       }, /*#__PURE__*/react.createElement(SubMenu_SubMenuList, {
@@ -32100,9 +31935,9 @@ var InternalSubMenu = function InternalSubMenu(props) {
       disabled: mergedDisabled,
       onVisibleChange: onPopupVisibleChange
     }, titleNode);
-  } // >>>>> List node
+  }
 
-
+  // >>>>> List node
   var listNode = /*#__PURE__*/react.createElement(rc_overflow_es.Item, _extends({
     role: "none"
   }, restProps, {
@@ -32116,7 +31951,6 @@ var InternalSubMenu = function InternalSubMenu(props) {
     open: open,
     keyPath: connectedPath
   }, children));
-
   if (_internalRenderSubMenuItem) {
     listNode = _internalRenderSubMenuItem(listNode, props, {
       selected: childrenSelected,
@@ -32124,9 +31958,9 @@ var InternalSubMenu = function InternalSubMenu(props) {
       open: open,
       disabled: mergedDisabled
     });
-  } // >>>>> Render
+  }
 
-
+  // >>>>> Render
   return /*#__PURE__*/react.createElement(InheritableContextProvider, {
     onItemClick: onMergedItemClick,
     mode: mode === 'horizontal' ? 'vertical' : mode,
@@ -32134,15 +31968,16 @@ var InternalSubMenu = function InternalSubMenu(props) {
     expandIcon: mergedExpandIcon
   }, listNode);
 };
-
 function SubMenu(props) {
   var eventKey = props.eventKey,
-      children = props.children;
+    children = props.children;
   var connectedKeyPath = useFullPath(eventKey);
-  var childList = parseChildren(children, connectedKeyPath); // ==================== Record KeyPath ====================
+  var childList = parseChildren(children, connectedKeyPath);
 
-  var measure = useMeasure(); // eslint-disable-next-line consistent-return
+  // ==================== Record KeyPath ====================
+  var measure = useMeasure();
 
+  // eslint-disable-next-line consistent-return
   react.useEffect(function () {
     if (measure) {
       measure.registerPath(eventKey, connectedKeyPath);
@@ -32151,14 +31986,14 @@ function SubMenu(props) {
       };
     }
   }, [connectedKeyPath]);
-  var renderNode; // ======================== Render ========================
+  var renderNode;
 
+  // ======================== Render ========================
   if (measure) {
     renderNode = childList;
   } else {
     renderNode = /*#__PURE__*/react.createElement(InternalSubMenu, props, childList);
   }
-
   return /*#__PURE__*/react.createElement(PathTrackerContext.Provider, {
     value: connectedKeyPath
   }, renderNode);
@@ -32191,6 +32026,7 @@ var Menu_excluded = ["prefixCls", "rootClassName", "style", "className", "tabInd
 
 
 
+
 /**
  * Menu modify after refactor:
  * ## Add
@@ -32203,166 +32039,155 @@ var Menu_excluded = ["prefixCls", "rootClassName", "style", "className", "tabInd
  * - siderCollapsed: Seems antd do not use this prop (Need test in antd)
  * - collapsedWidth: Seems this logic should be handle by antd Layout.Sider
  */
-// optimize for render
 
+// optimize for render
 var EMPTY_LIST = [];
 var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
   var _childList$, _classNames;
-
   var _ref = props,
-      _ref$prefixCls = _ref.prefixCls,
-      prefixCls = _ref$prefixCls === void 0 ? 'rc-menu' : _ref$prefixCls,
-      rootClassName = _ref.rootClassName,
-      style = _ref.style,
-      className = _ref.className,
-      _ref$tabIndex = _ref.tabIndex,
-      tabIndex = _ref$tabIndex === void 0 ? 0 : _ref$tabIndex,
-      items = _ref.items,
-      children = _ref.children,
-      direction = _ref.direction,
-      id = _ref.id,
-      _ref$mode = _ref.mode,
-      mode = _ref$mode === void 0 ? 'vertical' : _ref$mode,
-      inlineCollapsed = _ref.inlineCollapsed,
-      disabled = _ref.disabled,
-      disabledOverflow = _ref.disabledOverflow,
-      _ref$subMenuOpenDelay = _ref.subMenuOpenDelay,
-      subMenuOpenDelay = _ref$subMenuOpenDelay === void 0 ? 0.1 : _ref$subMenuOpenDelay,
-      _ref$subMenuCloseDela = _ref.subMenuCloseDelay,
-      subMenuCloseDelay = _ref$subMenuCloseDela === void 0 ? 0.1 : _ref$subMenuCloseDela,
-      forceSubMenuRender = _ref.forceSubMenuRender,
-      defaultOpenKeys = _ref.defaultOpenKeys,
-      openKeys = _ref.openKeys,
-      activeKey = _ref.activeKey,
-      defaultActiveFirst = _ref.defaultActiveFirst,
-      _ref$selectable = _ref.selectable,
-      selectable = _ref$selectable === void 0 ? true : _ref$selectable,
-      _ref$multiple = _ref.multiple,
-      multiple = _ref$multiple === void 0 ? false : _ref$multiple,
-      defaultSelectedKeys = _ref.defaultSelectedKeys,
-      selectedKeys = _ref.selectedKeys,
-      onSelect = _ref.onSelect,
-      onDeselect = _ref.onDeselect,
-      _ref$inlineIndent = _ref.inlineIndent,
-      inlineIndent = _ref$inlineIndent === void 0 ? 24 : _ref$inlineIndent,
-      motion = _ref.motion,
-      defaultMotions = _ref.defaultMotions,
-      _ref$triggerSubMenuAc = _ref.triggerSubMenuAction,
-      triggerSubMenuAction = _ref$triggerSubMenuAc === void 0 ? 'hover' : _ref$triggerSubMenuAc,
-      builtinPlacements = _ref.builtinPlacements,
-      itemIcon = _ref.itemIcon,
-      expandIcon = _ref.expandIcon,
-      _ref$overflowedIndica = _ref.overflowedIndicator,
-      overflowedIndicator = _ref$overflowedIndica === void 0 ? '...' : _ref$overflowedIndica,
-      overflowedIndicatorPopupClassName = _ref.overflowedIndicatorPopupClassName,
-      getPopupContainer = _ref.getPopupContainer,
-      onClick = _ref.onClick,
-      onOpenChange = _ref.onOpenChange,
-      onKeyDown = _ref.onKeyDown,
-      openAnimation = _ref.openAnimation,
-      openTransitionName = _ref.openTransitionName,
-      _internalRenderMenuItem = _ref._internalRenderMenuItem,
-      _internalRenderSubMenuItem = _ref._internalRenderSubMenuItem,
-      restProps = objectWithoutProperties_objectWithoutProperties(_ref, Menu_excluded);
-
+    _ref$prefixCls = _ref.prefixCls,
+    prefixCls = _ref$prefixCls === void 0 ? 'rc-menu' : _ref$prefixCls,
+    rootClassName = _ref.rootClassName,
+    style = _ref.style,
+    className = _ref.className,
+    _ref$tabIndex = _ref.tabIndex,
+    tabIndex = _ref$tabIndex === void 0 ? 0 : _ref$tabIndex,
+    items = _ref.items,
+    children = _ref.children,
+    direction = _ref.direction,
+    id = _ref.id,
+    _ref$mode = _ref.mode,
+    mode = _ref$mode === void 0 ? 'vertical' : _ref$mode,
+    inlineCollapsed = _ref.inlineCollapsed,
+    disabled = _ref.disabled,
+    disabledOverflow = _ref.disabledOverflow,
+    _ref$subMenuOpenDelay = _ref.subMenuOpenDelay,
+    subMenuOpenDelay = _ref$subMenuOpenDelay === void 0 ? 0.1 : _ref$subMenuOpenDelay,
+    _ref$subMenuCloseDela = _ref.subMenuCloseDelay,
+    subMenuCloseDelay = _ref$subMenuCloseDela === void 0 ? 0.1 : _ref$subMenuCloseDela,
+    forceSubMenuRender = _ref.forceSubMenuRender,
+    defaultOpenKeys = _ref.defaultOpenKeys,
+    openKeys = _ref.openKeys,
+    activeKey = _ref.activeKey,
+    defaultActiveFirst = _ref.defaultActiveFirst,
+    _ref$selectable = _ref.selectable,
+    selectable = _ref$selectable === void 0 ? true : _ref$selectable,
+    _ref$multiple = _ref.multiple,
+    multiple = _ref$multiple === void 0 ? false : _ref$multiple,
+    defaultSelectedKeys = _ref.defaultSelectedKeys,
+    selectedKeys = _ref.selectedKeys,
+    onSelect = _ref.onSelect,
+    onDeselect = _ref.onDeselect,
+    _ref$inlineIndent = _ref.inlineIndent,
+    inlineIndent = _ref$inlineIndent === void 0 ? 24 : _ref$inlineIndent,
+    motion = _ref.motion,
+    defaultMotions = _ref.defaultMotions,
+    _ref$triggerSubMenuAc = _ref.triggerSubMenuAction,
+    triggerSubMenuAction = _ref$triggerSubMenuAc === void 0 ? 'hover' : _ref$triggerSubMenuAc,
+    builtinPlacements = _ref.builtinPlacements,
+    itemIcon = _ref.itemIcon,
+    expandIcon = _ref.expandIcon,
+    _ref$overflowedIndica = _ref.overflowedIndicator,
+    overflowedIndicator = _ref$overflowedIndica === void 0 ? '...' : _ref$overflowedIndica,
+    overflowedIndicatorPopupClassName = _ref.overflowedIndicatorPopupClassName,
+    getPopupContainer = _ref.getPopupContainer,
+    onClick = _ref.onClick,
+    onOpenChange = _ref.onOpenChange,
+    onKeyDown = _ref.onKeyDown,
+    openAnimation = _ref.openAnimation,
+    openTransitionName = _ref.openTransitionName,
+    _internalRenderMenuItem = _ref._internalRenderMenuItem,
+    _internalRenderSubMenuItem = _ref._internalRenderSubMenuItem,
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, Menu_excluded);
   var childList = react.useMemo(function () {
     return parseItems(children, items, EMPTY_LIST);
   }, [children, items]);
-
   var _React$useState = react.useState(false),
-      _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
-      mounted = _React$useState2[0],
-      setMounted = _React$useState2[1];
-
+    _React$useState2 = slicedToArray_slicedToArray(_React$useState, 2),
+    mounted = _React$useState2[0],
+    setMounted = _React$useState2[1];
   var containerRef = react.useRef();
   var uuid = useUUID(id);
-  var isRtl = direction === 'rtl'; // ========================= Warn =========================
+  var isRtl = direction === 'rtl';
 
-  if (false) {} // ========================= Open =========================
+  // ========================= Warn =========================
+  if (false) {}
 
-
+  // ========================= Open =========================
   var _useMergedState = useMergedState(defaultOpenKeys, {
-    value: openKeys,
-    postState: function postState(keys) {
-      return keys || EMPTY_LIST;
-    }
-  }),
-      _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
-      mergedOpenKeys = _useMergedState2[0],
-      setMergedOpenKeys = _useMergedState2[1]; // React 18 will merge mouse event which means we open key will not sync
+      value: openKeys,
+      postState: function postState(keys) {
+        return keys || EMPTY_LIST;
+      }
+    }),
+    _useMergedState2 = slicedToArray_slicedToArray(_useMergedState, 2),
+    mergedOpenKeys = _useMergedState2[0],
+    setMergedOpenKeys = _useMergedState2[1];
+
+  // React 18 will merge mouse event which means we open key will not sync
   // ref: https://github.com/ant-design/ant-design/issues/38818
-
-
   var triggerOpenKeys = function triggerOpenKeys(keys) {
     var forceFlush = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
     function doUpdate() {
       setMergedOpenKeys(keys);
       onOpenChange === null || onOpenChange === void 0 ? void 0 : onOpenChange(keys);
     }
-
     if (forceFlush) {
       (0,react_dom.flushSync)(doUpdate);
     } else {
       doUpdate();
     }
-  }; // >>>>> Cache & Reset open keys when inlineCollapsed changed
+  };
 
-
+  // >>>>> Cache & Reset open keys when inlineCollapsed changed
   var _React$useState3 = react.useState(mergedOpenKeys),
-      _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
-      inlineCacheOpenKeys = _React$useState4[0],
-      setInlineCacheOpenKeys = _React$useState4[1];
+    _React$useState4 = slicedToArray_slicedToArray(_React$useState3, 2),
+    inlineCacheOpenKeys = _React$useState4[0],
+    setInlineCacheOpenKeys = _React$useState4[1];
+  var mountRef = react.useRef(false);
 
-  var mountRef = react.useRef(false); // ========================= Mode =========================
-
+  // ========================= Mode =========================
   var _React$useMemo = react.useMemo(function () {
-    if ((mode === 'inline' || mode === 'vertical') && inlineCollapsed) {
-      return ['vertical', inlineCollapsed];
-    }
-
-    return [mode, false];
-  }, [mode, inlineCollapsed]),
-      _React$useMemo2 = slicedToArray_slicedToArray(_React$useMemo, 2),
-      mergedMode = _React$useMemo2[0],
-      mergedInlineCollapsed = _React$useMemo2[1];
-
+      if ((mode === 'inline' || mode === 'vertical') && inlineCollapsed) {
+        return ['vertical', inlineCollapsed];
+      }
+      return [mode, false];
+    }, [mode, inlineCollapsed]),
+    _React$useMemo2 = slicedToArray_slicedToArray(_React$useMemo, 2),
+    mergedMode = _React$useMemo2[0],
+    mergedInlineCollapsed = _React$useMemo2[1];
   var isInlineMode = mergedMode === 'inline';
-
   var _React$useState5 = react.useState(mergedMode),
-      _React$useState6 = slicedToArray_slicedToArray(_React$useState5, 2),
-      internalMode = _React$useState6[0],
-      setInternalMode = _React$useState6[1];
-
+    _React$useState6 = slicedToArray_slicedToArray(_React$useState5, 2),
+    internalMode = _React$useState6[0],
+    setInternalMode = _React$useState6[1];
   var _React$useState7 = react.useState(mergedInlineCollapsed),
-      _React$useState8 = slicedToArray_slicedToArray(_React$useState7, 2),
-      internalInlineCollapsed = _React$useState8[0],
-      setInternalInlineCollapsed = _React$useState8[1];
-
+    _React$useState8 = slicedToArray_slicedToArray(_React$useState7, 2),
+    internalInlineCollapsed = _React$useState8[0],
+    setInternalInlineCollapsed = _React$useState8[1];
   react.useEffect(function () {
     setInternalMode(mergedMode);
     setInternalInlineCollapsed(mergedInlineCollapsed);
-
     if (!mountRef.current) {
       return;
-    } // Synchronously update MergedOpenKeys
-
-
+    }
+    // Synchronously update MergedOpenKeys
     if (isInlineMode) {
       setMergedOpenKeys(inlineCacheOpenKeys);
     } else {
       // Trigger open event in case its in control
       triggerOpenKeys(EMPTY_LIST);
     }
-  }, [mergedMode, mergedInlineCollapsed]); // ====================== Responsive ======================
+  }, [mergedMode, mergedInlineCollapsed]);
 
+  // ====================== Responsive ======================
   var _React$useState9 = react.useState(0),
-      _React$useState10 = slicedToArray_slicedToArray(_React$useState9, 2),
-      lastVisibleIndex = _React$useState10[0],
-      setLastVisibleIndex = _React$useState10[1];
+    _React$useState10 = slicedToArray_slicedToArray(_React$useState9, 2),
+    lastVisibleIndex = _React$useState10[0],
+    setLastVisibleIndex = _React$useState10[1];
+  var allVisible = lastVisibleIndex >= childList.length - 1 || internalMode !== 'horizontal' || disabledOverflow;
 
-  var allVisible = lastVisibleIndex >= childList.length - 1 || internalMode !== 'horizontal' || disabledOverflow; // Cache
-
+  // Cache
   react.useEffect(function () {
     if (isInlineMode) {
       setInlineCacheOpenKeys(mergedOpenKeys);
@@ -32373,17 +32198,17 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
     return function () {
       mountRef.current = false;
     };
-  }, []); // ========================= Path =========================
+  }, []);
 
+  // ========================= Path =========================
   var _useKeyRecords = useKeyRecords(),
-      registerPath = _useKeyRecords.registerPath,
-      unregisterPath = _useKeyRecords.unregisterPath,
-      refreshOverflowKeys = _useKeyRecords.refreshOverflowKeys,
-      isSubPathKey = _useKeyRecords.isSubPathKey,
-      getKeyPath = _useKeyRecords.getKeyPath,
-      getKeys = _useKeyRecords.getKeys,
-      getSubPathKeys = _useKeyRecords.getSubPathKeys;
-
+    registerPath = _useKeyRecords.registerPath,
+    unregisterPath = _useKeyRecords.unregisterPath,
+    refreshOverflowKeys = _useKeyRecords.refreshOverflowKeys,
+    isSubPathKey = _useKeyRecords.isSubPathKey,
+    getKeyPath = _useKeyRecords.getKeyPath,
+    getKeys = _useKeyRecords.getKeys,
+    getSubPathKeys = _useKeyRecords.getSubPathKeys;
   var registerPathContext = react.useMemo(function () {
     return {
       registerPath: registerPath,
@@ -32399,15 +32224,15 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
     refreshOverflowKeys(allVisible ? EMPTY_LIST : childList.slice(lastVisibleIndex + 1).map(function (child) {
       return child.key;
     }));
-  }, [lastVisibleIndex, allVisible]); // ======================== Active ========================
+  }, [lastVisibleIndex, allVisible]);
 
+  // ======================== Active ========================
   var _useMergedState3 = useMergedState(activeKey || defaultActiveFirst && ((_childList$ = childList[0]) === null || _childList$ === void 0 ? void 0 : _childList$.key), {
-    value: activeKey
-  }),
-      _useMergedState4 = slicedToArray_slicedToArray(_useMergedState3, 2),
-      mergedActiveKey = _useMergedState4[0],
-      setMergedActiveKey = _useMergedState4[1];
-
+      value: activeKey
+    }),
+    _useMergedState4 = slicedToArray_slicedToArray(_useMergedState3, 2),
+    mergedActiveKey = _useMergedState4[0],
+    setMergedActiveKey = _useMergedState4[1];
   var onActive = useMemoCallback(function (key) {
     setMergedActiveKey(key);
   });
@@ -32419,48 +32244,43 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
       list: containerRef.current,
       focus: function focus(options) {
         var _childList$find;
-
         var shouldFocusKey = mergedActiveKey !== null && mergedActiveKey !== void 0 ? mergedActiveKey : (_childList$find = childList.find(function (node) {
           return !node.props.disabled;
         })) === null || _childList$find === void 0 ? void 0 : _childList$find.key;
-
         if (shouldFocusKey) {
           var _containerRef$current, _containerRef$current2, _containerRef$current3;
-
           (_containerRef$current = containerRef.current) === null || _containerRef$current === void 0 ? void 0 : (_containerRef$current2 = _containerRef$current.querySelector("li[data-menu-id='".concat(getMenuId(uuid, shouldFocusKey), "']"))) === null || _containerRef$current2 === void 0 ? void 0 : (_containerRef$current3 = _containerRef$current2.focus) === null || _containerRef$current3 === void 0 ? void 0 : _containerRef$current3.call(_containerRef$current2, options);
         }
       }
     };
-  }); // ======================== Select ========================
+  });
+
+  // ======================== Select ========================
   // >>>>> Select keys
-
   var _useMergedState5 = useMergedState(defaultSelectedKeys || [], {
-    value: selectedKeys,
-    // Legacy convert key to array
-    postState: function postState(keys) {
-      if (Array.isArray(keys)) {
-        return keys;
+      value: selectedKeys,
+      // Legacy convert key to array
+      postState: function postState(keys) {
+        if (Array.isArray(keys)) {
+          return keys;
+        }
+        if (keys === null || keys === undefined) {
+          return EMPTY_LIST;
+        }
+        return [keys];
       }
+    }),
+    _useMergedState6 = slicedToArray_slicedToArray(_useMergedState5, 2),
+    mergedSelectKeys = _useMergedState6[0],
+    setMergedSelectKeys = _useMergedState6[1];
 
-      if (keys === null || keys === undefined) {
-        return EMPTY_LIST;
-      }
-
-      return [keys];
-    }
-  }),
-      _useMergedState6 = slicedToArray_slicedToArray(_useMergedState5, 2),
-      mergedSelectKeys = _useMergedState6[0],
-      setMergedSelectKeys = _useMergedState6[1]; // >>>>> Trigger select
-
-
+  // >>>>> Trigger select
   var triggerSelection = function triggerSelection(info) {
     if (selectable) {
       // Insert or Remove
       var targetKey = info.key;
       var exist = mergedSelectKeys.includes(targetKey);
       var newSelectKeys;
-
       if (multiple) {
         if (exist) {
           newSelectKeys = mergedSelectKeys.filter(function (key) {
@@ -32472,31 +32292,29 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
       } else {
         newSelectKeys = [targetKey];
       }
+      setMergedSelectKeys(newSelectKeys);
 
-      setMergedSelectKeys(newSelectKeys); // Trigger event
-
+      // Trigger event
       var selectInfo = objectSpread2_objectSpread2(objectSpread2_objectSpread2({}, info), {}, {
         selectedKeys: newSelectKeys
       });
-
       if (exist) {
         onDeselect === null || onDeselect === void 0 ? void 0 : onDeselect(selectInfo);
       } else {
         onSelect === null || onSelect === void 0 ? void 0 : onSelect(selectInfo);
       }
-    } // Whatever selectable, always close it
+    }
 
-
+    // Whatever selectable, always close it
     if (!multiple && mergedOpenKeys.length && internalMode !== 'inline') {
       triggerOpenKeys(EMPTY_LIST);
     }
-  }; // ========================= Open =========================
+  };
 
+  // ========================= Open =========================
   /**
    * Click for item. SubMenu do not have selection status
    */
-
-
   var onInternalClick = useMemoCallback(function (info) {
     onClick === null || onClick === void 0 ? void 0 : onClick(warnItemProp(info));
     triggerSelection(info);
@@ -32505,7 +32323,6 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
     var newOpenKeys = mergedOpenKeys.filter(function (k) {
       return k !== key;
     });
-
     if (open) {
       newOpenKeys.push(key);
     } else if (internalMode !== 'inline') {
@@ -32515,33 +32332,37 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
         return !subPathKeys.has(k);
       });
     }
-
-    if (!shallowequal_default()(mergedOpenKeys, newOpenKeys)) {
+    if (!es_isEqual(mergedOpenKeys, newOpenKeys, true)) {
       triggerOpenKeys(newOpenKeys, true);
     }
   });
-  var getInternalPopupContainer = useMemoCallback(getPopupContainer); // ==================== Accessibility =====================
+  var getInternalPopupContainer = useMemoCallback(getPopupContainer);
 
+  // ==================== Accessibility =====================
   var triggerAccessibilityOpen = function triggerAccessibilityOpen(key, open) {
     var nextOpen = open !== null && open !== void 0 ? open : !mergedOpenKeys.includes(key);
     onInternalOpenChange(key, nextOpen);
   };
+  var onInternalKeyDown = useAccessibility_useAccessibility(internalMode, mergedActiveKey, isRtl, uuid, containerRef, getKeys, getKeyPath, setMergedActiveKey, triggerAccessibilityOpen, onKeyDown);
 
-  var onInternalKeyDown = useAccessibility_useAccessibility(internalMode, mergedActiveKey, isRtl, uuid, containerRef, getKeys, getKeyPath, setMergedActiveKey, triggerAccessibilityOpen, onKeyDown); // ======================== Effect ========================
-
+  // ======================== Effect ========================
   react.useEffect(function () {
     setMounted(true);
-  }, []); // ======================= Context ========================
+  }, []);
 
+  // ======================= Context ========================
   var privateContext = react.useMemo(function () {
     return {
       _internalRenderMenuItem: _internalRenderMenuItem,
       _internalRenderSubMenuItem: _internalRenderSubMenuItem
     };
-  }, [_internalRenderMenuItem, _internalRenderSubMenuItem]); // ======================== Render ========================
-  // >>>>> Children
+  }, [_internalRenderMenuItem, _internalRenderSubMenuItem]);
 
-  var wrappedChildList = internalMode !== 'horizontal' || disabledOverflow ? childList : // Need wrap for overflow dropdown that do not response for open
+  // ======================== Render ========================
+
+  // >>>>> Children
+  var wrappedChildList = internalMode !== 'horizontal' || disabledOverflow ? childList :
+  // Need wrap for overflow dropdown that do not response for open
   childList.map(function (child, index) {
     return (
       /*#__PURE__*/
@@ -32551,8 +32372,9 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
         overflowDisabled: index > lastVisibleIndex
       }, child)
     );
-  }); // >>>>> Container
+  });
 
+  // >>>>> Container
   var container = /*#__PURE__*/react.createElement(rc_overflow_es, _extends({
     id: id,
     ref: containerRef,
@@ -32587,8 +32409,9 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
       setLastVisibleIndex(newLastIndex);
     },
     onKeyDown: onInternalKeyDown
-  }, restProps)); // >>>>> Render
+  }, restProps));
 
+  // >>>>> Render
   return /*#__PURE__*/react.createElement(context_PrivateContext.Provider, {
     value: privateContext
   }, /*#__PURE__*/react.createElement(IdContext.Provider, {
@@ -32598,30 +32421,38 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
     rootClassName: rootClassName,
     mode: internalMode,
     openKeys: mergedOpenKeys,
-    rtl: isRtl // Disabled
+    rtl: isRtl
+    // Disabled
     ,
-    disabled: disabled // Motion
+    disabled: disabled
+    // Motion
     ,
     motion: mounted ? motion : null,
-    defaultMotions: mounted ? defaultMotions : null // Active
+    defaultMotions: mounted ? defaultMotions : null
+    // Active
     ,
     activeKey: mergedActiveKey,
     onActive: onActive,
-    onInactive: onInactive // Selection
+    onInactive: onInactive
+    // Selection
     ,
-    selectedKeys: mergedSelectKeys // Level
+    selectedKeys: mergedSelectKeys
+    // Level
     ,
-    inlineIndent: inlineIndent // Popup
+    inlineIndent: inlineIndent
+    // Popup
     ,
     subMenuOpenDelay: subMenuOpenDelay,
     subMenuCloseDelay: subMenuCloseDelay,
     forceSubMenuRender: forceSubMenuRender,
     builtinPlacements: builtinPlacements,
     triggerSubMenuAction: triggerSubMenuAction,
-    getPopupContainer: getInternalPopupContainer // Icon
+    getPopupContainer: getInternalPopupContainer
+    // Icon
     ,
     itemIcon: itemIcon,
-    expandIcon: expandIcon // Events
+    expandIcon: expandIcon
+    // Events
     ,
     onItemClick: onInternalClick,
     onOpenChange: onInternalOpenChange
@@ -32641,8 +32472,7 @@ var Menu = /*#__PURE__*/react.forwardRef(function (props, ref) {
 
 
 var MenuItemGroup_excluded = ["className", "title", "eventKey", "children"],
-    MenuItemGroup_excluded2 = ["children"];
-
+  MenuItemGroup_excluded2 = ["children"];
 
 
 
@@ -32651,40 +32481,38 @@ var MenuItemGroup_excluded = ["className", "title", "eventKey", "children"],
 
 var InternalMenuItemGroup = function InternalMenuItemGroup(_ref) {
   var className = _ref.className,
-      title = _ref.title,
-      eventKey = _ref.eventKey,
-      children = _ref.children,
-      restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuItemGroup_excluded);
-
+    title = _ref.title,
+    eventKey = _ref.eventKey,
+    children = _ref.children,
+    restProps = objectWithoutProperties_objectWithoutProperties(_ref, MenuItemGroup_excluded);
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls;
-
+    prefixCls = _React$useContext.prefixCls;
   var groupPrefixCls = "".concat(prefixCls, "-item-group");
-  return /*#__PURE__*/react.createElement("li", _extends({}, restProps, {
+  return /*#__PURE__*/react.createElement("li", _extends({
+    role: "presentation"
+  }, restProps, {
     onClick: function onClick(e) {
       return e.stopPropagation();
     },
     className: classnames_default()(groupPrefixCls, className)
   }), /*#__PURE__*/react.createElement("div", {
+    role: "presentation",
     className: "".concat(groupPrefixCls, "-title"),
     title: typeof title === 'string' ? title : undefined
   }, title), /*#__PURE__*/react.createElement("ul", {
+    role: "group",
     className: "".concat(groupPrefixCls, "-list")
   }, children));
 };
-
 function MenuItemGroup(_ref2) {
   var children = _ref2.children,
-      props = objectWithoutProperties_objectWithoutProperties(_ref2, MenuItemGroup_excluded2);
-
+    props = objectWithoutProperties_objectWithoutProperties(_ref2, MenuItemGroup_excluded2);
   var connectedKeyPath = useFullPath(props.eventKey);
   var childList = parseChildren(children, connectedKeyPath);
   var measure = useMeasure();
-
   if (measure) {
     return childList;
   }
-
   return /*#__PURE__*/react.createElement(InternalMenuItemGroup, omit_omit(props, ['warnKey']), childList);
 }
 ;// CONCATENATED MODULE: ./node_modules/rc-menu/es/Divider.js
@@ -32694,17 +32522,13 @@ function MenuItemGroup(_ref2) {
 
 function Divider(_ref) {
   var className = _ref.className,
-      style = _ref.style;
-
+    style = _ref.style;
   var _React$useContext = react.useContext(MenuContext),
-      prefixCls = _React$useContext.prefixCls;
-
+    prefixCls = _React$useContext.prefixCls;
   var measure = useMeasure();
-
   if (measure) {
     return null;
   }
-
   return /*#__PURE__*/react.createElement("li", {
     className: classnames_default()("".concat(prefixCls, "-item-divider"), className),
     style: style
@@ -35209,8 +35033,8 @@ const WaveEffect = props => {
       borderLeftWidth,
       borderTopWidth
     } = nodeStyle;
-    setLeft(isStatic ? target.offsetLeft : -parseFloat(borderLeftWidth));
-    setTop(isStatic ? target.offsetTop : -parseFloat(borderTopWidth));
+    setLeft(isStatic ? target.offsetLeft : validateNum(-parseFloat(borderLeftWidth)));
+    setTop(isStatic ? target.offsetTop : validateNum(-parseFloat(borderTopWidth)));
     setWidth(target.offsetWidth);
     setHeight(target.offsetHeight);
     // Get border radius
@@ -35691,19 +35515,24 @@ const genGroupStyle = token => {
 /* harmony default export */ const group = (genGroupStyle);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/style/compact-item.js
 // handle border collapse
-function compactItemBorder(token, options) {
-  const childCombinator = options.borderElCls ? '> *' : '';
-  const hoverEffects = ['hover', options.focus ? 'focus' : null, 'active'].filter(Boolean).map(n => `&:${n} ${childCombinator}`).join(',');
+function compactItemBorder(token, parentCls, options) {
+  const {
+    focusElCls,
+    focus,
+    borderElCls
+  } = options;
+  const childCombinator = borderElCls ? '> *' : '';
+  const hoverEffects = ['hover', focus ? 'focus' : null, 'active'].filter(Boolean).map(n => `&:${n} ${childCombinator}`).join(',');
   return {
-    '&-item:not(&-last-item)': {
+    [`&-item:not(${parentCls}-last-item)`]: {
       marginInlineEnd: -token.lineWidth
     },
     '&-item': Object.assign(Object.assign({
       [hoverEffects]: {
         zIndex: 2
       }
-    }, options.focusElCls ? {
-      [`&${options.focusElCls}`]: {
+    }, focusElCls ? {
+      [`&${focusElCls}`]: {
         zIndex: 2
       }
     } : {}), {
@@ -35714,19 +35543,22 @@ function compactItemBorder(token, options) {
   };
 }
 // handle border-radius
-function compactItemBorderRadius(prefixCls, options) {
-  const childCombinator = options.borderElCls ? `> ${options.borderElCls}` : '';
+function compactItemBorderRadius(prefixCls, parentCls, options) {
+  const {
+    borderElCls
+  } = options;
+  const childCombinator = borderElCls ? `> ${borderElCls}` : '';
   return {
-    [`&-item:not(&-first-item):not(&-last-item) ${childCombinator}`]: {
+    [`&-item:not(${parentCls}-first-item):not(${parentCls}-last-item) ${childCombinator}`]: {
       borderRadius: 0
     },
-    '&-item:not(&-last-item)&-first-item': {
+    [`&-item:not(${parentCls}-last-item)${parentCls}-first-item`]: {
       [`& ${childCombinator}, &${prefixCls}-sm ${childCombinator}, &${prefixCls}-lg ${childCombinator}`]: {
         borderStartEndRadius: 0,
         borderEndEndRadius: 0
       }
     },
-    '&-item:not(&-first-item)&-last-item': {
+    [`&-item:not(${parentCls}-first-item)${parentCls}-last-item`]: {
       [`& ${childCombinator}, &${prefixCls}-sm ${childCombinator}, &${prefixCls}-lg ${childCombinator}`]: {
         borderStartStartRadius: 0,
         borderEndStartRadius: 0
@@ -35738,15 +35570,19 @@ function genCompactItemStyle(token) {
   let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
     focus: true
   };
+  const {
+    componentCls
+  } = token;
+  const compactCls = `${componentCls}-compact`;
   return {
-    [`${token.componentCls}-compact`]: Object.assign(Object.assign({}, compactItemBorder(token, options)), compactItemBorderRadius(token.componentCls, options))
+    [compactCls]: Object.assign(Object.assign({}, compactItemBorder(token, compactCls, options)), compactItemBorderRadius(componentCls, compactCls, options))
   };
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/style/compact-item-vertical.js
-function compactItemVerticalBorder(token) {
+function compactItemVerticalBorder(token, parentCls) {
   return {
     // border collapse
-    '&-item:not(&-last-item)': {
+    [`&-item:not(${parentCls}-last-item)`]: {
       marginBottom: -token.lineWidth
     },
     '&-item': {
@@ -35759,18 +35595,18 @@ function compactItemVerticalBorder(token) {
     }
   };
 }
-function compactItemBorderVerticalRadius(prefixCls) {
+function compactItemBorderVerticalRadius(prefixCls, parentCls) {
   return {
-    '&-item:not(&-first-item):not(&-last-item)': {
+    [`&-item:not(${parentCls}-first-item):not(${parentCls}-last-item)`]: {
       borderRadius: 0
     },
-    '&-item&-first-item:not(&-last-item)': {
+    [`&-item${parentCls}-first-item:not(${parentCls}-last-item)`]: {
       [`&, &${prefixCls}-sm, &${prefixCls}-lg`]: {
         borderEndEndRadius: 0,
         borderEndStartRadius: 0
       }
     },
-    '&-item&-last-item:not(&-first-item)': {
+    [`&-item${parentCls}-last-item:not(${parentCls}-first-item)`]: {
       [`&, &${prefixCls}-sm, &${prefixCls}-lg`]: {
         borderStartStartRadius: 0,
         borderStartEndRadius: 0
@@ -35779,8 +35615,9 @@ function compactItemBorderVerticalRadius(prefixCls) {
   };
 }
 function genCompactItemVerticalStyle(token) {
+  const compactCls = `${token.componentCls}-compact-vertical`;
   return {
-    [`${token.componentCls}-compact-vertical`]: Object.assign(Object.assign({}, compactItemVerticalBorder(token)), compactItemBorderVerticalRadius(token.componentCls))
+    [compactCls]: Object.assign(Object.assign({}, compactItemVerticalBorder(token, compactCls)), compactItemBorderVerticalRadius(token.componentCls, compactCls))
   };
 }
 ;// CONCATENATED MODULE: ./node_modules/antd/es/button/style/index.js
@@ -35819,14 +35656,17 @@ const genSharedButtonStyle = token => {
       [`> ${iconCls} + span, > span + ${iconCls}`]: {
         marginInlineStart: token.marginXS
       },
+      '> a': {
+        color: 'currentColor'
+      },
       '&:not(:disabled)': Object.assign({}, genFocusStyle(token)),
       // make `btn-icon-only` not too narrow
-      '&-icon-only&-compact-item': {
+      [`&-icon-only${componentCls}-compact-item`]: {
         flex: 'none'
       },
       // Special styles for Primary Button
       [`&-compact-item${componentCls}-primary`]: {
-        '&:not([disabled]) + &:not([disabled])': {
+        [`&:not([disabled]) + ${componentCls}-compact-item${componentCls}-primary:not([disabled])`]: {
           position: 'relative',
           '&:before': {
             position: 'absolute',
@@ -35843,7 +35683,7 @@ const genSharedButtonStyle = token => {
       // Special styles for Primary Button
       '&-compact-vertical-item': {
         [`&${componentCls}-primary`]: {
-          '&:not([disabled]) + &:not([disabled])': {
+          [`&:not([disabled]) + ${componentCls}-compact-vertical-item${componentCls}-primary:not([disabled])`]: {
             position: 'relative',
             '&:before': {
               position: 'absolute',
@@ -39939,7 +39779,7 @@ const genInputSmallStyle = token => ({
   padding: `${token.inputPaddingVerticalSM}px ${token.controlPaddingHorizontalSM - 1}px`,
   borderRadius: token.borderRadiusSM
 });
-const genStatusStyle = token => {
+const genStatusStyle = (token, parentCls) => {
   const {
     componentCls,
     colorError,
@@ -39950,7 +39790,7 @@ const genStatusStyle = token => {
     colorWarningBorderHover
   } = token;
   return {
-    '&-status-error:not(&-disabled):not(&-borderless)&': {
+    [`&-status-error:not(${parentCls}-disabled):not(${parentCls}-borderless)${parentCls}`]: {
       borderColor: colorError,
       '&:hover': {
         borderColor: colorErrorBorderHover
@@ -39960,11 +39800,11 @@ const genStatusStyle = token => {
         inputBorderHoverColor: colorError,
         controlOutline: colorErrorOutline
       }))),
-      [`${componentCls}-prefix`]: {
+      [`${componentCls}-prefix, ${componentCls}-suffix`]: {
         color: colorError
       }
     },
-    '&-status-warning:not(&-disabled):not(&-borderless)&': {
+    [`&-status-warning:not(${parentCls}-disabled):not(${parentCls}-borderless)${parentCls}`]: {
       borderColor: colorWarning,
       '&:hover': {
         borderColor: colorWarningBorderHover
@@ -39974,7 +39814,7 @@ const genStatusStyle = token => {
         inputBorderHoverColor: colorWarning,
         controlOutline: colorWarningOutline
       }))),
-      [`${componentCls}-prefix`]: {
+      [`${componentCls}-prefix, ${componentCls}-suffix`]: {
         color: colorWarning
       }
     }
@@ -40122,7 +39962,6 @@ const genInputGroupStyle = token => {
       }
     },
     [`${componentCls}`]: {
-      float: 'inline-start',
       width: '100%',
       marginBottom: 0,
       textAlign: 'inherit',
@@ -40181,7 +40020,7 @@ const genInputGroupStyle = token => {
         borderEndStartRadius: 0
       }
     },
-    '&&-compact': Object.assign(Object.assign({
+    [`&${componentCls}-group-compact`]: Object.assign(Object.assign({
       display: 'block'
     }, clearFix()), {
       [`${componentCls}-group-addon, ${componentCls}-group-wrap, > ${componentCls}`]: {
@@ -40286,7 +40125,7 @@ const genInputStyle = token => {
   const FIXED_CHROME_COLOR_HEIGHT = 16;
   const colorSmallPadding = (controlHeightSM - lineWidth * 2 - FIXED_CHROME_COLOR_HEIGHT) / 2;
   return {
-    [`${componentCls}`]: Object.assign(Object.assign(Object.assign(Object.assign({}, resetComponent(token)), genBasicInputStyle(token)), genStatusStyle(token)), {
+    [componentCls]: Object.assign(Object.assign(Object.assign(Object.assign({}, resetComponent(token)), genBasicInputStyle(token)), genStatusStyle(token, componentCls)), {
       '&[type="color"]': {
         height: token.controlHeight,
         [`&${componentCls}-lg`]: {
@@ -40297,6 +40136,9 @@ const genInputStyle = token => {
           paddingTop: colorSmallPadding,
           paddingBottom: colorSmallPadding
         }
+      },
+      '&[type="search"]::-webkit-search-cancel-button, &[type="search"]::-webkit-search-decoration': {
+        '-webkit-appearance': 'none'
       }
     })
   };
@@ -40355,7 +40197,7 @@ const genAffixStyle = token => {
   return {
     [`${componentCls}-affix-wrapper`]: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, genBasicInputStyle(token)), {
       display: 'inline-flex',
-      '&:not(&-disabled):hover': Object.assign(Object.assign({}, genHoverStyle(token)), {
+      [`&:not(${componentCls}-affix-wrapper-disabled):hover`]: Object.assign(Object.assign({}, genHoverStyle(token)), {
         zIndex: 1,
         [`${componentCls}-search-with-button &`]: {
           zIndex: 0
@@ -40416,7 +40258,7 @@ const genAffixStyle = token => {
           color: colorIconHover
         }
       }
-    }), genStatusStyle(token))
+    }), genStatusStyle(token, `${componentCls}-affix-wrapper`))
   };
 };
 const style_genGroupStyle = token => {
@@ -40825,7 +40667,7 @@ const input_Input_Input = /*#__PURE__*/(0,react.forwardRef)((props, ref) => {
     prefixCls: prefixCls,
     autoComplete: input === null || input === void 0 ? void 0 : input.autoComplete
   }, rest, {
-    disabled: mergedDisabled || undefined,
+    disabled: mergedDisabled,
     onBlur: handleBlur,
     onFocus: handleFocus,
     suffix: suffixNode,
@@ -41323,16 +41165,16 @@ const genTypographyStyle = token => {
       color: token.colorText,
       wordBreak: 'break-word',
       lineHeight: token.lineHeight,
-      '&&-secondary': {
+      [`&${componentCls}-secondary`]: {
         color: token.colorTextDescription
       },
-      '&&-success': {
+      [`&${componentCls}-success`]: {
         color: token.colorSuccess
       },
-      '&&-warning': {
+      [`&${componentCls}-warning`]: {
         color: token.colorWarning
       },
-      '&&-danger': {
+      [`&${componentCls}-danger`]: {
         color: token.colorError,
         'a&:active, a&:focus': {
           color: token.colorErrorActive
@@ -41341,7 +41183,7 @@ const genTypographyStyle = token => {
           color: token.colorErrorHover
         }
       },
-      '&&-disabled': {
+      [`&${componentCls}-disabled`]: {
         color: token.colorTextDisabled,
         cursor: 'not-allowed',
         userSelect: 'none'
@@ -41354,11 +41196,11 @@ const genTypographyStyle = token => {
       }
     }, getTitleStyles(token)), {
       [`
-      & + h1&,
-      & + h2&,
-      & + h3&,
-      & + h4&,
-      & + h5&
+      & + h1${componentCls},
+      & + h2${componentCls},
+      & + h3${componentCls},
+      & + h4${componentCls},
+      & + h5${componentCls}
       `]: {
         marginTop: sizeMarginHeadingVerticalStart
       },
@@ -41804,17 +41646,19 @@ function wrapperDecorations(_ref, content) {
     italic
   } = _ref;
   let currentContent = content;
-  function wrap(needed, tag) {
-    if (!needed) return;
+  function wrap(tag, needed) {
+    if (!needed) {
+      return;
+    }
     currentContent = /*#__PURE__*/react.createElement(tag, {}, currentContent);
   }
-  wrap(strong, 'strong');
-  wrap(underline, 'u');
-  wrap(del, 'del');
-  wrap(code, 'code');
-  wrap(mark, 'mark');
-  wrap(keyboard, 'kbd');
-  wrap(italic, 'i');
+  wrap('strong', strong);
+  wrap('u', underline);
+  wrap('del', del);
+  wrap('code', code);
+  wrap('mark', mark);
+  wrap('kbd', keyboard);
+  wrap('i', italic);
   return currentContent;
 }
 function getNode(dom, defaultNode, needDom) {
@@ -42432,13 +42276,14 @@ const style_genBaseStyle = token => {
   const {
     paddingXXS,
     lineWidth,
-    tagPaddingHorizontal
+    tagPaddingHorizontal,
+    componentCls
   } = token;
   const paddingInline = tagPaddingHorizontal - lineWidth;
   const iconMarginInline = paddingXXS - lineWidth;
   return {
     // Result
-    [token.componentCls]: Object.assign(Object.assign({}, resetComponent(token)), {
+    [componentCls]: Object.assign(Object.assign({}, resetComponent(token)), {
       display: 'inline-block',
       height: 'auto',
       marginInlineEnd: token.marginXS,
@@ -42453,13 +42298,13 @@ const style_genBaseStyle = token => {
       transition: `all ${token.motionDurationMid}`,
       textAlign: 'start',
       // RTL
-      '&&-rtl': {
+      [`&${componentCls}-rtl`]: {
         direction: 'rtl'
       },
       '&, a, a:hover': {
         color: token.tagDefaultColor
       },
-      [`${token.componentCls}-close-icon`]: {
+      [`${componentCls}-close-icon`]: {
         marginInlineStart: iconMarginInline,
         color: token.colorTextDescription,
         fontSize: token.tagIconSize,
@@ -42469,7 +42314,7 @@ const style_genBaseStyle = token => {
           color: token.colorTextHeading
         }
       },
-      [`&&-has-color`]: {
+      [`&${componentCls}-has-color`]: {
         borderColor: 'transparent',
         [`&, a, a:hover, ${token.iconCls}-close, ${token.iconCls}-close:hover`]: {
           color: token.colorTextLightSolid
@@ -42479,7 +42324,7 @@ const style_genBaseStyle = token => {
         backgroundColor: 'transparent',
         borderColor: 'transparent',
         cursor: 'pointer',
-        '&:not(&-checked):hover': {
+        [`&:not(${componentCls}-checkable-checked):hover`]: {
           color: token.colorPrimary,
           backgroundColor: token.colorFillSecondary
         },
@@ -43021,7 +42866,7 @@ const genSharedDividerStyle = token => {
         minWidth: '100%',
         margin: `${token.dividerHorizontalGutterMargin}px 0`
       },
-      '&-horizontal&-with-text': {
+      [`&-horizontal${componentCls}-with-text`]: {
         display: 'flex',
         alignItems: 'center',
         margin: `${token.dividerHorizontalWithTextGutterMargin}px 0`,
@@ -43042,7 +42887,7 @@ const genSharedDividerStyle = token => {
           content: "''"
         }
       },
-      '&-horizontal&-with-text-left': {
+      [`&-horizontal${componentCls}-with-text-left`]: {
         '&::before': {
           width: '5%'
         },
@@ -43050,7 +42895,7 @@ const genSharedDividerStyle = token => {
           width: '95%'
         }
       },
-      '&-horizontal&-with-text-right': {
+      [`&-horizontal${componentCls}-with-text-right`]: {
         '&::before': {
           width: '95%'
         },
@@ -43068,23 +42913,23 @@ const genSharedDividerStyle = token => {
         borderStyle: 'dashed',
         borderWidth: `${lineWidth}px 0 0`
       },
-      '&-horizontal&-with-text&-dashed': {
+      [`&-horizontal${componentCls}-with-text${componentCls}-dashed`]: {
         '&::before, &::after': {
           borderStyle: 'dashed none none'
         }
       },
-      '&-vertical&-dashed': {
+      [`&-vertical${componentCls}-dashed`]: {
         borderInlineStart: lineWidth,
         borderInlineEnd: 0,
         borderBlockStart: 0,
         borderBlockEnd: 0
       },
-      '&-plain&-with-text': {
+      [`&-plain${componentCls}-with-text`]: {
         color: token.colorText,
         fontWeight: 'normal',
         fontSize: token.fontSize
       },
-      '&-horizontal&-with-text-left&-no-default-orientation-margin-left': {
+      [`&-horizontal${componentCls}-with-text-left${componentCls}-no-default-orientation-margin-left`]: {
         '&::before': {
           width: 0
         },
@@ -43095,7 +42940,7 @@ const genSharedDividerStyle = token => {
           paddingInlineStart: sizePaddingEdgeHorizontal
         }
       },
-      '&-horizontal&-with-text-right&-no-default-orientation-margin-right': {
+      [`&-horizontal${componentCls}-with-text-right${componentCls}-no-default-orientation-margin-right`]: {
         '&::before': {
           width: '100%'
         },
@@ -43576,6 +43421,9 @@ var SwapRightOutlined_SwapRightOutlined = function SwapRightOutlined(props, ref)
 };
 SwapRightOutlined_SwapRightOutlined.displayName = 'SwapRightOutlined';
 /* harmony default export */ const icons_SwapRightOutlined = (/*#__PURE__*/react.forwardRef(SwapRightOutlined_SwapRightOutlined));
+// EXTERNAL MODULE: ./node_modules/shallowequal/index.js
+var shallowequal = __webpack_require__(6774);
+var shallowequal_default = /*#__PURE__*/__webpack_require__.n(shallowequal);
 ;// CONCATENATED MODULE: ./node_modules/rc-picker/es/PanelContext.js
 
 var PanelContext = /*#__PURE__*/react.createContext({});
@@ -48567,7 +48415,7 @@ var RangePicker = /*#__PURE__*/function (_React$Component) {
 
 /* harmony default export */ const rc_picker_es = (es_Picker);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/date-picker/util.js
-function getPlaceholder(picker, locale, customizePlaceholder) {
+function getPlaceholder(locale, picker, customizePlaceholder) {
   if (customizePlaceholder !== undefined) {
     return customizePlaceholder;
   }
@@ -48588,7 +48436,7 @@ function getPlaceholder(picker, locale, customizePlaceholder) {
   }
   return locale.lang.placeholder;
 }
-function getRangePlaceholder(picker, locale, customizePlaceholder) {
+function getRangePlaceholder(locale, picker, customizePlaceholder) {
   if (customizePlaceholder !== undefined) {
     return customizePlaceholder;
   }
@@ -48817,6 +48665,7 @@ const genPikerPadding = (token, inputHeight, fontSize, paddingHorizontal) => {
 const genPickerCellInnerStyle = token => {
   const {
     componentCls,
+    pickerCellCls,
     pickerCellInnerCls,
     pickerPanelCellHeight,
     motionDurationSlow,
@@ -48860,14 +48709,14 @@ const genPickerCellInnerStyle = token => {
       transition: `background ${motionDurationMid}, border ${motionDurationMid}`
     },
     // >>> Hover
-    [`&:hover:not(&-in-view),
-    &:hover:not(&-selected):not(&-range-start):not(&-range-end):not(&-range-hover-start):not(&-range-hover-end)`]: {
+    [`&:hover:not(${pickerCellCls}-in-view),
+    &:hover:not(${pickerCellCls}-selected):not(${pickerCellCls}-range-start):not(${pickerCellCls}-range-end):not(${pickerCellCls}-range-hover-start):not(${pickerCellCls}-range-hover-end)`]: {
       [pickerCellInnerCls]: {
         background: controlItemBgHover
       }
     },
     // >>> Today
-    [`&-in-view:is(&-today) ${pickerCellInnerCls}`]: {
+    [`&-in-view${pickerCellCls}-today ${pickerCellInnerCls}`]: {
       '&::before': {
         position: 'absolute',
         top: 0,
@@ -48881,39 +48730,39 @@ const genPickerCellInnerStyle = token => {
       }
     },
     // >>> In Range
-    '&-in-view:is(&-in-range)': {
+    [`&-in-view${pickerCellCls}-in-range`]: {
       position: 'relative',
       '&::before': {
         background: controlItemBgActive
       }
     },
     // >>> Selected
-    [`&-in-view:is(&-selected) ${pickerCellInnerCls},
-    &-in-view:is(&-range-start) ${pickerCellInnerCls},
-    &-in-view:is(&-range-end) ${pickerCellInnerCls}`]: {
+    [`&-in-view${pickerCellCls}-selected ${pickerCellInnerCls},
+      &-in-view${pickerCellCls}-range-start ${pickerCellInnerCls},
+      &-in-view${pickerCellCls}-range-end ${pickerCellInnerCls}`]: {
       color: colorTextLightSolid,
       background: colorPrimary
     },
-    [`&-in-view:is(&-range-start):not(&-range-start-single),
-      &-in-view:is(&-range-end):not(&-range-end-single)`]: {
+    [`&-in-view${pickerCellCls}-range-start:not(${pickerCellCls}-range-start-single),
+      &-in-view${pickerCellCls}-range-end:not(${pickerCellCls}-range-end-single)`]: {
       '&::before': {
         background: controlItemBgActive
       }
     },
-    '&-in-view:is(&-range-start)::before': {
+    [`&-in-view${pickerCellCls}-range-start::before`]: {
       insetInlineStart: '50%'
     },
-    '&-in-view:is(&-range-end)::before': {
+    [`&-in-view${pickerCellCls}-range-end::before`]: {
       insetInlineEnd: '50%'
     },
     // >>> Range Hover
-    [`&-in-view:is(&-range-hover-start):not(&-in-range):not(&-range-start):not(&-range-end),
-      &-in-view:is(&-range-hover-end):not(&-in-range):not(&-range-start):not(&-range-end),
-      &-in-view:is(&-range-hover-start):is(&-range-start-single),
-      &-in-view:is(&-range-hover-start):is(&-range-start):is(&-range-end):is(&-range-end-near-hover),
-      &-in-view:is(&-range-hover-end):is(&-range-start):is(&-range-end):is(&-range-start-near-hover),
-      &-in-view:is(&-range-hover-end):is(&-range-end-single),
-      &-in-view:is(&-range-hover):not(&-in-range)`]: {
+    [`&-in-view${pickerCellCls}-range-hover-start:not(${pickerCellCls}-in-range):not(${pickerCellCls}-range-start):not(${pickerCellCls}-range-end),
+      &-in-view${pickerCellCls}-range-hover-end:not(${pickerCellCls}-in-range):not(${pickerCellCls}-range-start):not(${pickerCellCls}-range-end),
+      &-in-view${pickerCellCls}-range-hover-start${pickerCellCls}-range-start-single,
+      &-in-view${pickerCellCls}-range-hover-start${pickerCellCls}-range-start${pickerCellCls}-range-end${pickerCellCls}-range-end-near-hover,
+      &-in-view${pickerCellCls}-range-hover-end${pickerCellCls}-range-start${pickerCellCls}-range-end${pickerCellCls}-range-start-near-hover,
+      &-in-view${pickerCellCls}-range-hover-end${pickerCellCls}-range-end-single,
+      &-in-view${pickerCellCls}-range-hover:not(${pickerCellCls}-in-range)`]: {
       '&::after': {
         position: 'absolute',
         top: '50%',
@@ -48934,53 +48783,53 @@ const genPickerCellInnerStyle = token => {
       insetInlineStart: pickerCellBorderGap
     },
     // Hover with in range
-    [`&-in-view:is(&-in-range):is(&-range-hover)::before,
-      &-in-view:is(&-range-start):is(&-range-hover)::before,
-      &-in-view:is(&-range-end):is(&-range-hover)::before,
-      &-in-view:is(&-range-start):not(&-range-start-single):is(&-range-hover-start)::before,
-      &-in-view:is(&-range-end):not(&-range-end-single):is(&-range-hover-end)::before,
+    [`&-in-view${pickerCellCls}-in-range${pickerCellCls}-range-hover::before,
+      &-in-view${pickerCellCls}-range-start${pickerCellCls}-range-hover::before,
+      &-in-view${pickerCellCls}-range-end${pickerCellCls}-range-hover::before,
+      &-in-view${pickerCellCls}-range-start:not(${pickerCellCls}-range-start-single)${pickerCellCls}-range-hover-start::before,
+      &-in-view${pickerCellCls}-range-end:not(${pickerCellCls}-range-end-single)${pickerCellCls}-range-hover-end::before,
       ${componentCls}-panel
       > :not(${componentCls}-date-panel)
-      &-in-view:is(&-in-range):is(&-range-hover-start)::before,
+      &-in-view${pickerCellCls}-in-range${pickerCellCls}-range-hover-start::before,
       ${componentCls}-panel
       > :not(${componentCls}-date-panel)
-      &-in-view:is(&-in-range):is(&-range-hover-end)::before`]: {
+      &-in-view${pickerCellCls}-in-range${pickerCellCls}-range-hover-end::before`]: {
       background: pickerBasicCellHoverWithRangeColor
     },
     // range start border-radius
-    [`&-in-view:is(&-range-start):not(&-range-start-single):not(&-range-end) ${pickerCellInnerCls}`]: {
+    [`&-in-view${pickerCellCls}-range-start:not(${pickerCellCls}-range-start-single):not(${pickerCellCls}-range-end) ${pickerCellInnerCls}`]: {
       borderStartStartRadius: borderRadiusSM,
       borderEndStartRadius: borderRadiusSM,
       borderStartEndRadius: 0,
       borderEndEndRadius: 0
     },
     // range end border-radius
-    [`&-in-view:is(&-range-end):not(&-range-end-single):not(&-range-start) ${pickerCellInnerCls}`]: {
+    [`&-in-view${pickerCellCls}-range-end:not(${pickerCellCls}-range-end-single):not(${pickerCellCls}-range-start) ${pickerCellInnerCls}`]: {
       borderStartStartRadius: 0,
       borderEndStartRadius: 0,
       borderStartEndRadius: borderRadiusSM,
       borderEndEndRadius: borderRadiusSM
     },
-    '&-range-hover:is(&-range-end)::after': {
+    [`&-range-hover${pickerCellCls}-range-end::after`]: {
       insetInlineStart: '50%'
     },
     // Edge start
-    [`tr > &-in-view:is(&-range-hover):first-child::after,
-      tr > &-in-view:is(&-range-hover-end):first-child::after,
-      &-in-view:is(&-start):is(&-range-hover-edge-start):is(&-range-hover-edge-start-near-range)::after,
-      &-in-view:is(&-range-hover-edge-start):not(&-range-hover-edge-start-near-range)::after,
-      &-in-view:is(&-range-hover-start)::after`]: {
+    [`tr > &-in-view${pickerCellCls}-range-hover:first-child::after,
+      tr > &-in-view${pickerCellCls}-range-hover-end:first-child::after,
+      &-in-view${pickerCellCls}-start${pickerCellCls}-range-hover-edge-start${pickerCellCls}-range-hover-edge-start-near-range::after,
+      &-in-view${pickerCellCls}-range-hover-edge-start:not(${pickerCellCls}-range-hover-edge-start-near-range)::after,
+      &-in-view${pickerCellCls}-range-hover-start::after`]: {
       insetInlineStart: (pickerPanelCellWidth - pickerPanelCellHeight) / 2,
       borderInlineStart: `${lineWidth}px dashed ${pickerDateHoverRangeBorderColor}`,
       borderStartStartRadius: lineWidth,
       borderEndStartRadius: lineWidth
     },
     // Edge end
-    [`tr > &-in-view:is(&-range-hover):last-child::after,
-      tr > &-in-view:is(&-range-hover-start):last-child::after,
-      &-in-view:is(&-end):is(&-range-hover-edge-end):is(&-range-hover-edge-end-near-range)::after,
-      &-in-view:is(&-range-hover-edge-end):not(&-range-hover-edge-end-near-range)::after,
-      &-in-view:is(&-range-hover-end)::after`]: {
+    [`tr > &-in-view${pickerCellCls}-range-hover:last-child::after,
+      tr > &-in-view${pickerCellCls}-range-hover-start:last-child::after,
+      &-in-view${pickerCellCls}-end${pickerCellCls}-range-hover-edge-end${pickerCellCls}-range-hover-edge-end-near-range::after,
+      &-in-view${pickerCellCls}-range-hover-edge-end:not(${pickerCellCls}-range-hover-edge-end-near-range)::after,
+      &-in-view${pickerCellCls}-range-hover-end::after`]: {
       insetInlineEnd: (pickerPanelCellWidth - pickerPanelCellHeight) / 2,
       borderInlineEnd: `${lineWidth}px dashed ${pickerDateHoverRangeBorderColor}`,
       borderStartEndRadius: lineWidth,
@@ -48997,7 +48846,7 @@ const genPickerCellInnerStyle = token => {
         background: colorBgContainerDisabled
       }
     },
-    [`&-disabled:is(&-today) ${pickerCellInnerCls}::before`]: {
+    [`&-disabled${pickerCellCls}-today ${pickerCellInnerCls}::before`]: {
       borderColor: colorTextDisabled
     }
   };
@@ -49229,7 +49078,7 @@ const genPanelStyle = token => {
         insetInlineStart: -(pickerPanelCellWidth - pickerPanelCellHeight) / 2
       },
       // Hover with range start & end
-      '&-range-hover:is(&-range-start)::after': {
+      [`&-range-hover${componentCls}-range-start::after`]: {
         insetInlineEnd: '50%'
       },
       [`&-decade-panel,
@@ -49277,7 +49126,7 @@ const genPanelStyle = token => {
         '&:active': {
           color: colorLinkActive
         },
-        '&:is(&-disabled)': {
+        [`&${componentCls}-today-btn-disabled`]: {
           color: colorTextDisabled,
           cursor: 'not-allowed'
         }
@@ -49345,8 +49194,8 @@ const genPanelStyle = token => {
         // Clear cell style
         [`${componentCls}-cell`]: {
           [`&:hover ${pickerCellInnerCls},
-      &-selected ${pickerCellInnerCls},
-      ${pickerCellInnerCls}`]: {
+            &-selected ${pickerCellInnerCls},
+            ${pickerCellInnerCls}`]: {
             background: 'transparent !important'
           }
         },
@@ -49503,7 +49352,7 @@ const genPickerStatusStyle = token => {
   } = token;
   return {
     [componentCls]: {
-      '&-status-error&': {
+      [`&-status-error${componentCls}`]: {
         '&, &:not([disabled]):hover': {
           backgroundColor: colorBgContainer,
           borderColor: colorError
@@ -49517,7 +49366,7 @@ const genPickerStatusStyle = token => {
           background: colorError
         }
       },
-      '&-status-warning&': {
+      [`&-status-warning${componentCls}`]: {
         '&, &:not([disabled]):hover': {
           backgroundColor: colorBgContainer,
           borderColor: colorWarning
@@ -49592,7 +49441,7 @@ const genPickerStyle = token => {
       transition: `border ${motionDurationMid}, box-shadow ${motionDurationMid}`,
       '&:hover, &-focused': Object.assign({}, genHoverStyle(token)),
       '&-focused': Object.assign({}, genActiveStyle(token)),
-      '&&-disabled': {
+      [`&${componentCls}-disabled`]: {
         background: colorBgContainerDisabled,
         borderColor: colorBorder,
         cursor: 'not-allowed',
@@ -49600,7 +49449,7 @@ const genPickerStyle = token => {
           color: colorTextDisabled
         }
       },
-      '&&-borderless': {
+      [`&${componentCls}-borderless`]: {
         backgroundColor: 'transparent !important',
         borderColor: 'transparent !important',
         boxShadow: 'none !important'
@@ -49749,41 +49598,41 @@ const genPickerStyle = token => {
           value: -9999
         },
         zIndex: zIndexPopup,
-        '&&-hidden': {
+        [`&${componentCls}-dropdown-hidden`]: {
           display: 'none'
         },
-        '&&-placement-bottomLeft': {
+        [`&${componentCls}-dropdown-placement-bottomLeft`]: {
           [`${componentCls}-range-arrow`]: {
             top: 0,
             display: 'block',
             transform: 'translateY(-100%)'
           }
         },
-        '&&-placement-topLeft': {
+        [`&${componentCls}-dropdown-placement-topLeft`]: {
           [`${componentCls}-range-arrow`]: {
             bottom: 0,
             display: 'block',
             transform: 'translateY(100%) rotate(180deg)'
           }
         },
-        [`&${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-topLeft,
-          &${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-topRight,
-          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-topLeft,
-          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-topRight`]: {
+        [`&${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-topLeft,
+          &${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-topRight,
+          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-topLeft,
+          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-topRight`]: {
           animationName: slideDownIn
         },
-        [`&${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-bottomLeft,
-          &${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-bottomRight,
-          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-bottomLeft,
-          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-bottomRight`]: {
+        [`&${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-bottomLeft,
+          &${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-bottomRight,
+          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-bottomLeft,
+          &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-bottomRight`]: {
           animationName: slideUpIn
         },
-        [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-topLeft,
-          &${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-topRight`]: {
+        [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-topLeft,
+          &${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-topRight`]: {
           animationName: slideDownOut
         },
-        [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-bottomLeft,
-          &${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-bottomRight`]: {
+        [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-bottomLeft,
+          &${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-bottomRight`]: {
           animationName: slideUpOut
         },
         // Time picker with additional style
@@ -49928,6 +49777,7 @@ const initPickerPanelToken = token => {
     paddingXXS
   } = token;
   return {
+    pickerCellCls: `${componentCls}-cell`,
     pickerCellInnerCls: `${componentCls}-cell-inner`,
     pickerTextHeight: controlHeightLG,
     pickerPanelCellWidth: controlHeightSM * 1.5,
@@ -50072,7 +49922,7 @@ function generateRangePicker(generateConfig) {
         disabled: mergedDisabled,
         ref: innerRef,
         dropdownAlign: transPlacement2DropdownAlign(direction, placement),
-        placeholder: getRangePlaceholder(picker, locale, placeholder),
+        placeholder: getRangePlaceholder(locale, picker, placeholder),
         suffixIcon: suffixNode,
         clearIcon: /*#__PURE__*/react.createElement(icons_CloseCircleFilled, null),
         prevIcon: /*#__PURE__*/react.createElement("span", {
@@ -50217,7 +50067,7 @@ function generatePicker(generateConfig) {
         const locale = Object.assign(Object.assign({}, contextLocale), props.locale);
         return /*#__PURE__*/react.createElement(rc_picker_es, Object.assign({
           ref: innerRef,
-          placeholder: getPlaceholder(mergedPicker, locale, placeholder),
+          placeholder: getPlaceholder(locale, mergedPicker, placeholder),
           suffixIcon: suffixNode,
           dropdownAlign: transPlacement2DropdownAlign(direction, placement),
           clearIcon: /*#__PURE__*/react.createElement(icons_CloseCircleFilled, null),
@@ -54831,50 +54681,65 @@ TypedSelect.OptGroup = es_OptGroup;
 /* harmony default export */ const rc_select_es = (es_Select);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/empty/empty.js
 
-const empty_Empty = () => /*#__PURE__*/react.createElement("svg", {
-  width: "184",
-  height: "152",
-  viewBox: "0 0 184 152",
-  xmlns: "http://www.w3.org/2000/svg"
-}, /*#__PURE__*/react.createElement("g", {
-  fill: "none",
-  fillRule: "evenodd"
-}, /*#__PURE__*/react.createElement("g", {
-  transform: "translate(24 31.67)"
-}, /*#__PURE__*/react.createElement("ellipse", {
-  fillOpacity: ".8",
-  fill: "#F5F5F7",
-  cx: "67.797",
-  cy: "106.89",
-  rx: "67.797",
-  ry: "12.668"
-}), /*#__PURE__*/react.createElement("path", {
-  d: "M122.034 69.674L98.109 40.229c-1.148-1.386-2.826-2.225-4.593-2.225h-51.44c-1.766 0-3.444.839-4.592 2.225L13.56 69.674v15.383h108.475V69.674z",
-  fill: "#AEB8C2"
-}), /*#__PURE__*/react.createElement("path", {
-  d: "M101.537 86.214L80.63 61.102c-1.001-1.207-2.507-1.867-4.048-1.867H31.724c-1.54 0-3.047.66-4.048 1.867L6.769 86.214v13.792h94.768V86.214z",
-  fill: "url(#linearGradient-1)",
-  transform: "translate(13.56)"
-}), /*#__PURE__*/react.createElement("path", {
-  d: "M33.83 0h67.933a4 4 0 0 1 4 4v93.344a4 4 0 0 1-4 4H33.83a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z",
-  fill: "#F5F5F7"
-}), /*#__PURE__*/react.createElement("path", {
-  d: "M42.678 9.953h50.237a2 2 0 0 1 2 2V36.91a2 2 0 0 1-2 2H42.678a2 2 0 0 1-2-2V11.953a2 2 0 0 1 2-2zM42.94 49.767h49.713a2.262 2.262 0 1 1 0 4.524H42.94a2.262 2.262 0 0 1 0-4.524zM42.94 61.53h49.713a2.262 2.262 0 1 1 0 4.525H42.94a2.262 2.262 0 0 1 0-4.525zM121.813 105.032c-.775 3.071-3.497 5.36-6.735 5.36H20.515c-3.238 0-5.96-2.29-6.734-5.36a7.309 7.309 0 0 1-.222-1.79V69.675h26.318c2.907 0 5.25 2.448 5.25 5.42v.04c0 2.971 2.37 5.37 5.277 5.37h34.785c2.907 0 5.277-2.421 5.277-5.393V75.1c0-2.972 2.343-5.426 5.25-5.426h26.318v33.569c0 .617-.077 1.216-.221 1.789z",
-  fill: "#DCE0E6"
-})), /*#__PURE__*/react.createElement("path", {
-  d: "M149.121 33.292l-6.83 2.65a1 1 0 0 1-1.317-1.23l1.937-6.207c-2.589-2.944-4.109-6.534-4.109-10.408C138.802 8.102 148.92 0 161.402 0 173.881 0 184 8.102 184 18.097c0 9.995-10.118 18.097-22.599 18.097-4.528 0-8.744-1.066-12.28-2.902z",
-  fill: "#DCE0E6"
-}), /*#__PURE__*/react.createElement("g", {
-  transform: "translate(149.65 15.383)",
-  fill: "#FFF"
-}, /*#__PURE__*/react.createElement("ellipse", {
-  cx: "20.654",
-  cy: "3.167",
-  rx: "2.849",
-  ry: "2.815"
-}), /*#__PURE__*/react.createElement("path", {
-  d: "M5.698 5.63H0L2.898.704zM9.259.704h4.985V5.63H9.259z"
-}))));
+
+
+const empty_Empty = () => {
+  const [, token] = useToken();
+  const bgColor = new TinyColor(token.colorBgBase);
+  let themeStyle = {};
+  // Dark Theme need more dark of this
+  if (bgColor.toHsl().l < 0.5) {
+    themeStyle = {
+      opacity: 0.65
+    };
+  }
+  return /*#__PURE__*/react.createElement("svg", {
+    style: themeStyle,
+    width: "184",
+    height: "152",
+    viewBox: "0 0 184 152",
+    xmlns: "http://www.w3.org/2000/svg"
+  }, /*#__PURE__*/react.createElement("g", {
+    fill: "none",
+    fillRule: "evenodd"
+  }, /*#__PURE__*/react.createElement("g", {
+    transform: "translate(24 31.67)"
+  }, /*#__PURE__*/react.createElement("ellipse", {
+    fillOpacity: ".8",
+    fill: "#F5F5F7",
+    cx: "67.797",
+    cy: "106.89",
+    rx: "67.797",
+    ry: "12.668"
+  }), /*#__PURE__*/react.createElement("path", {
+    d: "M122.034 69.674L98.109 40.229c-1.148-1.386-2.826-2.225-4.593-2.225h-51.44c-1.766 0-3.444.839-4.592 2.225L13.56 69.674v15.383h108.475V69.674z",
+    fill: "#AEB8C2"
+  }), /*#__PURE__*/react.createElement("path", {
+    d: "M101.537 86.214L80.63 61.102c-1.001-1.207-2.507-1.867-4.048-1.867H31.724c-1.54 0-3.047.66-4.048 1.867L6.769 86.214v13.792h94.768V86.214z",
+    fill: "url(#linearGradient-1)",
+    transform: "translate(13.56)"
+  }), /*#__PURE__*/react.createElement("path", {
+    d: "M33.83 0h67.933a4 4 0 0 1 4 4v93.344a4 4 0 0 1-4 4H33.83a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z",
+    fill: "#F5F5F7"
+  }), /*#__PURE__*/react.createElement("path", {
+    d: "M42.678 9.953h50.237a2 2 0 0 1 2 2V36.91a2 2 0 0 1-2 2H42.678a2 2 0 0 1-2-2V11.953a2 2 0 0 1 2-2zM42.94 49.767h49.713a2.262 2.262 0 1 1 0 4.524H42.94a2.262 2.262 0 0 1 0-4.524zM42.94 61.53h49.713a2.262 2.262 0 1 1 0 4.525H42.94a2.262 2.262 0 0 1 0-4.525zM121.813 105.032c-.775 3.071-3.497 5.36-6.735 5.36H20.515c-3.238 0-5.96-2.29-6.734-5.36a7.309 7.309 0 0 1-.222-1.79V69.675h26.318c2.907 0 5.25 2.448 5.25 5.42v.04c0 2.971 2.37 5.37 5.277 5.37h34.785c2.907 0 5.277-2.421 5.277-5.393V75.1c0-2.972 2.343-5.426 5.25-5.426h26.318v33.569c0 .617-.077 1.216-.221 1.789z",
+    fill: "#DCE0E6"
+  })), /*#__PURE__*/react.createElement("path", {
+    d: "M149.121 33.292l-6.83 2.65a1 1 0 0 1-1.317-1.23l1.937-6.207c-2.589-2.944-4.109-6.534-4.109-10.408C138.802 8.102 148.92 0 161.402 0 173.881 0 184 8.102 184 18.097c0 9.995-10.118 18.097-22.599 18.097-4.528 0-8.744-1.066-12.28-2.902z",
+    fill: "#DCE0E6"
+  }), /*#__PURE__*/react.createElement("g", {
+    transform: "translate(149.65 15.383)",
+    fill: "#FFF"
+  }, /*#__PURE__*/react.createElement("ellipse", {
+    cx: "20.654",
+    cy: "3.167",
+    rx: "2.849",
+    ry: "2.815"
+  }), /*#__PURE__*/react.createElement("path", {
+    d: "M5.698 5.63H0L2.898.704zM9.259.704h4.985V5.63H9.259z"
+  }))));
+};
+if (false) {}
 /* harmony default export */ const empty = (empty_Empty);
 ;// CONCATENATED MODULE: ./node_modules/antd/es/empty/simple.js
 
@@ -55226,21 +55091,21 @@ const genSingleStyle = token => {
       outline: 'none',
       boxShadow: token.boxShadowSecondary,
       [`
-            &${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-bottomLeft,
-            &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-bottomLeft
+            &${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-bottomLeft,
+            &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-bottomLeft
           `]: {
         animationName: slideUpIn
       },
       [`
-            &${antCls}-slide-up-enter${antCls}-slide-up-enter-active&-placement-topLeft,
-            &${antCls}-slide-up-appear${antCls}-slide-up-appear-active&-placement-topLeft
+            &${antCls}-slide-up-enter${antCls}-slide-up-enter-active${componentCls}-dropdown-placement-topLeft,
+            &${antCls}-slide-up-appear${antCls}-slide-up-appear-active${componentCls}-dropdown-placement-topLeft
           `]: {
         animationName: slideDownIn
       },
-      [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-bottomLeft`]: {
+      [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-bottomLeft`]: {
         animationName: slideUpOut
       },
-      [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active&-placement-topLeft`]: {
+      [`&${antCls}-slide-up-leave${antCls}-slide-up-leave-active${componentCls}-dropdown-placement-topLeft`]: {
         animationName: slideDownOut
       },
       '&-hidden': {
@@ -55767,7 +55632,7 @@ const select_style_genBaseStyle = token => {
       position: 'relative',
       display: 'inline-block',
       cursor: 'pointer',
-      [`&:not(&-customize-input) ${componentCls}-selector`]: Object.assign(Object.assign({}, genSelectorStyle(token)), getSearchInputWithoutBorderStyle(token)),
+      [`&:not(${componentCls}-customize-input) ${componentCls}-selector`]: Object.assign(Object.assign({}, genSelectorStyle(token)), getSearchInputWithoutBorderStyle(token)),
       // [`&:not(&-disabled):hover ${selectCls}-selector`]: {
       //   ...genHoverStyle(token),
       // },
@@ -55872,7 +55737,7 @@ const genSelectStyle = token => {
         boxShadow: `none !important`
       },
       // ==================== In Form ====================
-      '&&-in-form-item': {
+      [`&${componentCls}-in-form-item`]: {
         width: '100%'
       }
     }
@@ -56222,47 +56087,19 @@ function abortPromise(p1) {
   return [p, abort];
 }
 function finalPromise(p, key) {
-  var _a, _b;
   if (!promise_util_map.has(key)) {
     promise_util_map.set(key, []);
   }
   let promise;
-  while (promise = (_a = promise_util_map.get(key)) === null || _a === void 0 ? void 0 : _a.pop()) {
+  while (promise = promise_util_map.get(key)?.pop()) {
     promise[1]('too late');
   }
   promise = abortPromise(p);
-  (_b = promise_util_map.get(key)) === null || _b === void 0 ? void 0 : _b.push(promise);
+  promise_util_map.get(key)?.push(promise);
   return promise[0];
 }
 const promise_util_map = new Map();
 ;// CONCATENATED MODULE: ./src/view/special/uid-username-search.view.tsx
-var uid_username_search_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
@@ -56279,11 +56116,11 @@ function UidUsernameSearchView(props) {
   const [userInfos, setUserInfos] = react.useState([]);
   const [searchType, setSearchType] = react.useState('uid2username');
   const [userInfoEnd, setUserInfoEnd] = react.useState(false);
-  const uid2username = uid => uid_username_search_view_awaiter(this, void 0, void 0, function* () {
-    let username = yield uu.uid2username(uid);
+  const uid2username = async uid => {
+    let username = await uu.uid2username(uid);
     username = username === '' ? undefined : username;
     return username;
-  });
+  };
   functions.setUid = uid => {
     setUid(uid);
     uid2username(String(uid)).then(username => {
@@ -56391,7 +56228,7 @@ function UidUsernameSearchView(props) {
         case 'uid2username':
           // 取消准备
           setSearchType('username2uid');
-          uu.username2infos(username !== null && username !== void 0 ? username : '').then(setUserInfos);
+          uu.username2infos(username ?? '').then(setUserInfos);
           setUserInfoEnd(false);
           break;
       }
@@ -56418,33 +56255,6 @@ function UidUsernameSearchView(props) {
   })));
 }
 ;// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx
-var uid_username_view_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
@@ -56518,12 +56328,12 @@ function UidUsernameView(props) {
     },
     block: true,
     icon: react.createElement(icons_SyncOutlined, null),
-    onClick: () => uid_username_view_awaiter(this, void 0, void 0, function* () {
+    onClick: async () => {
       // 刷新, uid排序
-      yield Settings.selectSettingData('uid').then(array => Settings.resetSettingData('uid', array.sort((sd1, sd2) => Number(sd1.key) - Number(sd2.key))));
+      await Settings.selectSettingData('uid').then(array => Settings.resetSettingData('uid', array.sort((sd1, sd2) => Number(sd1.key) - Number(sd2.key))));
       GM_listValues().filter(item => item.startsWith('uid_')).forEach(item => GM_deleteValue(item));
       updateSettings();
-    })
+    }
   })), react.createElement(es_col, {
     span: 2
   }, react.createElement(es_button, {
@@ -56547,8 +56357,7 @@ function UidUsernameView(props) {
 
 
 function DisplayTypeView() {
-  var _a;
-  const [displayType, setDisplayType] = react.useState((_a = document.getElementById(DisplayStyleId)) === null || _a === void 0 ? void 0 : _a.getAttribute(DisplayStyleAttribute));
+  const [displayType, setDisplayType] = react.useState(document.getElementById(DisplayStyleId)?.getAttribute(DisplayStyleAttribute));
   return react.createElement(react.Fragment, null, react.createElement(card, {
     style: {
       height: '100%'
@@ -56734,8 +56543,7 @@ function createDisplayStyle(type, document) {
       onceOnly: false,
       existing: false
     }, function () {
-      var _a;
-      createDisplayStyle((_a = this.getAttribute(DisplayStyleAttribute)) !== null && _a !== void 0 ? _a : 'hide', document);
+      createDisplayStyle(this.getAttribute(DisplayStyleAttribute) ?? 'hide', document);
     });
   };
 }
@@ -56771,41 +56579,13 @@ function iframes(pageMap) {
 function globalInit() {
   // 取消插件内部的浏览器右键菜单事件
   document.oncontextmenu = event => {
-    var _a;
     if (event.srcElement && event.srcElement instanceof Node) {
-      return !((_a = document.getElementById(AppId)) === null || _a === void 0 ? void 0 : _a.contains(event.srcElement));
+      return !document.getElementById(AppId)?.contains(event.srcElement);
     }
     return false;
   };
 }
 ;// CONCATENATED MODULE: ./src/main.tsx
-var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
 
 
 
@@ -56814,11 +56594,11 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
 
 
 
-(() => main_awaiter(void 0, void 0, void 0, function* () {
+(async () => {
   // 全局配置
   globalInit();
   // 检查版本是否更新 更新配置
-  yield checkVersion();
+  await checkVersion();
   // 读取配置生成 PageMap
   let pageMap = readEtc();
   // 创建ui-box
@@ -56829,11 +56609,10 @@ var main_awaiter = undefined && undefined.__awaiter || function (thisArg, _argum
   iframes(pageMap);
   // 油猴菜单展示/隐藏配置
   GM_registerMenuCommand('脚本配置', () => {
-    var _a;
     let main = document.querySelector(`#${AppId}>div`);
-    main.style.setProperty('display', ((_a = main.style) === null || _a === void 0 ? void 0 : _a.getPropertyValue('display')) === 'none' ? '' : 'none');
+    main.style.setProperty('display', main.style?.getPropertyValue('display') === 'none' ? '' : 'none');
   });
-}))();
+})();
 })();
 
 /******/ })()

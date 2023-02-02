@@ -8881,9 +8881,14 @@ var iconStyles = "\n.anticon {\n  display: inline-block;\n  color: inherit;\n  f
 var useInsertStyles = function useInsertStyles() {
   var styleStr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : iconStyles;
   var _useContext = (0,react.useContext)(Context),
-    csp = _useContext.csp;
+    csp = _useContext.csp,
+    prefixCls = _useContext.prefixCls;
+  var mergedStyleStr = styleStr;
+  if (prefixCls) {
+    mergedStyleStr = mergedStyleStr.replace(/anticon/g, prefixCls);
+  }
   (0,react.useEffect)(function () {
-    updateCSS(styleStr, '@ant-design-icons', {
+    updateCSS(mergedStyleStr, '@ant-design-icons', {
       prepend: true,
       csp: csp
     });
@@ -9274,7 +9279,7 @@ function cloneElement(element, props) {
 
 
 
-function renderSwitcherIcon(prefixCls, switcherIcon, showLine, treeNodeProps) {
+function renderSwitcherIcon(prefixCls, switcherIcon, treeNodeProps, showLine) {
   const {
     isLeaf,
     expanded,
@@ -10460,7 +10465,7 @@ function declaration (value, root, parent, length) {
 function utils_lintWarning(message, info) {
   var path = info.path,
       parentSelectors = info.parentSelectors;
-  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in '".concat(path, "': ") : '').concat(message).concat(parentSelectors.length ? " Selector info: ".concat(parentSelectors.join(' -> '), ")") : ''));
+  devWarning(false, "[Ant Design CSS-in-JS] ".concat(path ? "Error in ".concat(path, ": ") : '').concat(message).concat(parentSelectors.length ? " Selector: ".concat(parentSelectors.join(' | ')) : ''));
 }
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/contentQuotesLinter.js
 
@@ -10490,6 +10495,41 @@ var hashedAnimationLinter_linter = function linter(key, value, info) {
 };
 
 /* harmony default export */ const hashedAnimationLinter = ((/* unused pure expression or super */ null && (hashedAnimationLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/legacyNotSelectorLinter.js
+
+
+function isConcatSelector(selector) {
+  var _selector$match;
+
+  var notContent = ((_selector$match = selector.match(/:not\(([^)]*)\)/)) === null || _selector$match === void 0 ? void 0 : _selector$match[1]) || ''; // split selector. e.g.
+  // `h1#a.b` => ['h1', #a', '.b']
+
+  var splitCells = notContent.split(/(\[[^[]*])|(?=[.#])/).filter(function (str) {
+    return str;
+  });
+  return splitCells.length > 1;
+}
+
+function parsePath(info) {
+  return info.parentSelectors.reduce(function (prev, cur) {
+    if (!prev) {
+      return cur;
+    }
+
+    return cur.includes('&') ? cur.replace(/&/g, prev) : "".concat(prev, " ").concat(cur);
+  }, '');
+}
+
+var legacyNotSelectorLinter_linter = function linter(key, value, info) {
+  var parentSelectorPath = parsePath(info);
+  var notList = parentSelectorPath.match(/:not\([^)]*\)/g) || [];
+
+  if (notList.length > 0 && notList.some(isConcatSelector)) {
+    lintWarning("Concat ':not' selector not support in legacy browsers.", info);
+  }
+};
+
+/* harmony default export */ const legacyNotSelectorLinter = ((/* unused pure expression or super */ null && (legacyNotSelectorLinter_linter)));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/logicalPropertiesLinter.js
 
 
@@ -10584,7 +10624,24 @@ var logicalPropertiesLinter_linter = function linter(key, value, info) {
 };
 
 /* harmony default export */ const logicalPropertiesLinter = ((/* unused pure expression or super */ null && (logicalPropertiesLinter_linter)));
+;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/parentSelectorLinter.js
+
+
+var parentSelectorLinter_linter = function linter(key, value, info) {
+  if (info.parentSelectors.some(function (selector) {
+    var selectors = selector.split(',');
+    return selectors.some(function (item) {
+      return item.split('&').length > 2;
+    });
+  })) {
+    lintWarning('Should not use more than one `&` in a selector.', info);
+  }
+};
+
+/* harmony default export */ const parentSelectorLinter = ((/* unused pure expression or super */ null && (parentSelectorLinter_linter)));
 ;// CONCATENATED MODULE: ./node_modules/@ant-design/cssinjs/es/linters/index.js
+
+
 
 
 
@@ -11497,9 +11554,6 @@ const resetIcon = () => ({
   },
   svg: {
     display: 'inline-block'
-  },
-  '& &-icon': {
-    display: 'block'
   }
 });
 const clearFix = () => ({
@@ -11570,7 +11624,7 @@ const genCommonStyle = (token, componentPrefixCls) => {
   };
 };
 const genFocusOutline = token => ({
-  outline: `${token.lineWidth * 4}px solid ${token.colorPrimaryBorder}`,
+  outline: `${token.lineWidthBold}px solid ${token.colorPrimaryBorder}`,
   outlineOffset: 1,
   transition: 'outline-offset 0s, outline 0s'
 });
@@ -11578,7 +11632,7 @@ const genFocusStyle = token => ({
   '&:focus-visible': Object.assign({}, genFocusOutline(token))
 });
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/version.js
-/* harmony default export */ const version = ('5.1.5');
+/* harmony default export */ const version = ('5.1.7');
 ;// CONCATENATED MODULE: ./node_modules/antd/es/version/index.js
 /* eslint import/no-unresolved: 0 */
 // @ts-ignore
@@ -11656,7 +11710,7 @@ const seedToken = Object.assign(Object.assign({}, defaultPresetColors), {
   motionEaseInOut: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
   motionEaseOutBack: 'cubic-bezier(0.12, 0.4, 0.29, 1.46)',
   motionEaseInBack: 'cubic-bezier(0.71, -0.46, 0.88, 0.6)',
-  motionEaseInQuint: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
+  motionEaseInQuint: 'cubic-bezier(0.755, 0.05, 0.855, 0.06)',
   motionEaseOutQuint: 'cubic-bezier(0.23, 1, 0.32, 1)',
   // Radius
   borderRadius: 6,
@@ -12783,10 +12837,10 @@ const genCheckboxStyle = token => {
         content: "'\\a0'"
       },
       // Checkbox near checkbox
-      '& + &': {
+      [`& + ${wrapperCls}`]: {
         marginInlineStart: token.marginXS
       },
-      '&&-in-form-item': {
+      [`&${wrapperCls}-in-form-item`]: {
         'input[type="checkbox"]': {
           width: 14,
           height: 14 // FIXME: magic
@@ -13053,7 +13107,7 @@ const genBaseStyle = (prefixCls, token) => {
       background: token.colorBgContainer,
       borderRadius: token.borderRadius,
       transition: `background-color ${token.motionDurationSlow}`,
-      '&&-rtl': {
+      [`&${treeCls}-rtl`]: {
         // >>> Switcher
         [`${treeCls}-switcher`]: {
           '&_close': {
@@ -13065,7 +13119,7 @@ const genBaseStyle = (prefixCls, token) => {
           }
         }
       },
-      '&-focused:not(:hover):not(&-active-focused)': Object.assign({}, genFocusOutline(token)),
+      [`&-focused:not(:hover):not(${treeCls}-active-focused)`]: Object.assign({}, genFocusOutline(token)),
       // =================== Virtual List ===================
       [`${treeCls}-list-holder-inner`]: {
         alignItems: 'flex-start'
@@ -13119,7 +13173,7 @@ const genBaseStyle = (prefixCls, token) => {
           }
         },
         [`&-active ${treeCls}-node-content-wrapper`]: Object.assign({}, genFocusOutline(token)),
-        [`&:not(&-disabled).filter-node ${treeCls}-title`]: {
+        [`&:not(${treeNodeCls}-disabled).filter-node ${treeCls}-title`]: {
           color: 'inherit',
           fontWeight: 500
         },
@@ -13483,7 +13537,7 @@ const Tree_Tree = /*#__PURE__*/react.forwardRef((props, ref) => {
       className: `${prefixCls}-checkbox-inner`
     }) : checkable,
     selectable: selectable,
-    switcherIcon: nodeProps => renderSwitcherIcon(prefixCls, switcherIcon, showLine, nodeProps),
+    switcherIcon: nodeProps => renderSwitcherIcon(prefixCls, switcherIcon, nodeProps, showLine),
     draggable: draggableConfig
   }), children));
 });
