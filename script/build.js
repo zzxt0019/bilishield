@@ -3,7 +3,7 @@ const path = require('path');
 const marked = require("marked");
 const {default: highlight} = require("highlight.js");
 const _css = 'github.css';
-const {readFile, _html, dataJson, checkIgnore} = require('./base.js');
+const {readFile, _html, dataJson, checkIgnore, copyDir} = require('./base.js');
 
 function createMarked() {
     if (!fs.existsSync(path.resolve(__dirname, `../build/${_html}`))) {
@@ -47,6 +47,7 @@ ${body}
 
 function build() {
     console.info('build 开始 ...')
+    copyDir();
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(dataJson()));
     createMarked();
     fs.copyFileSync(path.resolve(__dirname, '../node_modules/highlight.js/styles/' + _css), path.resolve(__dirname, `../build/${_html}/${_css}`));

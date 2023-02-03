@@ -1,4 +1,4 @@
-const {dataJson} = require('./base.js');
+const {dataJson, copyDir} = require('./base.js');
 const fs = require("fs");
 const path = require("path");
 
@@ -7,6 +7,8 @@ function dev() {
     if (!fs.existsSync(path.resolve(__dirname, '../build'))) {
         fs.mkdirSync(path.resolve(__dirname, '../build'), {recursive: true});
     }
+    copyDir();
+
     let json = dataJson('public');
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(json));
     let text = String(fs.readFileSync(path.resolve(__dirname, '../src/userscript-info-local.js')));

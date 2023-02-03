@@ -63,4 +63,19 @@ function dataJson(dir = 'build') {
     return json;
 }
 
-module.exports = {_html, readFile, dataJson, checkIgnore}
+function copyDir(from='../public', to='../build') {
+    readFile(path.resolve(__dirname, from), {
+        fileCallback: (filePath) => {
+            let targetPath = path.resolve(__dirname, to) + '/' + path.relative(path.resolve(__dirname, from), filePath);
+            fs.writeFileSync(targetPath, fs.readFileSync(filePath));
+        },
+        dirCallback: (dirPath) => {
+            let targetPath = path.resolve(__dirname, to) + '/' + path.relative(path.resolve(__dirname, from), dirPath);
+            if (!fs.existsSync(targetPath)) {
+                fs.mkdirSync(targetPath);
+            }
+        }
+    })
+}
+
+module.exports = {_html, readFile, dataJson, checkIgnore, copyDir}
