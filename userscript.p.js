@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1675421097573
+// @version         1.1.1675422325030
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.p.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-02-03 18:44:57.573
+// @description     bilibili屏蔽 更新时间: 2023-02-03 19:05:25.030
 
 
 // @match           *://*.bilibili.com/*
@@ -4635,6 +4635,7 @@ class BiliUp {
 }
 ;// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts
 
+
 const Specials = {
   uid: new UidUsername(),
   username: new UidUsername()
@@ -4642,6 +4643,13 @@ const Specials = {
 const SpecialKeySet = new Set(Object.keys(Specials));
 function isSpecialKeys(key) {
   return SpecialKeySet.has(key);
+}
+function specialSetting(key) {
+  return new Setting({
+    key: key,
+    name: key,
+    type: Specials[key].type(key)
+  });
 }
 ;// CONCATENATED MODULE: ./src/config/setting/setting-data.ts
 class SettingDataBase {
@@ -4681,13 +4689,6 @@ class Settings {
         let setting = obj[key];
         setting.key = key;
         Settings.settingMap.set(key, setting);
-      });
-      ['uid', 'username'].forEach(key => {
-        Settings.settingMap.set(key, new Setting({
-          key: key,
-          name: key,
-          type: Specials[key].type(key)
-        }));
       });
     }
     return Settings.settingMap;
@@ -5180,6 +5181,7 @@ class Page {
 
 
 
+
 function readEtc() {
   let pageData = GM_getValue('script.page');
   let pageMap = new Map();
@@ -5196,7 +5198,11 @@ function readEtc() {
     let rule0 = ruleData[ruleKey];
     rule0.key = ruleKey;
     if (rule0.checker?.setting) {
-      rule0.checker.setting = Settings.getSystemSettings().get(rule0.checker.setting);
+      if (Settings.getSystemSettings().has(rule0.checker.setting)) {
+        rule0.checker.setting = Settings.getSystemSettings().get(rule0.checker.setting);
+      } else if (isSpecialKeys(rule0.checker.setting)) {
+        rule0.checker.setting = specialSetting(rule0.checker.setting);
+      }
     }
     pageMap.get(rule0.page)?.insert(new Rule(rule0));
   });

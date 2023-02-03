@@ -8,7 +8,7 @@
 <body>
 <pre><code class="language-js"><span class="hljs-comment">// ==UserScript==</span>
 <span class="hljs-comment">// @name            bilibili屏蔽</span>
-<span class="hljs-comment">// @version         1.1.1675421114867</span>
+<span class="hljs-comment">// @version         1.1.1675422343306</span>
 <span class="hljs-comment">// @author          zzxt0019</span>
 <span class="hljs-comment">// @namespace       zzxt0019/bilishield</span>
 <span class="hljs-comment">// @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png</span>
@@ -16,7 +16,7 @@
 <span class="hljs-comment">// @downloadURL     https://zzxt0019.github.io/bilishield/userscript.s.js</span>
 <span class="hljs-comment">// @supportURL      https://github.com/zzxt0019/bilishield</span>
 <span class="hljs-comment">// @homepage        https://github.com/zzxt0019/bilishield</span>
-<span class="hljs-comment">// @description     bilibili屏蔽 更新时间: 2023-02-03 18:45:14.867</span>
+<span class="hljs-comment">// @description     bilibili屏蔽 更新时间: 2023-02-03 19:05:43.306</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js</span>
@@ -382,6 +382,7 @@
 }
 ;<span class="hljs-comment">// CONCATENATED MODULE: ./src/config/setting/special/special-settings.ts</span>
 
+
 <span class="hljs-keyword">const</span> <span class="hljs-title class_">Specials</span> = {
   <span class="hljs-attr">uid</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">UidUsername</span>(),
   <span class="hljs-attr">username</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">UidUsername</span>()
@@ -389,6 +390,13 @@
 <span class="hljs-keyword">const</span> <span class="hljs-title class_">SpecialKeySet</span> = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Set</span>(<span class="hljs-title class_">Object</span>.<span class="hljs-title function_">keys</span>(<span class="hljs-title class_">Specials</span>));
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">isSpecialKeys</span>(<span class="hljs-params">key</span>) {
   <span class="hljs-keyword">return</span> <span class="hljs-title class_">SpecialKeySet</span>.<span class="hljs-title function_">has</span>(key);
+}
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">specialSetting</span>(<span class="hljs-params">key</span>) {
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Setting</span>({
+    <span class="hljs-attr">key</span>: key,
+    <span class="hljs-attr">name</span>: key,
+    <span class="hljs-attr">type</span>: <span class="hljs-title class_">Specials</span>[key].<span class="hljs-title function_">type</span>(key)
+  });
 }
 ;<span class="hljs-comment">// CONCATENATED MODULE: ./src/config/setting/setting-data.ts</span>
 <span class="hljs-keyword">class</span> <span class="hljs-title class_">SettingDataBase</span> {
@@ -428,13 +436,6 @@
         <span class="hljs-keyword">let</span> setting = obj[key];
         setting.<span class="hljs-property">key</span> = key;
         <span class="hljs-title class_">Settings</span>.<span class="hljs-property">settingMap</span>.<span class="hljs-title function_">set</span>(key, setting);
-      });
-      [<span class="hljs-string">&#x27;uid&#x27;</span>, <span class="hljs-string">&#x27;username&#x27;</span>].<span class="hljs-title function_">forEach</span>(<span class="hljs-function"><span class="hljs-params">key</span> =&gt;</span> {
-        <span class="hljs-title class_">Settings</span>.<span class="hljs-property">settingMap</span>.<span class="hljs-title function_">set</span>(key, <span class="hljs-keyword">new</span> <span class="hljs-title class_">Setting</span>({
-          <span class="hljs-attr">key</span>: key,
-          <span class="hljs-attr">name</span>: key,
-          <span class="hljs-attr">type</span>: <span class="hljs-title class_">Specials</span>[key].<span class="hljs-title function_">type</span>(key)
-        }));
       });
     }
     <span class="hljs-keyword">return</span> <span class="hljs-title class_">Settings</span>.<span class="hljs-property">settingMap</span>;
@@ -927,6 +928,7 @@
 
 
 
+
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">readEtc</span>(<span class="hljs-params"></span>) {
   <span class="hljs-keyword">let</span> pageData = <span class="hljs-title function_">GM_getValue</span>(<span class="hljs-string">&#x27;script.page&#x27;</span>);
   <span class="hljs-keyword">let</span> pageMap = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Map</span>();
@@ -943,7 +945,11 @@
     <span class="hljs-keyword">let</span> rule0 = ruleData[ruleKey];
     rule0.<span class="hljs-property">key</span> = ruleKey;
     <span class="hljs-keyword">if</span> (rule0.<span class="hljs-property">checker</span>?.<span class="hljs-property">setting</span>) {
-      rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span> = <span class="hljs-title class_">Settings</span>.<span class="hljs-title function_">getSystemSettings</span>().<span class="hljs-title function_">get</span>(rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span>);
+      <span class="hljs-keyword">if</span> (<span class="hljs-title class_">Settings</span>.<span class="hljs-title function_">getSystemSettings</span>().<span class="hljs-title function_">has</span>(rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span>)) {
+        rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span> = <span class="hljs-title class_">Settings</span>.<span class="hljs-title function_">getSystemSettings</span>().<span class="hljs-title function_">get</span>(rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span>);
+      } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-title function_">isSpecialKeys</span>(rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span>)) {
+        rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span> = <span class="hljs-title function_">specialSetting</span>(rule0.<span class="hljs-property">checker</span>.<span class="hljs-property">setting</span>);
+      }
     }
     pageMap.<span class="hljs-title function_">get</span>(rule0.<span class="hljs-property">page</span>)?.<span class="hljs-title function_">insert</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Rule</span>(rule0));
   });
