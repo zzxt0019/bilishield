@@ -35,7 +35,7 @@ const requires: { key: string, value: string, url: string }[] = [
         url: 'https://cdnjs.cloudflare.com/ajax/libs/ant-design-icons/5.0.1/index.umd.min.js'
     }
 ]
-const p: Configuration = {
+const s: Configuration = {
     entry: {
         [base.userscript + '.s']: './src/main.tsx',
         [base.userscript + '.s.min']: './src/main.tsx',
@@ -63,5 +63,6 @@ const p: Configuration = {
     ]
 }
 let config = base.config();
-objectUtil.copyProperties(p, config, 'force-append');
+objectUtil.copyProperties(s, config, 'force-append');
+config.entry = s.entry
 export default config;
