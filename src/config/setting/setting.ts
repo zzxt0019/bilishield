@@ -30,13 +30,6 @@ export class Settings {
                 setting.key = key
                 Settings.settingMap.set(key, setting)
             });
-            ['uid', 'username'].forEach(key => {
-                Settings.settingMap.set(key, new Setting({
-                    key: key,
-                    name: key,
-                    type: Specials[key as SpecialKeys].type(key as SpecialKeys)
-                }));
-            })
         }
         return Settings.settingMap
     }
