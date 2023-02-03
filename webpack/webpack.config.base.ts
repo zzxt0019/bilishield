@@ -5,6 +5,8 @@ import fs from "fs";
 const {date2string} = require('../src/utils/datetime-util.ts');
 
 export const banner = (fileName: string, requires?: string[]) => fs.readFileSync(path.resolve(__dirname, '../info/userscript-info.js'), 'utf-8')
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\n', '\r\n')
     .replaceAll('${timestamp}', String(new Date().getTime()))
     .replaceAll('${date}', String(date2string(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
     .replaceAll('${userscriptName}', fileName)
