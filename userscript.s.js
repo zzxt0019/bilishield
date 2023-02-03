@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1675411564968
+// @version         1.1.1675412420098
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.s.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-02-03 16:06:04.968
+// @description     bilibili屏蔽 更新时间: 2023-02-03 16:20:20.098
 // @require         https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js
 // @require         https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js
@@ -46,7 +46,7 @@ var __webpack_unused_export__;
 
 var m = __webpack_require__(533);
 if (true) {
-  exports.createRoot = m.createRoot;
+  exports.s = m.createRoot;
   __webpack_unused_export__ = m.hydrateRoot;
 } else { var i; }
 
@@ -9395,7 +9395,7 @@ function createBox(pageMap, root = {
     div.setAttribute("id", AppId);
     document.body.appendChild(div);
   }
-  root.root = (0,client.createRoot)(document.getElementById(AppId));
+  root.root = (0,client/* createRoot */.s)(document.getElementById(AppId));
   root.root.render(external_React_default().createElement(BoxView, {
     pageMap: pageMap
   }));
