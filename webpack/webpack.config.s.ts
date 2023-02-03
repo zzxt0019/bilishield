@@ -50,7 +50,7 @@ const s: Configuration = {
             new ESBuildMinifyPlugin({
                 target: 'es2016',
                 include: new RegExp(`${base.userscript}.*\\.min\\.js`),
-                banner: base.banner(base.userscript + '.min.js', requires.map(item => item.url)),
+                banner: base.banner(base.userscript + '.s.min.js', requires.map(item => item.url)),
             })
         ],
     },
