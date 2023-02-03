@@ -63,11 +63,11 @@ function dataJson(dir = 'build') {
     return json;
 }
 
-function copyDir(from='../public', to='../build') {
+function copyDir(from = '../public', to = '../build') {
     readFile(path.resolve(__dirname, from), {
         fileCallback: (filePath) => {
             let targetPath = path.resolve(__dirname, to) + '/' + path.relative(path.resolve(__dirname, from), filePath);
-            fs.writeFileSync(targetPath, fs.readFileSync(filePath));
+            fs.writeFileSync(targetPath, fs.readFileSync(filePath, {encoding: 'utf-8'}), {encoding: 'utf-8'});
         },
         dirCallback: (dirPath) => {
             let targetPath = path.resolve(__dirname, to) + '/' + path.relative(path.resolve(__dirname, from), dirPath);

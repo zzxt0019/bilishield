@@ -10,8 +10,8 @@ export const banner = (fileName: string, requires?: string[]) => fs.readFileSync
     .replaceAll('${timestamp}', String(new Date().getTime()))
     .replaceAll('${date}', String(date2string(new Date(Date.now() + 8 * 60 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000))))
     .replaceAll('${userscriptName}', fileName)
-    .replaceAll('// @require         ${require}', requires ? requires.map(url => `// @require         ${url}`).join(`\r\n`) : '')
-    .replace(/(==\/UserScript==)[\s\S]+$/, '$1');
+    .replaceAll('// @require         ${require}', requires ? requires.map(url => `// @require         ${url}`).join('\r\n') : '')
+    .replace(/(==\/UserScript==)[\s\S]+$/, '$1') + '\r\n';
 
 export const userscript = 'userscript';
 
