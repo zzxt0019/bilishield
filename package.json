@@ -2,8 +2,13 @@
   "version": "1.0",
   "name": "tampermonkey-typescript",
   "scripts": {
-    "dev": "node ./script/dev && cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=development --watch",
-    "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack  --mode=production && node --max_old_space_size=4096 ./script/build"
+    "dev": "npm run before-dev && npm run webpack-dev",
+    "build": "npm run webpack-build-p && npm run webpack-build-s && npm run after-build",
+    "before-dev": "node ./script/dev",
+    "webpack-dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.p.ts --mode=development --watch",
+    "webpack-build-p": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.p.ts --mode=production",
+    "webpack-build-s": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.s.ts --mode=production",
+    "after-build": "node ./script/build"
   },
   "devDependencies": {
     "@types/arrive": "^2.4.1",

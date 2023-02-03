@@ -9,6 +9,7 @@
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
 // @description     bilibili屏蔽 更新时间: ${date}
+// @require         ${require}
 
 // @match           *://*.bilibili.com/*
 // @noframes
