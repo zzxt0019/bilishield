@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            bilibili屏蔽
-// @version         1.1.1675422325030
+// @version         1.1.1675933807075
 // @author          zzxt0019
 // @namespace       zzxt0019/bilishield
 // @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png
@@ -8,7 +8,7 @@
 // @downloadURL     https://zzxt0019.github.io/bilishield/userscript.p.js
 // @supportURL      https://github.com/zzxt0019/bilishield
 // @homepage        https://github.com/zzxt0019/bilishield
-// @description     bilibili屏蔽 更新时间: 2023-02-03 19:05:25.030
+// @description     bilibili屏蔽 更新时间: 2023-02-09 17:10:07.075
 
 
 // @match           *://*.bilibili.com/*
@@ -56113,10 +56113,9 @@ const promise_util_map = new Map();
 
 
 
-function UidUsernameSearchView(props) {
+const UidUsernameSearchView = react.forwardRef((props, ref) => {
   const {
-    commit,
-    functions
+    commit
   } = props;
   const uu = react.useState(new UidUsername())[0];
   const [uid, setUid] = react.useState('');
@@ -56124,18 +56123,20 @@ function UidUsernameSearchView(props) {
   const [userInfos, setUserInfos] = react.useState([]);
   const [searchType, setSearchType] = react.useState('uid2username');
   const [userInfoEnd, setUserInfoEnd] = react.useState(false);
+  react.useImperativeHandle(ref, () => ({
+    setUid: uid => {
+      setUid(uid);
+      uid2username(String(uid)).then(username => {
+        setUsername(username);
+        setSearchType('username2uid');
+        username && uu.username2infos(username).then(setUserInfos);
+      });
+    }
+  }));
   const uid2username = async uid => {
     let username = await uu.uid2username(uid);
     username = username === '' ? undefined : username;
     return username;
-  };
-  functions.setUid = uid => {
-    setUid(uid);
-    uid2username(String(uid)).then(username => {
-      setUsername(username);
-      setSearchType('username2uid');
-      username && uu.username2infos(username).then(setUserInfos);
-    });
   };
   return react.createElement(react.Fragment, null, react.createElement(es_col, {
     span: 18
@@ -56261,7 +56262,7 @@ function UidUsernameSearchView(props) {
       }
     }
   })));
-}
+});
 ;// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx
 
 
@@ -56277,7 +56278,7 @@ function UidUsernameView(props) {
   const [hide, setHide] = react.useState(true); // 是否显示隐藏的tag标签
   const [hideAdvance, setHideAdvance] = react.useState(true);
   const [expireTime, setExpireTime] = react.useState();
-  const usvFunctions = {};
+  const searchRef = react.useRef();
   /**
    * 更新配置展示
    */
@@ -56307,7 +56308,7 @@ function UidUsernameView(props) {
       updateSettings();
     },
     onAuxClick: () => {
-      usvFunctions.setUid && usvFunctions.setUid(item.key);
+      searchRef.current?.setUid(item.key);
     },
     onClose: () => {
       // 删除, 删除uid
@@ -56317,7 +56318,7 @@ function UidUsernameView(props) {
     },
     key: item.username
   }, item.username)))), react.createElement(es_row, null, react.createElement(UidUsernameSearchView, {
-    functions: usvFunctions,
+    ref: searchRef,
     commit: uid => {
       Settings.insertSettingData('uid', {
         key: uid,

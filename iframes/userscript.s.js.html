@@ -8,7 +8,7 @@
 <body>
 <pre><code class="language-js"><span class="hljs-comment">// ==UserScript==</span>
 <span class="hljs-comment">// @name            bilibili屏蔽</span>
-<span class="hljs-comment">// @version         1.1.1675422343306</span>
+<span class="hljs-comment">// @version         1.1.1675933833454</span>
 <span class="hljs-comment">// @author          zzxt0019</span>
 <span class="hljs-comment">// @namespace       zzxt0019/bilishield</span>
 <span class="hljs-comment">// @icon64          https://zzxt0019.github.io/bilishield/img/Elysia.png</span>
@@ -16,7 +16,7 @@
 <span class="hljs-comment">// @downloadURL     https://zzxt0019.github.io/bilishield/userscript.s.js</span>
 <span class="hljs-comment">// @supportURL      https://github.com/zzxt0019/bilishield</span>
 <span class="hljs-comment">// @homepage        https://github.com/zzxt0019/bilishield</span>
-<span class="hljs-comment">// @description     bilibili屏蔽 更新时间: 2023-02-03 19:05:43.306</span>
+<span class="hljs-comment">// @description     bilibili屏蔽 更新时间: 2023-02-09 17:10:33.454</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js</span>
 <span class="hljs-comment">// @require         https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js</span>
@@ -9009,10 +9009,9 @@ plain-scalar(is-flow, min)
 
 
 
-<span class="hljs-keyword">function</span> <span class="hljs-title function_">UidUsernameSearchView</span>(<span class="hljs-params">props</span>) {
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">UidUsernameSearchView</span> = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">forwardRef</span>(<span class="hljs-function">(<span class="hljs-params">props, ref</span>) =&gt;</span> {
   <span class="hljs-keyword">const</span> {
-    commit,
-    functions
+    commit
   } = props;
   <span class="hljs-keyword">const</span> uu = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">UidUsername</span>())[<span class="hljs-number">0</span>];
   <span class="hljs-keyword">const</span> [uid, setUid] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-string">&#x27;&#x27;</span>);
@@ -9020,18 +9019,20 @@ plain-scalar(is-flow, min)
   <span class="hljs-keyword">const</span> [userInfos, setUserInfos] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>([]);
   <span class="hljs-keyword">const</span> [searchType, setSearchType] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-string">&#x27;uid2username&#x27;</span>);
   <span class="hljs-keyword">const</span> [userInfoEnd, setUserInfoEnd] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-literal">false</span>);
+  <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useImperativeHandle</span>(ref, <span class="hljs-function">() =&gt;</span> ({
+    <span class="hljs-attr">setUid</span>: <span class="hljs-function"><span class="hljs-params">uid</span> =&gt;</span> {
+      <span class="hljs-title function_">setUid</span>(uid);
+      <span class="hljs-title function_">uid2username</span>(<span class="hljs-title class_">String</span>(uid)).<span class="hljs-title function_">then</span>(<span class="hljs-function"><span class="hljs-params">username</span> =&gt;</span> {
+        <span class="hljs-title function_">setUsername</span>(username);
+        <span class="hljs-title function_">setSearchType</span>(<span class="hljs-string">&#x27;username2uid&#x27;</span>);
+        username &amp;&amp; uu.<span class="hljs-title function_">username2infos</span>(username).<span class="hljs-title function_">then</span>(setUserInfos);
+      });
+    }
+  }));
   <span class="hljs-keyword">const</span> <span class="hljs-title function_">uid2username</span> = <span class="hljs-keyword">async</span> uid =&gt; {
     <span class="hljs-keyword">let</span> username = <span class="hljs-keyword">await</span> uu.<span class="hljs-title function_">uid2username</span>(uid);
     username = username === <span class="hljs-string">&#x27;&#x27;</span> ? <span class="hljs-literal">undefined</span> : username;
     <span class="hljs-keyword">return</span> username;
-  };
-  functions.<span class="hljs-property">setUid</span> = <span class="hljs-function"><span class="hljs-params">uid</span> =&gt;</span> {
-    <span class="hljs-title function_">setUid</span>(uid);
-    <span class="hljs-title function_">uid2username</span>(<span class="hljs-title class_">String</span>(uid)).<span class="hljs-title function_">then</span>(<span class="hljs-function"><span class="hljs-params">username</span> =&gt;</span> {
-      <span class="hljs-title function_">setUsername</span>(username);
-      <span class="hljs-title function_">setSearchType</span>(<span class="hljs-string">&#x27;username2uid&#x27;</span>);
-      username &amp;&amp; uu.<span class="hljs-title function_">username2infos</span>(username).<span class="hljs-title function_">then</span>(setUserInfos);
-    });
   };
   <span class="hljs-keyword">return</span> <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">createElement</span>((<span class="hljs-title function_">external_React_default</span>()).<span class="hljs-property">Fragment</span>, <span class="hljs-literal">null</span>, <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">createElement</span>(external_antd_namespaceObject.<span class="hljs-property">Col</span>, {
     <span class="hljs-attr">span</span>: <span class="hljs-number">18</span>
@@ -9157,7 +9158,7 @@ plain-scalar(is-flow, min)
       }
     }
   })));
-}
+});
 ;<span class="hljs-comment">// CONCATENATED MODULE: ./src/view/special/uid-username.view.tsx</span>
 
 
@@ -9173,7 +9174,7 @@ plain-scalar(is-flow, min)
   <span class="hljs-keyword">const</span> [hide, setHide] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-literal">true</span>); <span class="hljs-comment">// 是否显示隐藏的tag标签</span>
   <span class="hljs-keyword">const</span> [hideAdvance, setHideAdvance] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>(<span class="hljs-literal">true</span>);
   <span class="hljs-keyword">const</span> [expireTime, setExpireTime] = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useState</span>();
-  <span class="hljs-keyword">const</span> usvFunctions = {};
+  <span class="hljs-keyword">const</span> searchRef = <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">useRef</span>();
   <span class="hljs-comment">/**
    * 更新配置展示
    */</span>
@@ -9203,7 +9204,7 @@ plain-scalar(is-flow, min)
       <span class="hljs-title function_">updateSettings</span>();
     },
     <span class="hljs-attr">onAuxClick</span>: <span class="hljs-function">() =&gt;</span> {
-      usvFunctions.<span class="hljs-property">setUid</span> &amp;&amp; usvFunctions.<span class="hljs-title function_">setUid</span>(item.<span class="hljs-property">key</span>);
+      searchRef.<span class="hljs-property">current</span>?.<span class="hljs-title function_">setUid</span>(item.<span class="hljs-property">key</span>);
     },
     <span class="hljs-attr">onClose</span>: <span class="hljs-function">() =&gt;</span> {
       <span class="hljs-comment">// 删除, 删除uid</span>
@@ -9213,7 +9214,7 @@ plain-scalar(is-flow, min)
     },
     <span class="hljs-attr">key</span>: item.<span class="hljs-property">username</span>
   }, item.<span class="hljs-property">username</span>)))), <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">createElement</span>(external_antd_namespaceObject.<span class="hljs-property">Row</span>, <span class="hljs-literal">null</span>, <span class="hljs-title function_">external_React_default</span>().<span class="hljs-title function_">createElement</span>(<span class="hljs-title class_">UidUsernameSearchView</span>, {
-    <span class="hljs-attr">functions</span>: usvFunctions,
+    <span class="hljs-attr">ref</span>: searchRef,
     <span class="hljs-attr">commit</span>: <span class="hljs-function"><span class="hljs-params">uid</span> =&gt;</span> {
       <span class="hljs-title class_">Settings</span>.<span class="hljs-title function_">insertSettingData</span>(<span class="hljs-string">&#x27;uid&#x27;</span>, {
         <span class="hljs-attr">key</span>: uid,
