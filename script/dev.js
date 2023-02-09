@@ -13,7 +13,7 @@ function dev() {
     fs.writeFileSync(path.resolve(__dirname, '../build/data.json'), JSON.stringify(json));
     let text = String(fs.readFileSync(path.resolve(__dirname, '../info/userscript-info-local.js')));
     let replace = '';
-    replace += '// @require         file://' + path.resolve(__dirname, '../build/userscript.js') + '\n';
+    replace += '// @require         file://' + path.resolve(__dirname, '../build/userscript.p.js') + '\n';
     replace += '// @resource        data.json file://' + path.resolve(__dirname, '../build/data.json') + '\n';
     Object.entries(json.yaml).forEach(([key, value]) => {
         Object.keys(value).forEach(fileName => {
