@@ -4,26 +4,28 @@ import {PlusOutlined, UserDeleteOutlined} from "@ant-design/icons";
 import {UidUsername} from "@/config/setting/special/impl/uid-username";
 import {finalPromise} from "@/utils/promise-util";
 
-export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
-    const {commit, functions} = props;
+export const UidUsernameSearchView = React.forwardRef((props: UidUsernameSearchViewProps, ref: any) => {
+    const {commit} = props;
     const uu: UidUsername = React.useState(new UidUsername())[0];
     const [uid, setUid] = React.useState('');
     const [username, setUsername] = React.useState<string | undefined>(undefined);
     const [userInfos, setUserInfos] = React.useState<{ uid: number, username: string; }[]>([]);
     const [searchType, setSearchType] = React.useState<'uid2username' | 'username2uid'>('uid2username');
     const [userInfoEnd, setUserInfoEnd] = React.useState(false);
+    React.useImperativeHandle(ref, () => ({
+        setUid: (uid: string) => {
+            setUid(uid);
+            uid2username(String(uid)).then(username => {
+                setUsername(username);
+                setSearchType('username2uid');
+                username && uu.username2infos(username).then(setUserInfos);
+            });
+        }
+    }))
     const uid2username = async (uid: string) => {
         let username: string | undefined = await uu.uid2username(uid);
         username = username === '' ? undefined : username;
         return username;
-    }
-    functions.setUid = (uid: string) => {
-        setUid(uid);
-        uid2username(String(uid)).then(username => {
-            setUsername(username);
-            setSearchType('username2uid');
-            username && uu.username2infos(username).then(setUserInfos);
-        });
     }
     return <>
         <Col span={18}>
@@ -142,9 +144,8 @@ export function UidUsernameSearchView(props: UidUsernameSearchViewProps) {
                 }}></Button>
         </Col>
     </>;
-}
+});
 
 export interface UidUsernameSearchViewProps {
-    functions: { setUid?: (uid: string) => void };
     commit: (uid: string) => void;
 }
