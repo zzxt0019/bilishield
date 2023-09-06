@@ -1,5 +1,5 @@
 import {BannerPlugin, Configuration} from 'webpack';
-import {ESBuildMinifyPlugin} from 'esbuild-loader';
+import {EsbuildPlugin} from 'esbuild-loader';
 
 import * as base from './webpack.config.base';
 import * as  objectUtil from '../src/utils/object-util';
@@ -11,7 +11,7 @@ const p: Configuration = {
     },
     optimization: {
         minimizer: [
-            new ESBuildMinifyPlugin({
+            new EsbuildPlugin({
                 target: 'es2016',
                 include: new RegExp(`${base.userscript}.*\\.min\\.js`),
                 banner: base.banner(base.userscript + '.p.min.js'),
