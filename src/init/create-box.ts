@@ -1,6 +1,6 @@
 import {createRoot, Root} from "react-dom/client";
 import * as MainStatic from "@/main-static";
-import {BoxView} from "@/view/box.view";
+import {BoxView} from "@/view/new/box.view";
 import React from "react";
 
 /**

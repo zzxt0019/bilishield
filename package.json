@@ -1,14 +1,9 @@
 {
-  "version": "1.0",
-  "name": "tampermonkey-typescript",
+  "version": "2.0",
+  "name": "bilishield",
   "scripts": {
-    "dev": "npm run webpack-dev",
-    "build": "npm run webpack-build-p && npm run webpack-build-s && npm run after-build",
-    "before-dev": "node ./script/dev",
-    "webpack-dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.p.ts --mode=development --watch",
-    "webpack-build-p": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.p.ts --mode=production",
-    "webpack-build-s": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.s.ts --mode=production",
-    "after-build": "node --max_old_space_size=4096 ./script/build"
+    "dev": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.ts --mode=development --watch",
+    "build": "cross-env TS_NODE_PROJECT=\"webpack-tsconfig.json\" webpack --config=./webpack/webpack.config.ts --mode=production"
   },
   "devDependencies": {
     "@types/arrive": "^2.4.1",
@@ -33,7 +28,6 @@
     "antd": "^5.8.6",
     "arrive": "^2.4.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "yaml": "^2.3.2"
+    "react-dom": "^18.2.0"
   }
 }

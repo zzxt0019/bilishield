@@ -2,6 +2,7 @@ import "arrive";
 import * as MainStatic from './main-static'
 import {createBox} from "@/init/create-box";
 import {globalInit} from "@/init/global";
+import {createStyle} from "@/init/create-style";
 
 (async () => {
     // 全局配置
@@ -13,7 +14,7 @@ import {globalInit} from "@/init/global";
     // // 创建ui-box
     createBox()();
     // // 创建隐藏元素的style标签
-    // createDisplayStyle('hide', window.document)();
+    createStyle('hide', window.document)();
     // // 追加页面iframe内部屏蔽
     // iframes(pageMap);
     // 油猴菜单展示/隐藏配置

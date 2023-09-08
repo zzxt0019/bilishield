@@ -1,7 +1,6 @@
-import {Page} from "@/config/page/page";
-import {createDisplayStyle} from "@/init/create-display-style";
+import {createStyle} from "@/init/create-style";
 
-export function iframes(pageMap: Map<string, Page>) {
+export function iframes() {
     interface FrameData {
         frame: Window,
         document?: Document,
@@ -21,11 +20,11 @@ export function iframes(pageMap: Map<string, Page>) {
             try {
                 if (frame.document && framesData[i].document !== frame.document) {
                     framesData[i].document = frame.document;
-                    createDisplayStyle('hide', frame.document)
-                    for (const page of pageMap.values()) {
-                        page.stop()
-                        page.start()
-                    }
+                    createStyle('hide', frame.document)
+                    // for (const page of pageMap.values()) {
+                    //     page.stop()
+                    //     page.start()
+                    // }
                 }
             } catch (ignore) {
             }
